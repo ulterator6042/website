@@ -1,13 +1,42 @@
-body {
+/* Full-screen background image */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.background {
+  background: url('image.jpg') no-repeat center center/cover;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  font-family: sans-serif;
 }
 
-button {
-  font-size: 18px;
-  padding: 12px 20px;
+/* Neon green button with red text */
+#playButton {
+  background-color: #39ff14; /* neon green */
+  color: red;
+  font-size: 2rem;
+  padding: 20px 50px;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
+  box-shadow: 0 0 20px #39ff14, 0 0 40px #39ff14, 0 0 60px #39ff14;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Hover effect */
+#playButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 30px #39ff14, 0 0 60px #39ff14, 0 0 90px #39ff14;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  #playButton {
+    font-size: 3rem;
+    padding: 30px 70px;
+  }
 }
