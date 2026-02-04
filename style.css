@@ -1,0 +1,13 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: sans-serif;
+}
+
+button {
+  font-size: 18px;
+  padding: 12px 20px;
+  cursor: pointer;
+}
