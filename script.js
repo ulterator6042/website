@@ -168,23 +168,55 @@ function tryLoadNext() {
 
 tryLoadNext();
 
-// Mouse tracking
+// Mouse tracking with inertia
 let mouseX = 0;
 let mouseY = 0;
+let targetMouseX = 0;
+let targetMouseY = 0;
+let rotationVelocityX = 0;
+let rotationVelocityY = 0;
+
+const interactionConfig = {
+  rotationSpeedX: 1,
+  rotationSpeedY: 0.5,
+  inertia: 0.95,
+  returnSpeed: 0.05,
+  autoOrbit: false,
+  autoOrbitSpeed: 0.2,
+};
 
 document.addEventListener('mousemove', (event) => {
-  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+  targetMouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  targetMouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 });
 
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
   
+  // Update mouse position with smoothing
+  mouseX += (targetMouseX - mouseX) * 0.1;
+  mouseY += (targetMouseY - mouseY) * 0.1;
+  
   if (model) {
-    // Rotate based on cursor position with adjustable sensitivity
-    model.rotation.y = mouseX * Math.PI * mouseControl.rotationSpeedX;
-    model.rotation.x = mouseY * Math.PI * 0.5 * mouseControl.rotationSpeedY;
+    // Auto-orbit
+    if (interactionConfig.autoOrbit) {
+      model.rotation.y += interactionConfig.autoOrbitSpeed * 0.01;
+    } else {
+      // Manual rotation with inertia
+      rotationVelocityX += (mouseY * Math.PI * 0.5 * interactionConfig.rotationSpeedY - model.rotation.x) * 0.01;
+      rotationVelocityY += (mouseX * Math.PI * interactionConfig.rotationSpeedX - model.rotation.y) * 0.01;
+      
+      rotationVelocityX *= interactionConfig.inertia;
+      rotationVelocityY *= interactionConfig.inertia;
+      
+      model.rotation.x += rotationVelocityX;
+      model.rotation.y += rotationVelocityY;
+      
+      // Return to center when mouse leaves
+      rotationVelocityX *= (1 - interactionConfig.returnSpeed);
+      rotationVelocityY *= (1 - interactionConfig.returnSpeed);
+    }
   }
   
   renderer.render(scene, camera);
@@ -227,6 +259,22 @@ modelFolder.add(modelControl, 'posY', -3, 3, 0.1).onChange((val) => {
 modelFolder.add(modelControl, 'posZ', -2, 2, 0.1).onChange((val) => {
   if (model) model.position.z = val;
 }).name('Position Z');
+modelFolder.add({ resetTransform: () => {
+  modelControl.posX = 0;
+  modelControl.posY = 0;
+  modelControl.posZ = 0;
+  if (model) {
+    model.position.set(0, 0, 0);
+    model.rotation.set(0, 0, 0);
+  }
+  mouseX = 0;
+  mouseY = 0;
+  targetMouseX = 0;
+  targetMouseY = 0;
+  rotationVelocityX = 0;
+  rotationVelocityY = 0;
+  modelFolder.updateDisplay();
+}}, 'resetTransform').name('🔄 Reset Transform');
 
 // Camera controls
 const cameraFolder = gui.addFolder('Camera');
@@ -240,6 +288,8 @@ const materialControl = {
   metalness: 0.95,
   roughness: 0.35,
   color: 0x656d88,
+  emissiveColor: 0x000000,
+  emissiveIntensity: 0,
 };
 materialFolder.add(materialControl, 'metalness', 0, 1, 0.05).onChange((val) => {
   if (model) {
@@ -262,19 +312,36 @@ materialFolder.addColor(materialControl, 'color').onChange((val) => {
     });
   }
 }).name('Color');
+materialFolder.addColor(materialControl, 'emissiveColor').onChange((val) => {
+  if (model) {
+    model.traverse((child) => {
+      if (child.isMesh) child.material.emissive.setHex(val);
+    });
+  }
+}).name('Emissive Color');
+materialFolder.add(materialControl, 'emissiveIntensity', 0, 2, 0.1).onChange((val) => {
+  if (model) {
+    model.traverse((child) => {
+      if (child.isMesh) child.material.emissiveIntensity = val;
+    });
+  }
+}).name('Emissive Intensity');
 
 // Lighting controls
 const lightFolder = gui.addFolder('Lighting');
 
-const ambientControl = { intensity: 0.3, color: 0xe60f07 };
+const ambientControl = { intensity: 0.3, color: 0xe60f07, visible: true };
 lightFolder.add(ambientControl, 'intensity', 0, 2, 0.05).onChange((val) => {
   ambientLight.intensity = val;
 }).name('Ambient Intensity');
 lightFolder.addColor(ambientControl, 'color').onChange((val) => {
   ambientLight.color.setHex(val);
 }).name('Ambient Color');
+lightFolder.add(ambientControl, 'visible').onChange((val) => {
+  ambientLight.visible = val;
+}).name('Ambient Visible');
 
-const hemiControl = { intensity: 0.4, skyColor: 0xffffff, groundColor: 0x666666 };
+const hemiControl = { intensity: 0.4, skyColor: 0xffffff, groundColor: 0x666666, visible: true };
 lightFolder.add(hemiControl, 'intensity', 0, 2, 0.05).onChange((val) => {
   hemiLight.intensity = val;
 }).name('Hemisphere Intensity');
@@ -284,8 +351,11 @@ lightFolder.addColor(hemiControl, 'skyColor').onChange((val) => {
 lightFolder.addColor(hemiControl, 'groundColor').onChange((val) => {
   hemiLight.groundColor.setHex(val);
 }).name('Hemisphere Ground');
+lightFolder.add(hemiControl, 'visible').onChange((val) => {
+  hemiLight.visible = val;
+}).name('Hemisphere Visible');
 
-const dir1Control = { intensity: 1.15, color: 0xffffff, x: -10, y: 6, z: 5 };
+const dir1Control = { intensity: 1.15, color: 0xffffff, x: -10, y: 6, z: 5, visible: true };
 lightFolder.add(dir1Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   directionalLight1.intensity = val;
 }).name('Dir Light 1 Intensity');
@@ -298,29 +368,44 @@ lightFolder.add(dir1Control, 'y', -10, 10, 1).onChange((val) => {
 lightFolder.add(dir1Control, 'z', -10, 10, 1).onChange((val) => {
   directionalLight1.position.z = val;
 }).name('Dir Light 1 Z');
+lightFolder.add(dir1Control, 'visible').onChange((val) => {
+  directionalLight1.visible = val;
+}).name('Dir Light 1 Visible');
 
-const dir2Control = { intensity: 1.1, color: 0x8a45f6, x: -5, y: -3, z: 5 };
+const dir2Control = { intensity: 1.1, color: 0x8a45f6, x: -5, y: -3, z: 5, visible: true };
 lightFolder.add(dir2Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   directionalLight2.intensity = val;
 }).name('Dir Light 2 Intensity');
 lightFolder.addColor(dir2Control, 'color').onChange((val) => {
   directionalLight2.color.setHex(val);
 }).name('Dir Light 2 Color');
+lightFolder.add(dir2Control, 'visible').onChange((val) => {
+  directionalLight2.visible = val;
+}).name('Dir Light 2 Visible');
 
-const point1Control = { intensity: 0.6, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2 };
+const point1Control = { intensity: 0.6, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true };
 lightFolder.add(point1Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point1.intensity = val;
 }).name('Point Light 1 Intensity');
+lightFolder.add(point1Control, 'visible').onChange((val) => {
+  point1.visible = val;
+}).name('Point Light 1 Visible');
 
-const point2Control = { intensity: 1.15, color: 0x8fb6ff, x: -2.5, y: 1, z: 3 };
+const point2Control = { intensity: 1.15, color: 0x8fb6ff, x: -2.5, y: 1, z: 3, visible: true };
 lightFolder.add(point2Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point2.intensity = val;
 }).name('Point Light 2 Intensity');
+lightFolder.add(point2Control, 'visible').onChange((val) => {
+  point2.visible = val;
+}).name('Point Light 2 Visible');
 
-const point3Control = { intensity: 0.3, color: 0xffffff, x: 0, y: -3, z: 5 };
+const point3Control = { intensity: 0.3, color: 0xffffff, x: 0, y: -3, z: 5, visible: true };
 lightFolder.add(point3Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point3.intensity = val;
 }).name('Point Light 3 Intensity');
+lightFolder.add(point3Control, 'visible').onChange((val) => {
+  point3.visible = val;
+}).name('Point Light 3 Visible');
 
 // Background & Rendering
 const renderFolder = gui.addFolder('Rendering');
@@ -334,9 +419,12 @@ renderFolder.add(renderControl, 'exposure', 0, 2, 0.1).onChange((val) => {
 
 // Mouse & Interaction controls
 const mouseFolder = gui.addFolder('Interaction');
-const mouseControl = { rotationSpeedX: 1, rotationSpeedY: 0.5 };
-mouseFolder.add(mouseControl, 'rotationSpeedX', 0, 3, 0.1).name('Rotation Speed X');
-mouseFolder.add(mouseControl, 'rotationSpeedY', 0, 3, 0.1).name('Rotation Speed Y');
+mouseFolder.add(interactionConfig, 'rotationSpeedX', 0, 3, 0.1).name('Rotation Speed X');
+mouseFolder.add(interactionConfig, 'rotationSpeedY', 0, 3, 0.1).name('Rotation Speed Y');
+mouseFolder.add(interactionConfig, 'inertia', 0.8, 0.99, 0.01).name('Inertia');
+mouseFolder.add(interactionConfig, 'returnSpeed', 0, 0.2, 0.01).name('Return to Center Speed');
+mouseFolder.add(interactionConfig, 'autoOrbit').name('Auto-Orbit');
+mouseFolder.add(interactionConfig, 'autoOrbitSpeed', 0, 0.5, 0.05).name('Auto-Orbit Speed');
 
 // Settings export/save
 const settingsFolder = gui.addFolder('Settings');
@@ -353,6 +441,7 @@ settingsFolder.add({ exportSettings: () => {
     point2: point2Control,
     point3: point3Control,
     rendering: renderControl,
+    interaction: interactionConfig,
   };
   console.log('=== CURRENT SETTINGS ===');
   console.log(JSON.stringify(settingsObj, null, 2));
