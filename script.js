@@ -177,22 +177,226 @@ let rotationVelocityX = 0;
 let rotationVelocityY = 0;
 
 const interactionConfig = {
-  rotationSpeedX: 1,
-  rotationSpeedY: 0.5,
-  inertia: 0.95,
+  rotationSpeedX: 0.4,
+  rotationSpeedY: 0.2,
+  inertia: 0.8,
   returnSpeed: 0.05,
   autoOrbit: false,
-  autoOrbitSpeed: 0.2,
+  autoOrbitSpeed: 0.5,
 };
 
+// Hitbox configuration
+const hitboxConfig = {
+  enabled: true,
+  shape: 'circle', // 'circle' or 'rectangle'
+  radius: 0.6, // for circle, normalized 0-1
+  width: 0.8, // for rectangle, normalized 0-1
+  height: 0.8, // for rectangle
+  visible: true,
+};
+
+// Button style configuration
+const buttonConfig = {
+  backgroundColor: '#667eea',
+  secondaryColor: '#764ba2',
+  textColor: '#ffffff',
+  padding: 15,
+  fontSize: 18,
+  borderRadius: 50,
+  fontWeight: 600,
+};
+
+// Preset settings
+const presetSettings = {
+  model: { posX: 0, posY: 0, posZ: 0 },
+  camera: { z: 2 },
+  material: { metalness: 0.95, roughness: 0.35, color: 6647176, emissiveColor: 0, emissiveIntensity: 0.6 },
+  ambient: { intensity: 0.3, color: 15077127, visible: true },
+  hemisphere: { intensity: 0.4, skyColor: 16777215, groundColor: 6710886, visible: true },
+  directional1: { intensity: 1.15, color: 16777215, x: -10, y: 6, z: 5, visible: true },
+  directional2: { intensity: 1.1, color: 14935011, x: -5, y: -3, z: 5, visible: true },
+  point1: { intensity: 0.6, color: 16760744, x: 2.5, y: 1.5, z: 2, visible: true },
+  point2: { intensity: 1.15, color: 9418495, x: -2.5, y: 1, z: 3, visible: true },
+  point3: { intensity: 0.3, color: 16777215, x: 0, y: -3, z: 5, visible: true },
+  rendering: { bgColor: 1841692, exposure: 1.5 },
+  interaction: { rotationSpeedX: 0.4, rotationSpeedY: 0.2, inertia: 0.8, returnSpeed: 0.05, autoOrbit: false, autoOrbitSpeed: 0.5 },
+};
+
+function applyPreset(preset) {
+  // Apply model position
+  modelControl.posX = preset.model.posX;
+  modelControl.posY = preset.model.posY;
+  modelControl.posZ = preset.model.posZ;
+  if (model) model.position.set(preset.model.posX, preset.model.posY, preset.model.posZ);
+
+  // Apply camera
+  camera.position.z = preset.camera.z;
+  camera.updateProjectionMatrix();
+
+  // Apply material
+  materialControl.metalness = preset.material.metalness;
+  materialControl.roughness = preset.material.roughness;
+  materialControl.color = preset.material.color;
+  materialControl.emissiveColor = preset.material.emissiveColor;
+  materialControl.emissiveIntensity = preset.material.emissiveIntensity;
+  if (model) {
+    model.traverse((child) => {
+      if (child.isMesh) {
+        child.material.metalness = preset.material.metalness;
+        child.material.roughness = preset.material.roughness;
+        child.material.color.setHex(preset.material.color);
+        child.material.emissive.setHex(preset.material.emissiveColor);
+        child.material.emissiveIntensity = preset.material.emissiveIntensity;
+      }
+    });
+  }
+
+  // Apply lighting
+  ambientControl.intensity = preset.ambient.intensity;
+  ambientControl.color = preset.ambient.color;
+  ambientControl.visible = preset.ambient.visible;
+  ambientLight.intensity = preset.ambient.intensity;
+  ambientLight.color.setHex(preset.ambient.color);
+  ambientLight.visible = preset.ambient.visible;
+
+  hemiControl.intensity = preset.hemisphere.intensity;
+  hemiControl.skyColor = preset.hemisphere.skyColor;
+  hemiControl.groundColor = preset.hemisphere.groundColor;
+  hemiControl.visible = preset.hemisphere.visible;
+  hemiLight.intensity = preset.hemisphere.intensity;
+  hemiLight.color.setHex(preset.hemisphere.skyColor);
+  hemiLight.groundColor.setHex(preset.hemisphere.groundColor);
+  hemiLight.visible = preset.hemisphere.visible;
+
+  dir1Control.intensity = preset.directional1.intensity;
+  dir1Control.color = preset.directional1.color;
+  dir1Control.x = preset.directional1.x;
+  dir1Control.y = preset.directional1.y;
+  dir1Control.z = preset.directional1.z;
+  dir1Control.visible = preset.directional1.visible;
+  directionalLight1.intensity = preset.directional1.intensity;
+  directionalLight1.color.setHex(preset.directional1.color);
+  directionalLight1.position.set(preset.directional1.x, preset.directional1.y, preset.directional1.z);
+  directionalLight1.visible = preset.directional1.visible;
+
+  dir2Control.intensity = preset.directional2.intensity;
+  dir2Control.color = preset.directional2.color;
+  dir2Control.visible = preset.directional2.visible;
+  directionalLight2.intensity = preset.directional2.intensity;
+  directionalLight2.color.setHex(preset.directional2.color);
+  directionalLight2.visible = preset.directional2.visible;
+
+  point1Control.intensity = preset.point1.intensity;
+  point1Control.visible = preset.point1.visible;
+  point1.intensity = preset.point1.intensity;
+  point1.visible = preset.point1.visible;
+
+  point2Control.intensity = preset.point2.intensity;
+  point2Control.visible = preset.point2.visible;
+  point2.intensity = preset.point2.intensity;
+  point2.visible = preset.point2.visible;
+
+  point3Control.intensity = preset.point3.intensity;
+  point3Control.visible = preset.point3.visible;
+  point3.intensity = preset.point3.intensity;
+  point3.visible = preset.point3.visible;
+
+  // Apply rendering
+  renderControl.bgColor = preset.rendering.bgColor;
+  renderControl.exposure = preset.rendering.exposure;
+  document.body.style.background = `#${preset.rendering.bgColor.toString(16).padStart(6, '0')}`;
+  renderer.toneMappingExposure = preset.rendering.exposure;
+
+  // Apply interaction
+  interactionConfig.rotationSpeedX = preset.interaction.rotationSpeedX;
+  interactionConfig.rotationSpeedY = preset.interaction.rotationSpeedY;
+  interactionConfig.inertia = preset.interaction.inertia;
+  interactionConfig.returnSpeed = preset.interaction.returnSpeed;
+  interactionConfig.autoOrbit = preset.interaction.autoOrbit;
+  interactionConfig.autoOrbitSpeed = preset.interaction.autoOrbitSpeed;
+
+  // Update GUI
+  if (window.gui) gui.updateDisplay();
+}
+
+// Check if mouse is within hitbox
+function isMouseInHitbox(mouseX, mouseY) {
+  if (!hitboxConfig.enabled) return true;
+  
+  if (hitboxConfig.shape === 'circle') {
+    const distance = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
+    return distance <= hitboxConfig.radius;
+  } else if (hitboxConfig.shape === 'rectangle') {
+    return Math.abs(mouseX) <= hitboxConfig.width / 2 && Math.abs(mouseY) <= hitboxConfig.height / 2;
+  }
+  return true;
+}
+
+let mouseInHitbox = false;
 document.addEventListener('mousemove', (event) => {
-  targetMouseX = (event.clientX / window.innerWidth) * 2 - 1;
-  targetMouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+  const x = (event.clientX / window.innerWidth) * 2 - 1;
+  const y = -(event.clientY / window.innerHeight) * 2 + 1;
+  
+  mouseInHitbox = isMouseInHitbox(x, y);
+  
+  if (mouseInHitbox) {
+    targetMouseX = x;
+    targetMouseY = y;
+  }
 });
 
-// Animation loop
-function animate() {
-  requestAnimationFrame(animate);
+// Hitbox visualization on canvas overlay
+function drawHitboxVisualization() {
+  if (!hitboxCanvas) return;
+  
+  const ctx = hitboxCanvas.getContext('2d');
+  ctx.clearRect(0, 0, hitboxCanvas.width, hitboxCanvas.height);
+  ctx.strokeStyle = 'rgba(102, 126, 234, 0.5)';
+  ctx.lineWidth = 2;
+  
+  const centerX = hitboxCanvas.width / 2;
+  const centerY = hitboxCanvas.height / 2;
+  
+  if (hitboxConfig.shape === 'circle') {
+    const radius = hitboxConfig.radius * Math.min(hitboxCanvas.width, hitboxCanvas.height) / 2;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (hitboxConfig.shape === 'rectangle') {
+    const width = hitboxConfig.width * hitboxCanvas.width;
+    const height = hitboxConfig.height * hitboxCanvas.height;
+    ctx.strokeRect(centerX - width / 2, centerY - height / 2, width, height);
+  }
+}\n\n// Create hitbox canvas overlay
+let hitboxCanvas = null;
+function createHitboxCanvas() {
+  if (hitboxCanvas) hitboxCanvas.remove();
+  hitboxCanvas = document.createElement('canvas');
+  hitboxCanvas.id = 'hitboxCanvas';
+  hitboxCanvas.style.position = 'fixed';
+  hitboxCanvas.style.top = '0';
+  hitboxCanvas.style.left = '0';
+  hitboxCanvas.style.zIndex = '999';
+  hitboxCanvas.style.pointerEvents = 'none';
+  hitboxCanvas.width = window.innerWidth;
+  hitboxCanvas.height = window.innerHeight;
+  document.body.appendChild(hitboxCanvas);
+}
+
+createHitboxCanvas();
+window.addEventListener('resize', () => {
+  createHitboxCanvas();
+});\n\n// Apply button styles
+function applyButtonStyles() {
+  downloadButton.style.background = `linear-gradient(135deg, ${buttonConfig.backgroundColor} 0%, ${buttonConfig.secondaryColor} 100%)`;
+  downloadButton.style.color = buttonConfig.textColor;
+  downloadButton.style.padding = `${buttonConfig.padding}px ${buttonConfig.padding * 3.3}px`;
+  downloadButton.style.fontSize = `${buttonConfig.fontSize / 16}rem`;
+  downloadButton.style.borderRadius = `${buttonConfig.borderRadius}px`;
+  downloadButton.style.fontWeight = buttonConfig.fontWeight;
+}
+
+applyButtonStyles();\n\n// Animation loop\nfunction animate() {\n  requestAnimationFrame(animate);"
   
   // Update mouse position with smoothing
   mouseX += (targetMouseX - mouseX) * 0.1;
@@ -203,9 +407,11 @@ function animate() {
     if (interactionConfig.autoOrbit) {
       model.rotation.y += interactionConfig.autoOrbitSpeed * 0.01;
     } else {
-      // Manual rotation with inertia
-      rotationVelocityX += (mouseY * Math.PI * 0.5 * interactionConfig.rotationSpeedY - model.rotation.x) * 0.01;
-      rotationVelocityY += (mouseX * Math.PI * interactionConfig.rotationSpeedX - model.rotation.y) * 0.01;
+      // Manual rotation with inertia (only if in hitbox)
+      if (mouseInHitbox) {
+        rotationVelocityX += (mouseY * Math.PI * 0.5 * interactionConfig.rotationSpeedY - model.rotation.x) * 0.01;
+        rotationVelocityY += (mouseX * Math.PI * interactionConfig.rotationSpeedX - model.rotation.y) * 0.01;
+      }
       
       rotationVelocityX *= interactionConfig.inertia;
       rotationVelocityY *= interactionConfig.inertia;
@@ -217,6 +423,11 @@ function animate() {
       rotationVelocityX *= (1 - interactionConfig.returnSpeed);
       rotationVelocityY *= (1 - interactionConfig.returnSpeed);
     }
+  }
+  
+  // Draw hitbox visualization
+  if (hitboxConfig.visible) {
+    drawHitboxVisualization();
   }
   
   renderer.render(scene, camera);
@@ -426,8 +637,44 @@ mouseFolder.add(interactionConfig, 'returnSpeed', 0, 0.2, 0.01).name('Return to 
 mouseFolder.add(interactionConfig, 'autoOrbit').name('Auto-Orbit');
 mouseFolder.add(interactionConfig, 'autoOrbitSpeed', 0, 0.5, 0.05).name('Auto-Orbit Speed');
 
+// Hitbox controls
+const hitboxFolder = gui.addFolder('Hitbox');
+hitboxFolder.add(hitboxConfig, 'enabled').name('Enable Hitbox');
+hitboxFolder.add(hitboxConfig, 'shape', ['circle', 'rectangle']).name('Shape');
+hitboxFolder.add(hitboxConfig, 'radius', 0.1, 1, 0.05).name('Radius (Circle)');
+hitboxFolder.add(hitboxConfig, 'width', 0.1, 1.5, 0.05).name('Width (Rectangle)');
+hitboxFolder.add(hitboxConfig, 'height', 0.1, 1.5, 0.05).name('Height (Rectangle)');
+hitboxFolder.add(hitboxConfig, 'visible').name('Visualize Hitbox');
+
+// Button style controls
+const buttonFolder = gui.addFolder('Button Style');
+buttonFolder.addColor(buttonConfig, 'backgroundColor').onChange((val) => {
+  applyButtonStyles();
+}).name('Primary Color');
+buttonFolder.addColor(buttonConfig, 'secondaryColor').onChange((val) => {
+  applyButtonStyles();
+}).name('Secondary Color');
+buttonFolder.addColor(buttonConfig, 'textColor').onChange((val) => {
+  applyButtonStyles();
+}).name('Text Color');
+buttonFolder.add(buttonConfig, 'padding', 5, 30, 1).onChange((val) => {
+  applyButtonStyles();
+}).name('Padding');
+buttonFolder.add(buttonConfig, 'fontSize', 12, 32, 1).onChange((val) => {
+  applyButtonStyles();
+}).name('Font Size');
+buttonFolder.add(buttonConfig, 'borderRadius', 0, 100, 5).onChange((val) => {
+  applyButtonStyles();
+}).name('Border Radius');
+buttonFolder.add(buttonConfig, 'fontWeight', { Normal: 400, Bold: 600, ExtraBold: 700 }).onChange((val) => {
+  applyButtonStyles();
+}).name('Font Weight');
+
 // Settings export/save
 const settingsFolder = gui.addFolder('Settings');
+settingsFolder.add({ loadPreset: () => {
+  applyPreset(presetSettings);
+}}, 'loadPreset').name('⚡ Load Preset');
 settingsFolder.add({ exportSettings: () => {
   const settingsObj = {
     model: modelControl,
