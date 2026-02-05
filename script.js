@@ -631,11 +631,46 @@ const designClose = document.getElementById('designClose');
 const designControls = document.getElementById('designControls');
 
 const designSettings = {
+  // Colors
   primaryColor: '#667eea',
   secondaryColor: '#764ba2',
   accentColor: '#ffbfa8',
   backgroundColor: '#1a1a1a',
+  sectionBackground: '#242424',
   textColor: '#ffffff',
+  textSecondaryColor: 'rgba(255, 255, 255, 0.7)',
+  borderColor: 'rgba(255, 255, 255, 0.15)',
+  
+  // Button styles
+  buttonTextColor: '#ffffff',
+  buttonOpacity: '0.6',
+  
+  // Section styles
+  projectCardBg: 'rgba(255, 255, 255, 0.06)',
+  projectCardHoverBg: 'rgba(255, 255, 255, 0.1)',
+  
+  // Typography
+  headingSize: '2.5',
+  bodyFontSize: '1',
+  navbarOpacity: '0.95',
+};
+
+const controlConfig = {
+  primaryColor: { type: 'color', label: 'Primary Color' },
+  secondaryColor: { type: 'color', label: 'Secondary Color' },
+  accentColor: { type: 'color', label: 'Accent Color' },
+  backgroundColor: { type: 'color', label: 'Background Color' },
+  sectionBackground: { type: 'color', label: 'Section Background' },
+  textColor: { type: 'color', label: 'Text Color' },
+  textSecondaryColor: { type: 'color', label: 'Secondary Text Color' },
+  borderColor: { type: 'color', label: 'Border Color' },
+  buttonTextColor: { type: 'color', label: 'Button Text Color' },
+  buttonOpacity: { type: 'range', label: 'Button Glass Opacity', min: 0.3, max: 1, step: 0.1 },
+  projectCardBg: { type: 'color', label: 'Card Background' },
+  projectCardHoverBg: { type: 'color', label: 'Card Hover Background' },
+  headingSize: { type: 'range', label: 'Heading Size (rem)', min: 1.5, max: 4, step: 0.2 },
+  bodyFontSize: { type: 'range', label: 'Body Font Size', min: 0.8, max: 1.3, step: 0.1 },
+  navbarOpacity: { type: 'range', label: 'Navbar Opacity', min: 0.5, max: 1, step: 0.05 },
 };
 
 function initDesignPanel() {
@@ -643,47 +678,123 @@ function initDesignPanel() {
   const saved = localStorage.getItem('designSettings');
   if (saved) {
     Object.assign(designSettings, JSON.parse(saved));
-    applyDesignSettings();
   }
 
   // Create controls
-  Object.keys(designSettings).forEach(key => {
+  Object.keys(controlConfig).forEach(key => {
+    const config = controlConfig[key];
     const group = document.createElement('div');
     group.className = 'design-control-group';
     
     const label = document.createElement('label');
-    label.textContent = key.replace(/([A-Z])/g, ' $1').trim();
+    label.textContent = config.label;
     
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.value = designSettings[key];
-    input.addEventListener('input', (e) => {
-      designSettings[key] = e.target.value;
-      applyDesignSettings();
-      localStorage.setItem('designSettings', JSON.stringify(designSettings));
-    });
-    
-    group.appendChild(label);
-    group.appendChild(input);
-    designControls.appendChild(group);
+    let input;
+    if (config.type === 'color') {
+      input = document.createElement('input');
+      input.type = 'color';
+      input.value = designSettings[key].replace(/[^#0-9a-f]/gi, '') || '#ffffff';
+      
+      input.addEventListener('input', (e) => {
+        designSettings[key] = e.target.value;
+        applyDesignSettings();
+        localStorage.setItem('designSettings', JSON.stringify(designSettings));
+      });
+      
+      group.appendChild(label);
+      group.appendChild(input);
+      designControls.appendChild(group);
+    }
   });
+
+  applyDesignSettings();
 }
 
 function applyDesignSettings() {
+  // Set CSS variables
   document.documentElement.style.setProperty('--primary-color', designSettings.primaryColor);
   document.documentElement.style.setProperty('--secondary-color', designSettings.secondaryColor);
   document.documentElement.style.setProperty('--accent-color', designSettings.accentColor);
   document.documentElement.style.setProperty('--text-color', designSettings.textColor);
-  
-  // Update specific elements
+  document.documentElement.style.setProperty('--text-secondary-color', designSettings.textSecondaryColor);
+  document.documentElement.style.setProperty('--border-color', designSettings.borderColor);
+  document.documentElement.style.setProperty('--section-bg', designSettings.sectionBackground);
+  document.documentElement.style.setProperty('--card-bg', designSettings.projectCardBg);
+  document.documentElement.style.setProperty('--card-hover-bg', designSettings.projectCardHoverBg);
+  document.documentElement.style.setProperty('--heading-size', designSettings.headingSize + 'rem');
+  document.documentElement.style.setProperty('--body-font-size', designSettings.bodyFontSize);
+
+  // Update body background
+  document.body.style.background = designSettings.backgroundColor;
+
+  // Update navbar
   const navbar = document.querySelector('.navbar');
   if (navbar) {
-    navbar.style.borderBottomColor = `${designSettings.primaryColor}33`;
+    navbar.style.background = `rgba(18, 18, 18, ${designSettings.navbarOpacity})`;
+    navbar.style.borderBottomColor = designSettings.borderColor;
   }
-  
+
+  // Update sections
+  const projectsSection = document.querySelector('.projects-section');
+  const contactsSection = document.querySelector('.contacts-section');
+  if (projectsSection) {
+    projectsSection.style.background = `linear-gradient(135deg, ${designSettings.backgroundColor} 0%, ${designSettings.sectionBackground} 100%)`;
+  }
+  if (contactsSection) {
+    contactsSection.style.background = `linear-gradient(135deg, ${designSettings.sectionBackground} 0%, ${designSettings.backgroundColor} 100%)`;
+  }
+
+  // Update section headings
+  const headings = document.querySelectorAll('.section-content h2');
+  headings.forEach(h => {
+    h.style.color = designSettings.textColor;
+    h.style.fontSize = designSettings.headingSize + 'rem';
+  });
+
+  // Update body text
+  const bodyText = document.querySelector('body');
+  if (bodyText) {
+    bodyText.style.fontSize = designSettings.bodyFontSize + 'rem';
+    bodyText.style.color = designSettings.textColor;
+  }
+
+  // Update project/contact cards
   const projectCards = document.querySelectorAll('.project-card, .contact-item');
   projectCards.forEach(card => {
-    card.style.borderColor = `${designSettings.primaryColor}40`;
+    card.style.background = designSettings.projectCardBg;
+    card.style.borderColor = designSettings.borderColor;
+    card.addEventListener('mouseover', () => {
+      card.style.background = designSettings.projectCardHoverBg;
+    });
+    card.addEventListener('mouseout', () => {
+      card.style.background = designSettings.projectCardBg;
+    });
+  });
+
+  // Update buttons
+  const buttons = document.querySelectorAll('.download-btn');
+  buttons.forEach(btn => {
+    btn.style.color = designSettings.buttonTextColor;
+    btn.style.background = `rgba(18, 18, 18, ${designSettings.buttonOpacity})`;
+    btn.style.borderColor = designSettings.borderColor;
+  });
+
+  // Update links
+  const links = document.querySelectorAll('.project-link, .contact-item a, .nav-link');
+  links.forEach(link => {
+    link.style.color = designSettings.primaryColor;
+  });
+
+  // Update card headings
+  const cardHeadings = document.querySelectorAll('.project-card h3, .contact-item h3');
+  cardHeadings.forEach(h => {
+    h.style.color = designSettings.textColor;
+  });
+
+  // Update card text
+  const cardText = document.querySelectorAll('.project-card p');
+  cardText.forEach(p => {
+    p.style.color = designSettings.textSecondaryColor;
   });
 }
 
