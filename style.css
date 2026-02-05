@@ -7,26 +7,51 @@
 body {
   width: 100%;
   height: 100vh;
-  background: url('image.jpg') no-repeat center center/cover;
+  background: #1a1a1a;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
 }
 
-.play-btn {
-  padding: 30px 60px;
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: white;
-  background-color: rgba(0, 0, 0, 0.6);
-  border: 2px solid white;
-  border-radius: 15px;
+.hero-section {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+}
+
+.model-container {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  overflow: hidden;
+}
+
+.download-btn {
+  padding: 15px 50px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-.play-btn:hover {
-  background-color: rgba(0, 0, 0, 0.8);
-  transform: scale(1.1);
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+.download-btn:active {
+  transform: translateY(0);
 }
