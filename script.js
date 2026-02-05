@@ -1515,23 +1515,142 @@ buttonFolder.close();
 settingsFolder.close();
 
 // ============================================
-// CUSTOM CURSOR TWINKLE EFFECT ON CLICK
+// CURSOR CLOSET - CUSTOM CURSOR SELECTOR
 // ============================================
+
+// Define available cursor options
+const cursorOptions = [
+  {
+    id: 'metallic',
+    name: 'Metallic',
+    icon: '🤖',
+    css: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"58\" height=\"58\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"m1\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%23f5f5f5;stop-opacity:1\" /><stop offset=\"20%\" style=\"stop-color:%23d0d0d0;stop-opacity:1\" /><stop offset=\"40%\" style=\"stop-color:%23a1a1a1;stop-opacity:1\" /><stop offset=\"70%\" style=\"stop-color:%238a8a8a;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23505050;stop-opacity:1\" /></linearGradient><radialGradient id=\"s1\" cx=\"35%\" cy=\"35%\" r=\"50%\"><stop offset=\"0%\" style=\"stop-color:%23ffffff;stop-opacity:0.8\" /><stop offset=\"50%\" style=\"stop-color:%23ffffff;stop-opacity:0.3\" /><stop offset=\"100%\" style=\"stop-color:%23ffffff;stop-opacity:0\" /></radialGradient></defs><path d=\"M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z\" fill=\"url(%23m1)\" stroke=\"%23303030\" stroke-width=\"1.2\" stroke-linejoin=\"round\" /><ellipse cx=\"20\" cy=\"12\" rx=\"4\" ry=\"5\" fill=\"url(%23s1)\" /></svg>') 11 4, auto"
+  },
+  {
+    id: 'neon',
+    name: 'Neon',
+    icon: '⚡',
+    css: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"58\" height=\"58\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"neo\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%2300ff88;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:%2300cc66;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23009944;stop-opacity:1\" /></linearGradient></defs><path d=\"M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z\" fill=\"url(%23neo)\" stroke=\"%2300ff88\" stroke-width=\"1\" glow=\"url(%23neo)\" /></svg>') 11 4, auto"
+  },
+  {
+    id: 'gold',
+    name: 'Gold',
+    icon: '✨',
+    css: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"58\" height=\"58\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"gld\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%23ffd700;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:%23ffed4e;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23cc9900;stop-opacity:1\" /></linearGradient></defs><path d=\"M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z\" fill=\"url(%23gld)\" stroke=\"%23cc6600\" stroke-width=\"1.2\" /></svg>') 11 4, auto"
+  },
+  {
+    id: 'crimson',
+    name: 'Crimson',
+    icon: '❤️',
+    css: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"58\" height=\"58\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"crm\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%23ff4444;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:%23dd0000;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23880000;stop-opacity:1\" /></linearGradient></defs><path d=\"M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z\" fill=\"url(%23crm)\" stroke=\"%23660000\" stroke-width=\"1.2\" /></svg>') 11 4, auto"
+  },
+  {
+    id: 'aqua',
+    name: 'Aqua',
+    icon: '💎',
+    css: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"58\" height=\"58\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"aqx\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%2340ddff;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:%2300aaff;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23005588;stop-opacity:1\" /></linearGradient></defs><path d=\"M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z\" fill=\"url(%23aqx)\" stroke=\"%23002255\" stroke-width=\"1.2\" /></svg>') 11 4, auto"
+  }
+];
+
+// Shuffle and select 5 random cursors
+function getRandomCursors() {
+  return cursorOptions.sort(() => Math.random() - 0.5).slice(0, 5);
+}
+
+let currentCursor = null;
+let availableCursors = getRandomCursors();
+
+// Initialize cursor closet UI
+function initCursorCloset() {
+  const grid = document.getElementById('cursorClosetGrid');
+  const openBtn = document.getElementById('cursorClosetBtn');
+  const closeBtn = document.getElementById('cursorClosetClose');
+  const modal = document.getElementById('cursorClosetModal');
+
+  // Generate cursor options
+  availableCursors.forEach(cursor => {
+    const option = document.createElement('div');
+    option.className = 'cursor-option';
+    option.id = `cursor-${cursor.id}`;
+    option.innerHTML = `
+      <div class="cursor-option-icon">${cursor.icon}</div>
+      <div class="cursor-option-name">${cursor.name}</div>
+    `;
+
+    option.addEventListener('click', () => {
+      switchCursor(cursor);
+    });
+
+    grid.appendChild(option);
+  });
+
+  // Modal controls
+  openBtn.addEventListener('click', () => {
+    modal.classList.add('active');
+  });
+
+  closeBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('active');
+    }
+  });
+}
+
+// Switch to selected cursor
+function switchCursor(cursor) {
+  // Remove active class from all options
+  document.querySelectorAll('.cursor-option').forEach(opt => opt.classList.remove('active'));
+
+  // Add active class to selected
+  document.getElementById(`cursor-${cursor.id}`).classList.add('active');
+
+  // Apply cursor style
+  document.documentElement.style.cursor = cursor.css;
+  currentCursor = cursor.id;
+
+  // Save preference
+  localStorage.setItem('selectedCursor', cursor.id);
+}
+
+// Load saved cursor preference
+function loadSavedCursor() {
+  const saved = localStorage.getItem('selectedCursor');
+  if (saved) {
+    const cursor = availableCursors.find(c => c.id === saved);
+    if (cursor) {
+      switchCursor(cursor);
+      return;
+    }
+  }
+
+  // Default to first cursor
+  switchCursor(availableCursors[0]);
+}
+
+// Initialize on page load
+initCursorCloset();
+loadSavedCursor();
+
+// Click twinkle effect
 document.addEventListener('click', (event) => {
   // Create twinkle element
   const twinkle = document.createElement('div');
   twinkle.className = 'cursor-twinkle';
-  twinkle.style.display = 'block'; // Ensure it's visible
+  twinkle.style.display = 'block';
   document.body.appendChild(twinkle);
-  
-  // Position at click location (center the 50px element)
+
+  // Position at click location
   twinkle.style.left = (event.clientX - 25) + 'px';
   twinkle.style.top = (event.clientY - 25) + 'px';
-  
+
   // Remove twinkle after animation completes
   setTimeout(() => {
     twinkle.remove();
-  }, 600); // Match animation duration (0.6s)
+  }, 600);
 });
 
 
