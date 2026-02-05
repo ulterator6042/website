@@ -9,6 +9,27 @@
   --secondary-color: #764ba2;
   --accent-color: #ffbfa8;
   --text-color: #ffffff;
+  --hero-bg-1: #1a1a1a;
+  --hero-bg-2: #242424;
+  --hero-accent: rgba(255, 255, 255, 0.08);
+  --hero-glow: rgba(255, 255, 255, 0.06);
+  --hero-vignette-opacity: 0.35;
+  --hero-grain-opacity: 0.08;
+  --hero-backdrop-opacity: 1;
+  --hero-parallax-x: 0px;
+  --hero-parallax-y: 0px;
+  --mist-opacity: 0.45;
+  --mist-blur: 70px;
+  --mist-scale: 1.2;
+  --mist-color-1: rgba(255, 255, 255, 0.12);
+  --mist-color-2: rgba(180, 180, 180, 0.08);
+  --mist-color-3: rgba(120, 120, 120, 0.06);
+  --radial-1-size: 900px;
+  --radial-1-x: 15%;
+  --radial-1-y: 20%;
+  --radial-2-size: 700px;
+  --radial-2-x: 85%;
+  --radial-2-y: 15%;
 }
 
 /* Navigation Bar */
@@ -236,6 +257,23 @@ body {
   border-color: rgba(102, 126, 234, 0.5);
 }
 
+.design-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 .gui-container {
   background: transparent;
   padding: 8px 0;
@@ -323,12 +361,49 @@ body {
   padding: 0;
   padding-top: 60px;
   position: relative;
+  overflow: hidden;
 }
+
+.hero-backdrop,
+.hero-vignette,
+.hero-grain,
+.hero-mist {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-backdrop {
+  z-index: 0;
+  opacity: var(--hero-backdrop-opacity, 1);
+  transform: translate(var(--hero-parallax-x), var(--hero-parallax-y));
+  background:
+    radial-gradient(var(--radial-1-size, 900px) circle at var(--radial-1-x, 15%) var(--radial-1-y, 20%), var(--hero-glow, rgba(255, 255, 255, 0.06)) 0%, rgba(0, 0, 0, 0) 60%),
+    radial-gradient(var(--radial-2-size, 700px) circle at var(--radial-2-x, 85%) var(--radial-2-y, 15%), var(--hero-accent, rgba(255, 255, 255, 0.08)) 0%, rgba(0, 0, 0, 0) 55%),
+    linear-gradient(160deg, var(--hero-bg-1, #1a1a1a) 0%, var(--hero-bg-2, #242424) 100%);
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+.hero-vignette {
+  z-index: 1;
+  background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, var(--hero-vignette-opacity, 0.35)) 100%);
+}
+
+.hero-grain {
+  z-index: 2;
+  opacity: var(--hero-grain-opacity, 0.08);
+  background-image:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0) 100%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.04) 0 1px, rgba(0, 0, 0, 0) 1px 3px);
+  mix-blend-mode: soft-light;
+}
+
 
 .hero-section > .model-container {
   width: 100%;
   height: 75vh;
   flex-shrink: 0;
+  z-index: 4;
 }
 
 .hero-section > .download-btn {
@@ -340,6 +415,37 @@ body {
   max-width: none;
   margin: 20px 0 40px 0;
   padding: 15px 50px;
+  z-index: 4;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 4;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.scroll-hint.hidden {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.scroll-dot {
+  width: 4px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  animation: scrollPulse 1.8s ease infinite;
+}
+
+@keyframes scrollPulse {
+  0% { transform: translateY(0); opacity: 0.6; }
+  60% { transform: translateY(8px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.6; }
 }
 
 .model-container {
@@ -783,4 +889,25 @@ body {
   .contact-item {
     padding: 16px;
   }
+}
+
+.hero-mist {
+  z-index: 2;
+  opacity: var(--mist-opacity, 0.45);
+  filter: blur(var(--mist-blur, 70px));
+  transform: scale(var(--mist-scale, 1.2));
+  transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s ease;
+  mix-blend-mode: screen;
+}
+
+.hero-mist.layer-1 {
+  background: radial-gradient(600px circle at 40% 35%, var(--mist-color-1) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+.hero-mist.layer-2 {
+  background: radial-gradient(520px circle at 65% 45%, var(--mist-color-2) 0%, rgba(0, 0, 0, 0) 72%);
+}
+
+.hero-mist.layer-3 {
+  background: radial-gradient(480px circle at 50% 60%, var(--mist-color-3) 0%, rgba(0, 0, 0, 0) 75%);
 }

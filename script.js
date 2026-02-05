@@ -1,10 +1,15 @@
 const downloadButton = document.getElementById('downloadButton');
 const sound = document.getElementById('sound');
 const modelContainer = document.getElementById('modelContainer');
+const heroSection = document.querySelector('.hero-section');
+const scrollHint = document.getElementById('scrollHint');
+const heroMistLayers = document.querySelectorAll('.hero-mist');
 
 // Mobile fallback elements (added in index.html)
 const mobileFallback = document.getElementById('mobileFallback');
 const load3DButton = document.getElementById('load3DButton');
+const resetColorsBtn = document.getElementById('resetColors');
+const applyModelPresetBtn = document.getElementById('applyModelPreset');
 
 // Three.js Setup
 const scene = new THREE.Scene();
@@ -66,6 +71,11 @@ scene.add(point2);
 const point3 = new THREE.PointLight(0xffffff, 0.3, 15);
 point3.position.set(0, -3, 5);
 scene.add(point3);
+
+// Rim light for metallic edge definition
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
+rimLight.position.set(6, 4, -6);
+scene.add(rimLight);
 
 const defaultMaterialSettings = {
   metalness: 0.95,
@@ -146,7 +156,7 @@ function tryLoadNext() {
     model.children.forEach((child, idx) => {
       console.log(`Child ${idx}:`, child.type, child.name, child);
     });
-    
+
     // Center and scale the model
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
@@ -200,6 +210,7 @@ function tryLoadNext() {
     clearTimeout(fallbackTimer);
     console.log('Model added to scene. Final position:', model.position);
     console.log('Model loaded successfully!', url, gltf);
+    applyEnvironmentSettings();
     // Show the canvas now that the model is available
     modelContainer.classList.add('model-loaded');
   }, (xhr) => {
@@ -298,6 +309,57 @@ const buttonConfig = {
   borderRadius: 50,
   fontWeight: 600,
 };
+
+// Hero environment configuration
+const environmentConfig = {
+  rimIntensity: 0.6,
+  rimColor: 0xffffff,
+  rimX: 6,
+  rimY: 4,
+  rimZ: -6,
+  mistEnabled: true,
+  mistOpacity: 0.45,
+  mistBlur: 70,
+  mistScale: 1.2,
+  mistParallax: 10,
+  mistColor1: 0xffffff,
+  mistColor2: 0xb4b4b4,
+  mistColor3: 0x787878,
+  vignetteOpacity: 0.35,
+  grainOpacity: 0.08,
+  backdropOpacity: 1,
+  parallaxStrength: 10,
+  radial1Size: 900,
+  radial1X: 15,
+  radial1Y: 20,
+  radial2Size: 700,
+  radial2X: 85,
+  radial2Y: 15,
+};
+
+function applyEnvironmentSettings() {
+  rimLight.intensity = environmentConfig.rimIntensity;
+  rimLight.color.setHex(environmentConfig.rimColor);
+  rimLight.position.set(environmentConfig.rimX, environmentConfig.rimY, environmentConfig.rimZ);
+
+  if (heroSection) {
+    heroSection.style.setProperty('--hero-vignette-opacity', environmentConfig.vignetteOpacity);
+    heroSection.style.setProperty('--hero-grain-opacity', environmentConfig.grainOpacity);
+    heroSection.style.setProperty('--hero-backdrop-opacity', environmentConfig.backdropOpacity);
+    heroSection.style.setProperty('--mist-opacity', environmentConfig.mistEnabled ? environmentConfig.mistOpacity : 0);
+    heroSection.style.setProperty('--mist-blur', `${environmentConfig.mistBlur}px`);
+    heroSection.style.setProperty('--mist-scale', environmentConfig.mistScale);
+    heroSection.style.setProperty('--mist-color-1', hexToRgba(`#${environmentConfig.mistColor1.toString(16).padStart(6, '0')}`, 0.35));
+    heroSection.style.setProperty('--mist-color-2', hexToRgba(`#${environmentConfig.mistColor2.toString(16).padStart(6, '0')}`, 0.25));
+    heroSection.style.setProperty('--mist-color-3', hexToRgba(`#${environmentConfig.mistColor3.toString(16).padStart(6, '0')}`, 0.2));
+    heroSection.style.setProperty('--radial-1-size', `${environmentConfig.radial1Size}px`);
+    heroSection.style.setProperty('--radial-1-x', `${environmentConfig.radial1X}%`);
+    heroSection.style.setProperty('--radial-1-y', `${environmentConfig.radial1Y}%`);
+    heroSection.style.setProperty('--radial-2-size', `${environmentConfig.radial2Size}px`);
+    heroSection.style.setProperty('--radial-2-x', `${environmentConfig.radial2X}%`);
+    heroSection.style.setProperty('--radial-2-y', `${environmentConfig.radial2Y}%`);
+  }
+}
 
 // Preset settings
 const presetSettings = {
@@ -634,6 +696,17 @@ function applyButtonStyles() {
 }
 
 applyButtonStyles();
+applyEnvironmentSettings();
+
+if (scrollHint) {
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 40) {
+      scrollHint.classList.add('hidden');
+    } else {
+      scrollHint.classList.remove('hidden');
+    }
+  });
+}
 
 // Animation loop
 function animate() {
@@ -643,6 +716,23 @@ function animate() {
   if (!isMobileDevice || !isTouching) {
     mouseX += (targetMouseX - mouseX) * 0.1;
     mouseY += (targetMouseY - mouseY) * 0.1;
+  }
+
+  if (heroSection && model) {
+    const parallaxX = model.rotation.y * environmentConfig.parallaxStrength * 12;
+    const parallaxY = model.rotation.x * environmentConfig.parallaxStrength * 12;
+    heroSection.style.setProperty('--hero-parallax-x', `${parallaxX}px`);
+    heroSection.style.setProperty('--hero-parallax-y', `${parallaxY}px`);
+  }
+
+  if (heroMistLayers.length > 0 && model) {
+    const mistX = model.rotation.y * environmentConfig.mistParallax * 12;
+    const mistY = model.rotation.x * environmentConfig.mistParallax * 12;
+    const factors = [0.35, 0.55, 0.8];
+    heroMistLayers.forEach((layer, index) => {
+      const factor = factors[index] || 0.5;
+      layer.style.transform = `translate(${mistX * factor}px, ${mistY * factor}px) scale(${environmentConfig.mistScale})`;
+    });
   }
   
   if (model) {
@@ -672,7 +762,7 @@ function animate() {
   if (hitboxConfig.visible) {
     drawHitboxVisualization();
   }
-  
+
   renderer.render(scene, camera);
 }
 
@@ -691,7 +781,7 @@ const designPanel = document.getElementById('designPanel');
 const designClose = document.getElementById('designClose');
 const designControls = document.getElementById('designControls');
 
-const designSettings = {
+const defaultDesignSettings = {
   // Colors
   primaryColor: '#f0f0f0',
   secondaryColor: '#121212',
@@ -701,6 +791,12 @@ const designSettings = {
   textColor: '#d6d6d6',
   textSecondaryColor: '#9e9e9e',
   borderColor: '#242424',
+
+  // Hero environment colors
+  heroBg1: '#1c1c1c',
+  heroBg2: '#242424',
+  heroAccent: '#3a3a3a',
+  heroGlow: '#4a4a4a',
   
   // Button styles
   buttonTextColor: '#e1e0e0',
@@ -716,6 +812,8 @@ const designSettings = {
   navbarOpacity: '0.95',
 };
 
+const designSettings = { ...defaultDesignSettings };
+
 const controlConfig = {
   primaryColor: { type: 'color', label: 'Primary Color' },
   secondaryColor: { type: 'color', label: 'Secondary Color' },
@@ -725,6 +823,10 @@ const controlConfig = {
   textColor: { type: 'color', label: 'Text Color' },
   textSecondaryColor: { type: 'color', label: 'Secondary Text Color' },
   borderColor: { type: 'color', label: 'Border Color' },
+  heroBg1: { type: 'color', label: 'Hero Background 1' },
+  heroBg2: { type: 'color', label: 'Hero Background 2' },
+  heroAccent: { type: 'color', label: 'Hero Accent' },
+  heroGlow: { type: 'color', label: 'Hero Glow' },
   buttonTextColor: { type: 'color', label: 'Button Text Color' },
   buttonOpacity: { type: 'range', label: 'Button Glass Opacity', min: 0.3, max: 1, step: 0.1 },
   projectCardBg: { type: 'color', label: 'Card Background' },
@@ -754,6 +856,7 @@ function initDesignPanel() {
     if (config.type === 'color') {
       input = document.createElement('input');
       input.type = 'color';
+      input.dataset.key = key;
       input.value = designSettings[key].replace(/[^#0-9a-f]/gi, '') || '#ffffff';
       
       input.addEventListener('input', (e) => {
@@ -773,6 +876,7 @@ function initDesignPanel() {
       
       input = document.createElement('input');
       input.type = 'range';
+      input.dataset.key = key;
       input.min = config.min;
       input.max = config.max;
       input.step = config.step;
@@ -780,6 +884,7 @@ function initDesignPanel() {
       
       const valueDisplay = document.createElement('span');
       valueDisplay.className = 'control-value';
+      valueDisplay.dataset.key = key;
       valueDisplay.textContent = parseFloat(designSettings[key]).toFixed(2);
       
       input.addEventListener('input', (e) => {
@@ -800,6 +905,31 @@ function initDesignPanel() {
   applyDesignSettings();
 }
 
+function hexToRgba(hex, alpha) {
+  const cleaned = hex.replace('#', '');
+  if (cleaned.length !== 6) return `rgba(0, 0, 0, ${alpha})`;
+  const r = parseInt(cleaned.slice(0, 2), 16);
+  const g = parseInt(cleaned.slice(2, 4), 16);
+  const b = parseInt(cleaned.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function syncDesignControls() {
+  const inputs = designControls.querySelectorAll('input[data-key]');
+  inputs.forEach(input => {
+    const key = input.dataset.key;
+    if (!key || !(key in designSettings)) return;
+    input.value = designSettings[key];
+
+    if (input.type === 'range') {
+      const valueDisplay = input.parentElement.querySelector('.control-value');
+      if (valueDisplay) {
+        valueDisplay.textContent = parseFloat(designSettings[key]).toFixed(2);
+      }
+    }
+  });
+}
+
 function applyDesignSettings() {
   // Set CSS variables
   document.documentElement.style.setProperty('--primary-color', designSettings.primaryColor);
@@ -813,6 +943,10 @@ function applyDesignSettings() {
   document.documentElement.style.setProperty('--card-hover-bg', designSettings.projectCardHoverBg);
   document.documentElement.style.setProperty('--heading-size', designSettings.headingSize + 'rem');
   document.documentElement.style.setProperty('--body-font-size', designSettings.bodyFontSize);
+  document.documentElement.style.setProperty('--hero-bg-1', designSettings.heroBg1);
+  document.documentElement.style.setProperty('--hero-bg-2', designSettings.heroBg2);
+  document.documentElement.style.setProperty('--hero-accent', hexToRgba(designSettings.heroAccent, 0.25));
+  document.documentElement.style.setProperty('--hero-glow', hexToRgba(designSettings.heroGlow, 0.18));
 
   // Update body background
   document.body.style.background = designSettings.backgroundColor;
@@ -937,6 +1071,10 @@ if (exportBtn) {
       textColor: designSettings.textColor,
       textSecondaryColor: designSettings.textSecondaryColor,
       borderColor: designSettings.borderColor,
+      heroBg1: designSettings.heroBg1,
+      heroBg2: designSettings.heroBg2,
+      heroAccent: designSettings.heroAccent,
+      heroGlow: designSettings.heroGlow,
       buttonTextColor: designSettings.buttonTextColor,
       projectCardBg: designSettings.projectCardBg,
       projectCardHoverBg: designSettings.projectCardHoverBg,
@@ -953,6 +1091,21 @@ if (exportBtn) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  });
+}
+
+if (resetColorsBtn) {
+  resetColorsBtn.addEventListener('click', () => {
+    Object.assign(designSettings, defaultDesignSettings);
+    localStorage.setItem('designSettings', JSON.stringify(designSettings));
+    syncDesignControls();
+    applyDesignSettings();
+  });
+}
+
+if (applyModelPresetBtn) {
+  applyModelPresetBtn.addEventListener('click', () => {
+    applyPreset(presetSettings);
   });
 }
 
@@ -1238,6 +1391,34 @@ renderFolder.add(renderControl, 'exposure', 0, 2, 0.1).onChange((val) => {
   renderer.toneMappingExposure = val;
 }).name('Tone Mapping Exposure');
 
+renderFolder.add(environmentConfig, 'mistEnabled').onChange(applyEnvironmentSettings).name('Mist Enabled');
+renderFolder.add(environmentConfig, 'mistOpacity', 0, 1, 0.05).onChange(applyEnvironmentSettings).name('Mist Opacity');
+renderFolder.add(environmentConfig, 'mistBlur', 10, 160, 5).onChange(applyEnvironmentSettings).name('Mist Blur');
+renderFolder.add(environmentConfig, 'mistScale', 0.6, 2, 0.05).onChange(applyEnvironmentSettings).name('Mist Scale');
+renderFolder.add(environmentConfig, 'mistParallax', 0, 20, 1).name('Mist Parallax');
+renderFolder.addColor(environmentConfig, 'mistColor1').onChange(applyEnvironmentSettings).name('Mist Color 1');
+renderFolder.addColor(environmentConfig, 'mistColor2').onChange(applyEnvironmentSettings).name('Mist Color 2');
+renderFolder.addColor(environmentConfig, 'mistColor3').onChange(applyEnvironmentSettings).name('Mist Color 3');
+renderFolder.add(environmentConfig, 'radial1Size', 400, 1400, 20).onChange(applyEnvironmentSettings).name('Radial 1 Size');
+renderFolder.add(environmentConfig, 'radial1X', 0, 100, 1).onChange(applyEnvironmentSettings).name('Radial 1 X');
+renderFolder.add(environmentConfig, 'radial1Y', 0, 100, 1).onChange(applyEnvironmentSettings).name('Radial 1 Y');
+renderFolder.add(environmentConfig, 'radial2Size', 400, 1400, 20).onChange(applyEnvironmentSettings).name('Radial 2 Size');
+renderFolder.add(environmentConfig, 'radial2X', 0, 100, 1).onChange(applyEnvironmentSettings).name('Radial 2 X');
+renderFolder.add(environmentConfig, 'radial2Y', 0, 100, 1).onChange(applyEnvironmentSettings).name('Radial 2 Y');
+
+// Environment controls
+const envFolder = gui.addFolder('Environment');
+envFolder.add(environmentConfig, 'rimIntensity', 0, 2, 0.05).onChange(applyEnvironmentSettings).name('Rim Intensity');
+envFolder.addColor(environmentConfig, 'rimColor').onChange(applyEnvironmentSettings).name('Rim Color');
+envFolder.add(environmentConfig, 'rimX', -10, 10, 0.5).onChange(applyEnvironmentSettings).name('Rim X');
+envFolder.add(environmentConfig, 'rimY', -10, 10, 0.5).onChange(applyEnvironmentSettings).name('Rim Y');
+envFolder.add(environmentConfig, 'rimZ', -10, 10, 0.5).onChange(applyEnvironmentSettings).name('Rim Z');
+envFolder.add(environmentConfig, 'vignetteOpacity', 0, 0.8, 0.05).onChange(applyEnvironmentSettings).name('Vignette');
+envFolder.add(environmentConfig, 'grainOpacity', 0, 0.2, 0.01).onChange(applyEnvironmentSettings).name('Grain');
+envFolder.add(environmentConfig, 'backdropOpacity', 0.2, 1, 0.05).onChange(applyEnvironmentSettings).name('Backdrop');
+envFolder.add(environmentConfig, 'parallaxStrength', 0, 20, 1).name('Parallax');
+
+
 // Mouse & Interaction controls
 const mouseFolder = gui.addFolder('Interaction');
 mouseFolder.add(interactionConfig, 'rotationSpeedX', 0, 3, 0.1).name('Rotation Speed X');
@@ -1304,6 +1485,7 @@ cameraFolder.close();
 materialFolder.close();
 lightFolder.close();
 renderFolder.close();
+envFolder.close();
 interactionFolder.close();
 hitboxFolder.close();
 buttonFolder.close();

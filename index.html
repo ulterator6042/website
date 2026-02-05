@@ -43,6 +43,10 @@
     <div class="design-tab-content active" id="tab-colors">
       <div class="design-controls" id="designControls"></div>
       <button id="exportColors" class="export-btn">📋 Export Colors</button>
+      <div class="design-actions">
+        <button id="resetColors" class="export-btn secondary-btn">↺ Reset Theme</button>
+        <button id="applyModelPreset" class="export-btn secondary-btn">⚡ Apply Model Preset</button>
+      </div>
     </div>
 
     <!-- Model 3D Controls Tab -->
@@ -61,6 +65,12 @@
   </div>
 
   <div class="hero-section">
+    <div class="hero-backdrop"></div>
+    <div class="hero-vignette"></div>
+    <div class="hero-grain"></div>
+    <div class="hero-mist layer-1"></div>
+    <div class="hero-mist layer-2"></div>
+    <div class="hero-mist layer-3"></div>
     <div class="model-container" id="modelContainer">
       <!-- Mobile fallback: static image and explicit load 3D button -->
       <div class="mobile-fallback" id="mobileFallback">
@@ -69,6 +79,9 @@
       </div>
     </div>
     <button id="downloadButton" class="download-btn">Download CV</button>
+    <div class="scroll-hint" id="scrollHint">
+      <span class="scroll-dot"></span>
+    </div>
   </div>
 
   <section class="projects-section" id="projectsSection">
