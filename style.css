@@ -70,39 +70,45 @@ body {
 /* lil-gui mobile sidebar: smaller, scrollable, collapsible */
 .gui-toggle {
   position: fixed;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
+  top: 12px;
+  transform: none;
   z-index: 1200;
-  padding: 8px 10px;
-  font-size: 0.8rem;
-  border: none;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
-  color: #fff;
-  background: rgba(20, 20, 20, 0.8);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(18, 18, 18, 0.6);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.22), 0 8px 18px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .gui-collapsed .lil-gui {
   transform: translateX(110%);
-  transition: transform 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .lil-gui {
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .download-btn {
   padding: 15px 50px;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(18, 18, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.22), 0 8px 18px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   position: absolute;
   bottom: 40px;
   z-index: 100;
@@ -110,9 +116,14 @@ body {
   white-space: nowrap;
 }
 
+/* Match GUI button style on CV button */
+.download-btn {
+  border-radius: 999px;
+}
+
 .download-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.3), 0 10px 22px rgba(0, 0, 0, 0.5);
 }
 
 .download-btn:active {
@@ -171,6 +182,20 @@ body {
     max-width: 300px;
   }
 
+  /* Add breathing room on small screens */
+  .model-container {
+    width: calc(100vw - 24px);
+    height: calc(100vh - 24px);
+    margin: 12px;
+  }
+
+  .gui-toggle {
+    right: 10px;
+    top: 10px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
   /* Ensure fallback 'View 3D' button is prominent on phones */
   #load3DButton {
     position: static;
@@ -181,6 +206,11 @@ body {
     transform: none;
   }
 
+  /* Hide the load 3D button on mobile */
+  #load3DButton {
+    display: none;
+  }
+
   .download-btn:hover {
     transform: translateX(-50%) translateY(-2px);
   }
@@ -189,30 +219,34 @@ body {
     transform: translateX(-50%) translateY(0);
   }
 
-  /* Make GUI compact on mobile */
+  /* Rebuilt mobile GUI layout */
   .lil-gui {
     position: fixed !important;
-    bottom: 80px !important;
-    right: 0 !important;
+    top: 56px !important;
+    right: 12px !important;
     left: auto;
-    max-width: 85vw;
-    max-height: calc(100vh - 120px);
-    font-size: 10px !important;
-    z-index: 50;
-    width: min(260px, 85vw);
-    overflow: hidden;
-    touch-action: pan-y;
+    width: min(280px, calc(100vw - 24px));
+    max-height: calc(100vh - 72px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 11px !important;
+    z-index: 80;
+    border-radius: 14px;
+    padding-bottom: 8px;
+  }
+
+  .gui-collapsed .lil-gui {
+    display: none;
+  }
+
+  .lil-gui .title {
+    position: sticky;
+    top: 0;
+    z-index: 2;
   }
 
   .lil-gui .children {
-    max-height: calc(100vh - 160px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Hide GUI title on mobile to save space */
-  .lil-gui > .title {
-    display: none;
+    overflow: visible;
   }
 }
 

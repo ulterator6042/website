@@ -34,7 +34,7 @@ renderer.physicallyCorrectLights = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
-camera.position.z = 2;
+camera.position.z = isMobileDevice ? 2.8 : 2;
 
 // Lighting (richer environment with multiple light sources)
 const ambientLight = new THREE.AmbientLight(0xe60f07, 0.3);
@@ -106,7 +106,7 @@ fallbackTimer = setTimeout(() => {
 }, 8000);
 
 // Decide whether to auto-load the 3D model. On phones/low-power devices we wait for explicit user action.
-const shouldAutoLoadModel = !(isMobileDevice || isLowPowerDevice);
+const shouldAutoLoadModel = !isLowPowerDevice;
 
 // Prefer a lighter model first for mobile devices
 const modelUrls = isMobileDevice ? ['3d/3d_nodraco.glb', '3d/3d.glb', '3d/3d.gltf', '3d/abstract.glb', '3d/abstract/scene.gltf'] : ['3d/abstract.glb', '3d/abstract/scene.gltf', '3d/3d_nodraco.glb', '3d/3d.glb', '3d/3d.gltf'];
@@ -147,7 +147,8 @@ function tryLoadNext() {
       });
     }
     
-    const scale = maxDim === 0 ? 1 : 2 / maxDim;
+    const targetSize = isMobileDevice ? 1.4 : 2;
+    const scale = maxDim === 0 ? 1 : targetSize / maxDim;
     console.log('Calculated scale:', scale, 'maxDim:', maxDim);
     
     model.scale.multiplyScalar(scale);
@@ -170,6 +171,13 @@ function tryLoadNext() {
       }
     });
     console.log('Mesh count:', meshCount);
+
+    if (meshCount === 0) {
+      console.warn('Model has no meshes. Trying next URL...');
+      model = null;
+      tryLoadNext();
+      return;
+    }
     
     scene.add(model);
     clearTimeout(fallbackTimer);
@@ -200,13 +208,33 @@ if (shouldAutoLoadModel) {
   startModelLoading();
 }
 
+function resizeRendererToContainer() {
+  const width = modelContainer.clientWidth;
+  const height = modelContainer.clientHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+
 if (load3DButton) {
   load3DButton.addEventListener('click', (e) => {
     e.preventDefault();
     if (mobileFallback) mobileFallback.style.display = 'none';
     modelContainer.classList.add('model-loaded');
     startModelLoading();
+    resizeRendererToContainer();
   });
+}
+
+// On mobile, allow tapping the model area to start loading if auto-load is disabled
+if (isMobileDevice && !shouldAutoLoadModel) {
+  modelContainer.addEventListener('touchstart', () => {
+    if (mobileFallback) mobileFallback.style.display = 'none';
+    modelContainer.classList.add('model-loaded');
+    startModelLoading();
+    resizeRendererToContainer();
+  }, { passive: true });
 }
 
 // Mouse tracking with inertia
@@ -245,11 +273,8 @@ const hitboxConfig = {
   visible: false, // Hidden by default on mobile
 };
 
-// Button style configuration
+// Button style configuration (layout only - visual style is in CSS)
 const buttonConfig = {
-  backgroundColor: '#667eea',
-  secondaryColor: '#764ba2',
-  textColor: '#ffffff',
   padding: isMobileDevice ? 12 : 15,
   fontSize: isMobileDevice ? 16 : 18,  // Larger touch targets on mobile
   borderRadius: 50,
@@ -531,16 +556,7 @@ function debounce(func, wait) {
 
 // Handle window resize and orientation changes
 const handleResize = debounce(() => {
-  const width = modelContainer.clientWidth;
-  const height = modelContainer.clientHeight;
-  
-  // Update camera
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  
-  // Update renderer
-  renderer.setSize(width, height);
-  
+  resizeRendererToContainer();
   // Update hitbox canvas
   createHitboxCanvas();
 }, 100);
@@ -550,8 +566,6 @@ window.addEventListener('orientationchange', handleResize);
 
 // Apply button styles
 function applyButtonStyles() {
-  downloadButton.style.background = `linear-gradient(135deg, ${buttonConfig.backgroundColor} 0%, ${buttonConfig.secondaryColor} 100%)`;
-  downloadButton.style.color = buttonConfig.textColor;
   downloadButton.style.padding = `${buttonConfig.padding}px ${buttonConfig.padding * 3.3}px`;
   downloadButton.style.fontSize = `${buttonConfig.fontSize / 16}rem`;
   downloadButton.style.borderRadius = `${buttonConfig.borderRadius}px`;
@@ -622,7 +636,7 @@ function setupMobileGuiToggle() {
   const toggle = document.createElement('button');
   toggle.className = 'gui-toggle';
   toggle.type = 'button';
-  toggle.textContent = 'Menu';
+  toggle.textContent = 'GUI';
   toggle.addEventListener('click', () => {
     const isCollapsed = document.body.classList.toggle('gui-collapsed');
     if (isCollapsed) {
@@ -829,17 +843,8 @@ hitboxFolder.add(hitboxConfig, 'width', 0.1, 1.5, 0.05).name('Width (Rectangle)'
 hitboxFolder.add(hitboxConfig, 'height', 0.1, 1.5, 0.05).name('Height (Rectangle)');
 hitboxFolder.add(hitboxConfig, 'visible').name('Visualize Hitbox');
 
-// Button style controls
+// Button style controls (layout only)
 const buttonFolder = gui.addFolder('Button Style');
-buttonFolder.addColor(buttonConfig, 'backgroundColor').onChange((val) => {
-  applyButtonStyles();
-}).name('Primary Color');
-buttonFolder.addColor(buttonConfig, 'secondaryColor').onChange((val) => {
-  applyButtonStyles();
-}).name('Secondary Color');
-buttonFolder.addColor(buttonConfig, 'textColor').onChange((val) => {
-  applyButtonStyles();
-}).name('Text Color');
 buttonFolder.add(buttonConfig, 'padding', 5, 30, 1).onChange((val) => {
   applyButtonStyles();
 }).name('Padding');
