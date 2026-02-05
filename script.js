@@ -623,6 +623,85 @@ downloadButton.addEventListener('click', () => {
 });
 
 // ============================================
+// DESIGN PANEL
+// ============================================
+const designBtn = document.getElementById('designBtn');
+const designPanel = document.getElementById('designPanel');
+const designClose = document.getElementById('designClose');
+const designControls = document.getElementById('designControls');
+
+const designSettings = {
+  primaryColor: '#667eea',
+  secondaryColor: '#764ba2',
+  accentColor: '#ffbfa8',
+  backgroundColor: '#1a1a1a',
+  textColor: '#ffffff',
+};
+
+function initDesignPanel() {
+  // Load saved design settings
+  const saved = localStorage.getItem('designSettings');
+  if (saved) {
+    Object.assign(designSettings, JSON.parse(saved));
+    applyDesignSettings();
+  }
+
+  // Create controls
+  Object.keys(designSettings).forEach(key => {
+    const group = document.createElement('div');
+    group.className = 'design-control-group';
+    
+    const label = document.createElement('label');
+    label.textContent = key.replace(/([A-Z])/g, ' $1').trim();
+    
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = designSettings[key];
+    input.addEventListener('input', (e) => {
+      designSettings[key] = e.target.value;
+      applyDesignSettings();
+      localStorage.setItem('designSettings', JSON.stringify(designSettings));
+    });
+    
+    group.appendChild(label);
+    group.appendChild(input);
+    designControls.appendChild(group);
+  });
+}
+
+function applyDesignSettings() {
+  document.documentElement.style.setProperty('--primary-color', designSettings.primaryColor);
+  document.documentElement.style.setProperty('--secondary-color', designSettings.secondaryColor);
+  document.documentElement.style.setProperty('--accent-color', designSettings.accentColor);
+  document.documentElement.style.setProperty('--text-color', designSettings.textColor);
+  
+  // Update specific elements
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    navbar.style.borderBottomColor = `${designSettings.primaryColor}33`;
+  }
+  
+  const projectCards = document.querySelectorAll('.project-card, .contact-item');
+  projectCards.forEach(card => {
+    card.style.borderColor = `${designSettings.primaryColor}40`;
+  });
+}
+
+if (designBtn) {
+  designBtn.addEventListener('click', () => {
+    designPanel.classList.toggle('active');
+  });
+}
+
+if (designClose) {
+  designClose.addEventListener('click', () => {
+    designPanel.classList.remove('active');
+  });
+}
+
+initDesignPanel();
+
+// ============================================
 // NAVIGATION & SMOOTH SCROLLING
 // ============================================
 const navToggle = document.getElementById('navToggle');
