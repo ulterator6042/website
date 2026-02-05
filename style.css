@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><defs><linearGradient id="metallic" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23e8e8e8;stop-opacity:1" /><stop offset="30%" style="stop-color:%23a1a1a1;stop-opacity:1" /><stop offset="70%" style="stop-color:%238a8a8a;stop-opacity:1" /><stop offset="100%" style="stop-color:%23606060;stop-opacity:1" /></linearGradient><filter id="shine"><feGaussianBlur in="SourceGraphic" stdDeviation="1" /></filter></defs><path d="M8 2 L8 24 L14 18 L20 28 L24 26 L18 16 L26 16 Z" fill="url(%23metallic)" stroke="%23505050" stroke-width="0.5" filter="url(%23shine)" /><circle cx="10" cy="6" r="1.5" fill="%23ffffff" opacity="0.6" /></svg>') 8 2, auto;
 }
 
 :root {
