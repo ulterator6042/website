@@ -216,6 +216,8 @@ let targetMouseX = 0;
 let targetMouseY = 0;
 let rotationVelocityX = 0;
 let rotationVelocityY = 0;
+let lastTouchX = 0;
+let lastTouchY = 0;
 
 const interactionConfig = {
   rotationSpeedX: 0.4,
@@ -428,8 +430,12 @@ document.addEventListener('touchstart', (event) => {
     if (mouseInHitbox) {
       touchStartX = x;
       touchStartY = y;
-      targetMouseX = x;
-      targetMouseY = y;
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+      if (!isMobileDevice) {
+        targetMouseX = x;
+        targetMouseY = y;
+      }
     }
   }
 }, { passive: false });
@@ -443,8 +449,18 @@ document.addEventListener('touchmove', (event) => {
     
     mouseInHitbox = isMouseInHitbox(x, y);
     if (mouseInHitbox) {
-      targetMouseX = x;
-      targetMouseY = y;
+      if (isMobileDevice) {
+        const dx = (touch.clientX - lastTouchX) / window.innerWidth;
+        const dy = (touch.clientY - lastTouchY) / window.innerHeight;
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+
+        rotationVelocityY += dx * Math.PI * interactionConfig.rotationSpeedX * 1.5;
+        rotationVelocityX += dy * Math.PI * interactionConfig.rotationSpeedY * 1.5;
+      } else {
+        targetMouseX = x;
+        targetMouseY = y;
+      }
     }
   }
 }, { passive: false });
@@ -549,8 +565,10 @@ function animate() {
   requestAnimationFrame(animate);
   
   // Update mouse position with smoothing
-  mouseX += (targetMouseX - mouseX) * 0.1;
-  mouseY += (targetMouseY - mouseY) * 0.1;
+  if (!isMobileDevice || !isTouching) {
+    mouseX += (targetMouseX - mouseX) * 0.1;
+    mouseY += (targetMouseY - mouseY) * 0.1;
+  }
   
   if (model) {
     // Auto-orbit
@@ -558,7 +576,7 @@ function animate() {
       model.rotation.y += interactionConfig.autoOrbitSpeed * 0.01;
     } else {
       // Manual rotation with inertia (only if in hitbox)
-      if (mouseInHitbox) {
+      if (mouseInHitbox && (!isMobileDevice || !isTouching)) {
         rotationVelocityX += (mouseY * Math.PI * 0.5 * interactionConfig.rotationSpeedY - model.rotation.x) * 0.01;
         rotationVelocityY += (mouseX * Math.PI * interactionConfig.rotationSpeedX - model.rotation.y) * 0.01;
       }
@@ -594,6 +612,30 @@ downloadButton.addEventListener('click', () => {
 // GUI CONTROLS FOR FINE-TUNING
 // ============================================
 const gui = new window.lil.GUI({ title: 'Model Settings' });
+
+function setupMobileGuiToggle() {
+  if (!isMobileDevice) return;
+
+  document.body.classList.add('gui-collapsed');
+  gui.close();
+
+  const toggle = document.createElement('button');
+  toggle.className = 'gui-toggle';
+  toggle.type = 'button';
+  toggle.textContent = 'Menu';
+  toggle.addEventListener('click', () => {
+    const isCollapsed = document.body.classList.toggle('gui-collapsed');
+    if (isCollapsed) {
+      gui.close();
+    } else {
+      gui.open();
+    }
+  });
+
+  document.body.appendChild(toggle);
+}
+
+setupMobileGuiToggle();
 
 // Model controls
 const modelFolder = gui.addFolder('Model');
