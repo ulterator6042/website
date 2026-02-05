@@ -147,7 +147,7 @@ function tryLoadNext() {
       });
     }
     
-    const targetSize = isMobileDevice ? 1.4 : 2;
+    const targetSize = isMobileDevice ? 1.4 : 2.8;
     const scale = maxDim === 0 ? 1 : targetSize / maxDim;
     console.log('Calculated scale:', scale, 'maxDim:', maxDim);
     
@@ -620,6 +620,36 @@ animate();
 // Download button - play sound
 downloadButton.addEventListener('click', () => {
   sound.play();
+});
+
+// ============================================
+// NAVIGATION & SMOOTH SCROLLING
+// ============================================
+const navToggle = document.getElementById('navToggle');
+const navMenu = document.getElementById('navMenu');
+const navLinks = document.querySelectorAll('.nav-link');
+
+if (navToggle) {
+  navToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('active');
+  });
+}
+
+navLinks.forEach(link => {
+  link.addEventListener('click', (e) => {
+    // Close mobile menu
+    navMenu.classList.remove('active');
+    
+    // Get target section
+    const targetId = link.getAttribute('href');
+    if (targetId && targetId !== '#') {
+      e.preventDefault();
+      const target = document.querySelector(targetId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
 });
 
 // ============================================
