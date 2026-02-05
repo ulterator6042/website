@@ -2,7 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="metallic" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23f5f5f5;stop-opacity:1" /><stop offset="20%" style="stop-color:%23d0d0d0;stop-opacity:1" /><stop offset="40%" style="stop-color:%23a1a1a1;stop-opacity:1" /><stop offset="70%" style="stop-color:%238a8a8a;stop-opacity:1" /><stop offset="100%" style="stop-color:%23505050;stop-opacity:1" /></linearGradient><radialGradient id="shine" cx="35%" cy="35%" r="50%"><stop offset="0%" style="stop-color:%23ffffff;stop-opacity:0.8" /><stop offset="50%" style="stop-color:%23ffffff;stop-opacity:0.3" /><stop offset="100%" style="stop-color:%23ffffff;stop-opacity:0" /></radialGradient><filter id="glossy"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" /><feComponentTransfer><feFuncA type="linear" slope="0.8" /></feComponentTransfer></filter></defs><path d="M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z" fill="url(%23metallic)" stroke="%23303030" stroke-width="1.2" stroke-linejoin="round" /><ellipse cx="20" cy="12" rx="4" ry="5" fill="url(%23shine)" filter="url(%23glossy)" /></svg>') 12 4, auto;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="58" height="58" viewBox="0 0 64 64"><defs><linearGradient id="metallic" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23f5f5f5;stop-opacity:1" /><stop offset="20%" style="stop-color:%23d0d0d0;stop-opacity:1" /><stop offset="40%" style="stop-color:%23a1a1a1;stop-opacity:1" /><stop offset="70%" style="stop-color:%238a8a8a;stop-opacity:1" /><stop offset="100%" style="stop-color:%23505050;stop-opacity:1" /></linearGradient><radialGradient id="shine" cx="35%" cy="35%" r="50%"><stop offset="0%" style="stop-color:%23ffffff;stop-opacity:0.8" /><stop offset="50%" style="stop-color:%23ffffff;stop-opacity:0.3" /><stop offset="100%" style="stop-color:%23ffffff;stop-opacity:0" /></radialGradient><filter id="glossy"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" /><feComponentTransfer><feFuncA type="linear" slope="0.8" /></feComponentTransfer></filter></defs><path d="M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z" fill="url(%23metallic)" stroke="%23303030" stroke-width="1.2" stroke-linejoin="round" /><ellipse cx="20" cy="12" rx="4" ry="5" fill="url(%23shine)" filter="url(%23glossy)" /></svg>') 11 4, auto;
 }
 
 /* Ensure clickable elements don't change cursor */
@@ -29,14 +29,17 @@ a, button, [role="button"], input[type="button"], input[type="submit"] {
   position: fixed;
   pointer-events: none;
   z-index: 9999;
-  width: 40px;
-  height: 40px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(200, 200, 200, 0.6), rgba(161, 161, 161, 0.3), transparent);
-  border: 2px solid rgba(161, 161, 161, 0.8);
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 1), rgba(220, 220, 220, 0.8), rgba(180, 180, 180, 0.5), rgba(161, 161, 161, 0.2), transparent);
+  border: 2.5px solid rgba(161, 161, 161, 0.9);
   border-radius: 50%;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 0 20px rgba(255, 255, 255, 0.9),
+    0 0 35px rgba(200, 200, 200, 0.7),
+    inset 0 0 12px rgba(255, 255, 255, 0.9),
+    inset -2px -2px 8px rgba(0, 0, 0, 0.2);
   animation: twinkle-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  display: none;
 }
 
 :root {

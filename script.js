@@ -1521,12 +1521,12 @@ document.addEventListener('click', (event) => {
   // Create twinkle element
   const twinkle = document.createElement('div');
   twinkle.className = 'cursor-twinkle';
+  twinkle.style.display = 'block'; // Ensure it's visible
   document.body.appendChild(twinkle);
   
-  // Position at click location
-  twinkle.style.left = (event.clientX - 20) + 'px'; // Center the 40px element
-  twinkle.style.top = (event.clientY - 20) + 'px';
-  twinkle.style.display = 'block';
+  // Position at click location (center the 50px element)
+  twinkle.style.left = (event.clientX - 25) + 'px';
+  twinkle.style.top = (event.clientY - 25) + 'px';
   
   // Remove twinkle after animation completes
   setTimeout(() => {
