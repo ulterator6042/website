@@ -172,7 +172,7 @@ function tryLoadNext() {
       });
     }
     
-    const targetSize = isMobileDevice ? 1.4 : 2.8;
+    const targetSize = isMobileDevice ? 1.2 : 2.8;
     const scale = maxDim === 0 ? 1 : targetSize / maxDim;
     console.log('Calculated scale:', scale, 'maxDim:', maxDim);
     
@@ -540,11 +540,14 @@ document.addEventListener('mousemove', (event) => {
 let touchStartX = 0;
 let touchStartY = 0;
 let isTouching = false;
+let touchIntent = null;
+let touchStartClientX = 0;
+let touchStartClientY = 0;
 
 // Prevent default mobile browser gestures that interfere with interaction
 if (isMobileDevice) {
   document.addEventListener('touchmove', (e) => {
-    if (isTouching && mouseInHitbox && (e.target === modelContainer || e.target === renderer.domElement)) {
+    if (touchIntent === 'rotate' && mouseInHitbox && (e.target === modelContainer || e.target === renderer.domElement)) {
       e.preventDefault();
     }
   }, { passive: false });
@@ -563,6 +566,9 @@ if (isMobileDevice) {
 document.addEventListener('touchstart', (event) => {
   if (event.touches.length === 1) {
     const touch = event.touches[0];
+    touchStartClientX = touch.clientX;
+    touchStartClientY = touch.clientY;
+    touchIntent = null;
     const pointer = getPointerInModelContainer(touch.clientX, touch.clientY);
     if (!pointer.inside) {
       mouseInHitbox = false;
@@ -591,23 +597,36 @@ document.addEventListener('touchmove', (event) => {
     if (!pointer.inside) {
       isTouching = false;
       mouseInHitbox = false;
+      touchIntent = null;
       return;
     }
 
     mouseInHitbox = isMouseInHitbox(pointer.x, pointer.y);
     if (mouseInHitbox) {
-      event.preventDefault();
-      if (isMobileDevice) {
-        const dx = (touch.clientX - lastTouchX) / window.innerWidth;
-        const dy = (touch.clientY - lastTouchY) / window.innerHeight;
-        lastTouchX = touch.clientX;
-        lastTouchY = touch.clientY;
+      if (!touchIntent) {
+        const intentDx = touch.clientX - touchStartClientX;
+        const intentDy = touch.clientY - touchStartClientY;
+        if (Math.abs(intentDy) > Math.abs(intentDx) * 1.2 && Math.abs(intentDy) > 6) {
+          touchIntent = 'scroll';
+          isTouching = false;
+          return;
+        }
+        if (Math.abs(intentDx) > Math.abs(intentDy) * 1.2 && Math.abs(intentDx) > 6) {
+          touchIntent = 'rotate';
+        }
+      }
 
-        rotationVelocityY += dx * Math.PI * interactionConfig.rotationSpeedX * 1.5;
-        rotationVelocityX += dy * Math.PI * interactionConfig.rotationSpeedY * 1.5;
-      } else {
-        targetMouseX = x;
-        targetMouseY = y;
+      if (touchIntent === 'rotate') {
+        event.preventDefault();
+        if (isMobileDevice) {
+          const dx = (touch.clientX - lastTouchX) / window.innerWidth;
+          const dy = (touch.clientY - lastTouchY) / window.innerHeight;
+          lastTouchX = touch.clientX;
+          lastTouchY = touch.clientY;
+
+          rotationVelocityY += dx * Math.PI * interactionConfig.rotationSpeedX * 1.5;
+          rotationVelocityX += dy * Math.PI * interactionConfig.rotationSpeedY * 1.5;
+        }
       }
     }
   }
@@ -615,6 +634,7 @@ document.addEventListener('touchmove', (event) => {
 
 document.addEventListener('touchend', (event) => {
   isTouching = false;
+  touchIntent = null;
   if (event.touches.length === 0) {
     // Optional: reset on touch end if desired
     // targetMouseX = 0;
@@ -1197,7 +1217,10 @@ navLinks.forEach(link => {
       e.preventDefault();
       const target = document.querySelector(targetId);
       if (target) {
-        target.scrollIntoView({ behavior: 'smooth' });
+        const navbar = document.querySelector('.navbar');
+        const navOffset = navbar ? navbar.offsetHeight : 0;
+        const targetTop = target.getBoundingClientRect().top + window.scrollY - navOffset;
+        window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
       }
     }
   });
