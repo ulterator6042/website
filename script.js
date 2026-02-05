@@ -2,6 +2,10 @@ const downloadButton = document.getElementById('downloadButton');
 const sound = document.getElementById('sound');
 const modelContainer = document.getElementById('modelContainer');
 
+// Mobile fallback elements (added in index.html)
+const mobileFallback = document.getElementById('mobileFallback');
+const load3DButton = document.getElementById('load3DButton');
+
 // Three.js Setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, modelContainer.clientWidth / modelContainer.clientHeight, 0.1, 1000);
@@ -10,16 +14,18 @@ const camera = new THREE.PerspectiveCamera(75, modelContainer.clientWidth / mode
 const isMobileDevice = /Android|WebOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
 const isLowPowerDevice = navigator.deviceMemory && navigator.deviceMemory <= 4;
 
-const renderer = new THREE.WebGLRenderer({ 
-  antialias: !isLowPowerDevice, 
+const renderer = new THREE.WebGLRenderer({
+  antialias: !isLowPowerDevice,
   alpha: true,
   powerPreference: isMobileDevice ? 'low-power' : 'high-performance'
 });
 
+// Lower pixel ratio for mobile/low-power devices to save GPU
+const effectivePixelRatio = (isMobileDevice || isLowPowerDevice) ? Math.min(window.devicePixelRatio || 1, 1) : (window.devicePixelRatio || 1);
 renderer.setSize(modelContainer.clientWidth, modelContainer.clientHeight);
-renderer.setPixelRatio(isMobileDevice ? Math.min(window.devicePixelRatio, 2) : window.devicePixelRatio);
+renderer.setPixelRatio(effectivePixelRatio);
 renderer.setClearColor(0x000000, 0);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !isMobileDevice && !isLowPowerDevice;
 modelContainer.appendChild(renderer.domElement);
 
 // Better renderer settings for PBR and color
@@ -99,9 +105,13 @@ fallbackTimer = setTimeout(() => {
   if (!model) createFallbackCube();
 }, 8000);
 
-// Try loading .glb first, then .gltf as fallback
-const modelUrls = ['3d/abstract.glb', '3d/abstract/scene.gltf', '3d/3d_nodraco.glb', '3d/3d.glb', '3d/3d.gltf'];
+// Decide whether to auto-load the 3D model. On phones/low-power devices we wait for explicit user action.
+const shouldAutoLoadModel = !(isMobileDevice || isLowPowerDevice);
+
+// Prefer a lighter model first for mobile devices
+const modelUrls = isMobileDevice ? ['3d/3d_nodraco.glb', '3d/3d.glb', '3d/3d.gltf', '3d/abstract.glb', '3d/abstract/scene.gltf'] : ['3d/abstract.glb', '3d/abstract/scene.gltf', '3d/3d_nodraco.glb', '3d/3d.glb', '3d/3d.gltf'];
 let attempt = 0;
+let startedLoading = false;
 function tryLoadNext() {
   if (attempt >= modelUrls.length) {
     console.error('All model load attempts failed');
@@ -165,6 +175,8 @@ function tryLoadNext() {
     clearTimeout(fallbackTimer);
     console.log('Model added to scene. Final position:', model.position);
     console.log('Model loaded successfully!', url, gltf);
+    // Show the canvas now that the model is available
+    modelContainer.classList.add('model-loaded');
   }, (xhr) => {
     if (xhr && xhr.loaded && xhr.total) {
       console.log(`Model load progress (${url}): ${Math.round((xhr.loaded / xhr.total) * 100)}%`);
@@ -176,7 +188,26 @@ function tryLoadNext() {
   });
 }
 
-tryLoadNext();
+// Kick off loading depending on device - on mobile, wait for user to press 'View 3D'
+function startModelLoading() {
+  if (startedLoading) return;
+  startedLoading = true;
+  tryLoadNext();
+}
+
+if (shouldAutoLoadModel) {
+  if (mobileFallback) mobileFallback.style.display = 'none';
+  startModelLoading();
+}
+
+if (load3DButton) {
+  load3DButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (mobileFallback) mobileFallback.style.display = 'none';
+    modelContainer.classList.add('model-loaded');
+    startModelLoading();
+  });
+}
 
 // Mouse tracking with inertia
 let mouseX = 0;

@@ -37,6 +37,38 @@ body {
   touch-action: none;
 }
 
+/* Canvas starts hidden until the 3D model is loaded (prevents heavy GPU work on mobile until user opts in) */
+.model-container canvas {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.model-container.model-loaded canvas {
+  display: block;
+}
+
+/* Mobile fallback preview shown on small devices until user loads 3D */
+.mobile-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.25));
+}
+
+.mobile-fallback img {
+  width: 90%;
+  max-width: 640px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  object-fit: cover;
+}
+
 .download-btn {
   padding: 15px 50px;
   font-size: 1.2rem;
@@ -106,6 +138,16 @@ body {
     transform: translateX(-50%);
     width: calc(100% - 40px);
     max-width: 300px;
+  }
+
+  /* Ensure fallback 'View 3D' button is prominent on phones */
+  #load3DButton {
+    position: static;
+    width: calc(100% - 40px);
+    max-width: 320px;
+    bottom: auto;
+    left: auto;
+    transform: none;
   }
 
   .download-btn:hover {

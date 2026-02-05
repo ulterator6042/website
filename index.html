@@ -12,7 +12,13 @@
 </head>
 <body>
   <div class="hero-section">
-    <div class="model-container" id="modelContainer"></div>
+    <div class="model-container" id="modelContainer">
+      <!-- Mobile fallback: static image and explicit load 3D button -->
+      <div class="mobile-fallback" id="mobileFallback">
+        <img src="image.jpg" alt="Artwork preview" id="fallbackImage">
+        <button id="load3DButton" class="download-btn">View 3D</button>
+      </div>
+    </div>
     <button id="downloadButton" class="download-btn">Download CV</button>
   </div>
   <audio id="sound" src="sound.mp3"></audio>
