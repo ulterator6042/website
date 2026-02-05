@@ -1515,7 +1515,7 @@ buttonFolder.close();
 settingsFolder.close();
 
 // ============================================
-// CURSOR CLOSET - CUSTOM CURSOR SELECTOR
+// CURSOR CLOSET - POPUP MENU WITH RANDOM CURSORS
 // ============================================
 
 // Define available cursor options
@@ -1530,7 +1530,7 @@ const cursorOptions = [
     id: 'neon',
     name: 'Neon',
     icon: '⚡',
-    css: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"58\" height=\"58\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"neo\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%2300ff88;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:%2300cc66;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23009944;stop-opacity:1\" /></linearGradient></defs><path d=\"M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z\" fill=\"url(%23neo)\" stroke=\"%2300ff88\" stroke-width=\"1\" glow=\"url(%23neo)\" /></svg>') 11 4, auto"
+    css: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"58\" height=\"58\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"neo\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%2300ff88;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:%2300cc66;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23009944;stop-opacity:1\" /></linearGradient></defs><path d=\"M12 4 L12 48 L28 36 L40 56 L52 52 L40 32 L52 32 Z\" fill=\"url(%23neo)\" stroke=\"%2300ff88\" stroke-width=\"1\" /></svg>') 11 4, auto"
   },
   {
     id: 'gold',
@@ -1552,61 +1552,65 @@ const cursorOptions = [
   }
 ];
 
-// Shuffle and select 5 random cursors
+let currentCursor = null;
+
+// Get 4 random cursors from available options
 function getRandomCursors() {
-  return cursorOptions.sort(() => Math.random() - 0.5).slice(0, 5);
+  return cursorOptions.sort(() => Math.random() - 0.5).slice(0, 4);
 }
 
-let currentCursor = null;
-let availableCursors = getRandomCursors();
-
-// Initialize cursor closet UI
+// Initialize cursor closet popup
 function initCursorCloset() {
-  const grid = document.getElementById('cursorClosetGrid');
-  const openBtn = document.getElementById('cursorClosetBtn');
-  const closeBtn = document.getElementById('cursorClosetClose');
-  const modal = document.getElementById('cursorClosetModal');
+  const btn = document.getElementById('cursorClosetBtn');
+  const menu = document.getElementById('cursorPopupMenu');
+  const grid = document.getElementById('cursorPopupGrid');
 
-  // Generate cursor options
-  availableCursors.forEach(cursor => {
-    const option = document.createElement('div');
-    option.className = 'cursor-option';
-    option.id = `cursor-${cursor.id}`;
-    option.innerHTML = `
-      <div class="cursor-option-icon">${cursor.icon}</div>
-      <div class="cursor-option-name">${cursor.name}</div>
+  // Generate 4 random cursors for popup
+  const randomCursors = getRandomCursors();
+
+  randomCursors.forEach(cursor => {
+    const item = document.createElement('div');
+    item.className = 'cursor-popup-item';
+    item.id = `popup-cursor-${cursor.id}`;
+    item.innerHTML = `
+      <div class="cursor-popup-icon">${cursor.icon}</div>
+      <div class="cursor-popup-label">${cursor.name}</div>
+      <div class="cursor-popup-checkmark">✓</div>
     `;
 
-    option.addEventListener('click', () => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
       switchCursor(cursor);
+      menu.classList.remove('active');
+      btn.classList.remove('active');
     });
 
-    grid.appendChild(option);
+    grid.appendChild(item);
   });
 
-  // Modal controls
-  openBtn.addEventListener('click', () => {
-    modal.classList.add('active');
+  // Toggle popup on button click
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('active');
+    btn.classList.toggle('active');
   });
 
-  closeBtn.addEventListener('click', () => {
-    modal.classList.remove('active');
-  });
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.classList.remove('active');
+  // Close popup when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.remove('active');
+      btn.classList.remove('active');
     }
   });
 }
 
 // Switch to selected cursor
 function switchCursor(cursor) {
-  // Remove active class from all options
-  document.querySelectorAll('.cursor-option').forEach(opt => opt.classList.remove('active'));
-
-  // Add active class to selected
-  document.getElementById(`cursor-${cursor.id}`).classList.add('active');
+  // Update active state in popup
+  document.querySelectorAll('.cursor-popup-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  document.getElementById(`popup-cursor-${cursor.id}`)?.classList.add('active');
 
   // Apply cursor style
   document.documentElement.style.cursor = cursor.css;
@@ -1616,22 +1620,22 @@ function switchCursor(cursor) {
   localStorage.setItem('selectedCursor', cursor.id);
 }
 
-// Load saved cursor preference
+// Load saved cursor preference on page load
 function loadSavedCursor() {
   const saved = localStorage.getItem('selectedCursor');
   if (saved) {
-    const cursor = availableCursors.find(c => c.id === saved);
+    const cursor = cursorOptions.find(c => c.id === saved);
     if (cursor) {
       switchCursor(cursor);
       return;
     }
   }
 
-  // Default to first cursor
-  switchCursor(availableCursors[0]);
+  // Default to first option
+  switchCursor(cursorOptions[0]);
 }
 
-// Initialize on page load
+// Initialize on load
 initCursorCloset();
 loadSavedCursor();
 
@@ -1652,5 +1656,6 @@ document.addEventListener('click', (event) => {
     twinkle.remove();
   }, 600);
 });
+
 
 
