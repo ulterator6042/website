@@ -172,7 +172,7 @@ function tryLoadNext() {
       });
     }
     
-    const targetSize = isMobileDevice ? 1.2 : 2.8;
+    const targetSize = isMobileDevice ? 2.4 : 2.8;
     const scale = maxDim === 0 ? 1 : targetSize / maxDim;
     console.log('Calculated scale:', scale, 'maxDim:', maxDim);
     
