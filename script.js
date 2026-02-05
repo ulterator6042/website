@@ -32,39 +32,48 @@ modelContainer.appendChild(renderer.domElement);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.physicallyCorrectLights = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 1.6;
 
-camera.position.z = isMobileDevice ? 2.8 : 2;
+camera.position.z = 2.5;
 
 // Lighting (richer environment with multiple light sources)
-const ambientLight = new THREE.AmbientLight(0xe60f07, 0.3);
+const ambientLight = new THREE.AmbientLight(0xa3a3a3, 1.05);
 scene.add(ambientLight);
 
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x666666, 0.4);
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x737373, 0.15);
 hemiLight.position.set(0, 50, 0);
+hemiLight.visible = false;
 scene.add(hemiLight);
 
-const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.15);
-directionalLight1.position.set(-10, 6, 5);
+const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.75);
+directionalLight1.position.set(-10, 5, 3);
 directionalLight1.castShadow = true;
 scene.add(directionalLight1);
 
-const directionalLight2 = new THREE.DirectionalLight(0x8a45f6, 1.1);
+const directionalLight2 = new THREE.DirectionalLight(0xb28585, 0.3);
 directionalLight2.position.set(-5, -3, 5);
 scene.add(directionalLight2);
 
 // Soft colored rim/fill point lights
-const point1 = new THREE.PointLight(0xffbfa8, 0.6, 10);
+const point1 = new THREE.PointLight(0xffbfa8, 0.9, 10);
 point1.position.set(2.5, 1.5, 2);
 scene.add(point1);
 
-const point2 = new THREE.PointLight(0x8fb6ff, 1.15, 10);
+const point2 = new THREE.PointLight(0x8fb6ff, 0.1, 10);
 point2.position.set(-2.5, 1, 3);
 scene.add(point2);
 
 const point3 = new THREE.PointLight(0xffffff, 0.3, 15);
 point3.position.set(0, -3, 5);
 scene.add(point3);
+
+const defaultMaterialSettings = {
+  metalness: 0.95,
+  roughness: 0.4,
+  color: 0xa1a1a1,
+  emissiveColor: 0x000000,
+  emissiveIntensity: 0.9,
+};
 
 // Load 3D Model
 const loader = new THREE.GLTFLoader();
@@ -92,7 +101,13 @@ let fallbackTimer = null;
 function createFallbackCube() {
   console.warn('Using fallback cube — model did not load.');
   const geo = new THREE.BoxGeometry(1, 1, 1);
-  const mat = new THREE.MeshStandardMaterial({ metalness: 1.0, roughness: 0.15, color: 0xdddddd });
+  const mat = new THREE.MeshStandardMaterial({
+    metalness: defaultMaterialSettings.metalness,
+    roughness: defaultMaterialSettings.roughness,
+    color: defaultMaterialSettings.color,
+    emissive: defaultMaterialSettings.emissiveColor,
+    emissiveIntensity: defaultMaterialSettings.emissiveIntensity,
+  });
   const cube = new THREE.Mesh(geo, mat);
   cube.castShadow = true;
   cube.receiveShadow = true;
@@ -162,9 +177,11 @@ function tryLoadNext() {
       if (child.isMesh) {
         meshCount++;
         child.material = new THREE.MeshStandardMaterial({
-          metalness: 0.95,
-          roughness: 0.15,
-          color: 0xcccccc,
+          metalness: defaultMaterialSettings.metalness,
+          roughness: defaultMaterialSettings.roughness,
+          color: defaultMaterialSettings.color,
+          emissive: defaultMaterialSettings.emissiveColor,
+          emissiveIntensity: defaultMaterialSettings.emissiveIntensity,
         });
         child.castShadow = true;
         child.receiveShadow = true;
@@ -250,17 +267,18 @@ let lastTouchY = 0;
 const interactionConfig = {
   rotationSpeedX: 0.4,
   rotationSpeedY: 0.2,
-  inertia: 0.8,
-  returnSpeed: 0.05,
+  inertia: 0.99,
+  returnSpeed: 0.2,
   autoOrbit: false,
   autoOrbitSpeed: 0.5,
 };
 
 // Optimize interaction for mobile
 if (isMobileDevice) {
-  interactionConfig.rotationSpeedX = 0.6;  // Increase sensitivity for touch
-  interactionConfig.rotationSpeedY = 0.3;
-  interactionConfig.inertia = 0.85;  // Slightly higher inertia for smooth momentum
+  // Keep mobile defaults aligned with the current preset values
+  interactionConfig.rotationSpeedX = 0.4;
+  interactionConfig.rotationSpeedY = 0.2;
+  interactionConfig.inertia = 0.99;
 }
 
 // Hitbox configuration
@@ -283,18 +301,18 @@ const buttonConfig = {
 
 // Preset settings
 const presetSettings = {
-  model: { posX: 0, posY: 0, posZ: 0 },
-  camera: { z: 2 },
-  material: { metalness: 0.95, roughness: 0.35, color: 6647176, emissiveColor: 0, emissiveIntensity: 0.6 },
-  ambient: { intensity: 0.3, color: 15077127, visible: true },
-  hemisphere: { intensity: 0.4, skyColor: 16777215, groundColor: 6710886, visible: true },
-  directional1: { intensity: 1.15, color: 16777215, x: -10, y: 6, z: 5, visible: true },
-  directional2: { intensity: 1.1, color: 14935011, x: -5, y: -3, z: 5, visible: true },
-  point1: { intensity: 0.6, color: 16760744, x: 2.5, y: 1.5, z: 2, visible: true },
-  point2: { intensity: 1.15, color: 9418495, x: -2.5, y: 1, z: 3, visible: true },
+  model: { posX: 0, posY: 0, posZ: -2 },
+  camera: { z: 2.5 },
+  material: { metalness: 0.95, roughness: 0.4, color: 10592673, emissiveColor: 0, emissiveIntensity: 0.9 },
+  ambient: { intensity: 1.05, color: 10724259, visible: true },
+  hemisphere: { intensity: 0.15, skyColor: 16777215, groundColor: 7566195, visible: false },
+  directional1: { intensity: 1.75, color: 16777215, x: -10, y: 5, z: 3, visible: true },
+  directional2: { intensity: 0.3, color: 11699589, x: -5, y: -3, z: 5, visible: true },
+  point1: { intensity: 0.9, color: 16760744, x: 2.5, y: 1.5, z: 2, visible: true },
+  point2: { intensity: 0.1, color: 9418495, x: -2.5, y: 1, z: 3, visible: true },
   point3: { intensity: 0.3, color: 16777215, x: 0, y: -3, z: 5, visible: true },
-  rendering: { bgColor: 1841692, exposure: 1.5 },
-  interaction: { rotationSpeedX: 0.4, rotationSpeedY: 0.2, inertia: 0.8, returnSpeed: 0.05, autoOrbit: false, autoOrbitSpeed: 0.5 },
+  rendering: { bgColor: 1841692, exposure: 1.6 },
+  interaction: { rotationSpeedX: 0.4, rotationSpeedY: 0.2, inertia: 0.99, returnSpeed: 0.2, autoOrbit: false, autoOrbitSpeed: 0.5 },
 };
 
 function applyPreset(preset) {
@@ -356,24 +374,46 @@ function applyPreset(preset) {
 
   dir2Control.intensity = preset.directional2.intensity;
   dir2Control.color = preset.directional2.color;
+  dir2Control.x = preset.directional2.x;
+  dir2Control.y = preset.directional2.y;
+  dir2Control.z = preset.directional2.z;
   dir2Control.visible = preset.directional2.visible;
   directionalLight2.intensity = preset.directional2.intensity;
   directionalLight2.color.setHex(preset.directional2.color);
+  directionalLight2.position.set(preset.directional2.x, preset.directional2.y, preset.directional2.z);
   directionalLight2.visible = preset.directional2.visible;
 
   point1Control.intensity = preset.point1.intensity;
+  point1Control.color = preset.point1.color;
+  point1Control.x = preset.point1.x;
+  point1Control.y = preset.point1.y;
+  point1Control.z = preset.point1.z;
   point1Control.visible = preset.point1.visible;
   point1.intensity = preset.point1.intensity;
+  point1.color.setHex(preset.point1.color);
+  point1.position.set(preset.point1.x, preset.point1.y, preset.point1.z);
   point1.visible = preset.point1.visible;
 
   point2Control.intensity = preset.point2.intensity;
+  point2Control.color = preset.point2.color;
+  point2Control.x = preset.point2.x;
+  point2Control.y = preset.point2.y;
+  point2Control.z = preset.point2.z;
   point2Control.visible = preset.point2.visible;
   point2.intensity = preset.point2.intensity;
+  point2.color.setHex(preset.point2.color);
+  point2.position.set(preset.point2.x, preset.point2.y, preset.point2.z);
   point2.visible = preset.point2.visible;
 
   point3Control.intensity = preset.point3.intensity;
+  point3Control.color = preset.point3.color;
+  point3Control.x = preset.point3.x;
+  point3Control.y = preset.point3.y;
+  point3Control.z = preset.point3.z;
   point3Control.visible = preset.point3.visible;
   point3.intensity = preset.point3.intensity;
+  point3.color.setHex(preset.point3.color);
+  point3.position.set(preset.point3.x, preset.point3.y, preset.point3.z);
   point3.visible = preset.point3.visible;
 
   // Apply rendering
@@ -407,16 +447,30 @@ function isMouseInHitbox(mouseX, mouseY) {
   return true;
 }
 
+function getPointerInModelContainer(clientX, clientY) {
+  const rect = modelContainer.getBoundingClientRect();
+  const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+  if (!inside) {
+    return { inside: false, x: 0, y: 0 };
+  }
+
+  const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  const y = -(((clientY - rect.top) / rect.height) * 2 - 1);
+  return { inside: true, x, y };
+}
+
 let mouseInHitbox = false;
 document.addEventListener('mousemove', (event) => {
-  const x = (event.clientX / window.innerWidth) * 2 - 1;
-  const y = -(event.clientY / window.innerHeight) * 2 + 1;
-  
-  mouseInHitbox = isMouseInHitbox(x, y);
-  
+  const pointer = getPointerInModelContainer(event.clientX, event.clientY);
+  if (!pointer.inside) {
+    mouseInHitbox = false;
+    return;
+  }
+
+  mouseInHitbox = isMouseInHitbox(pointer.x, pointer.y);
   if (mouseInHitbox) {
-    targetMouseX = x;
-    targetMouseY = y;
+    targetMouseX = pointer.x;
+    targetMouseY = pointer.y;
   }
 });
 
@@ -428,7 +482,7 @@ let isTouching = false;
 // Prevent default mobile browser gestures that interfere with interaction
 if (isMobileDevice) {
   document.addEventListener('touchmove', (e) => {
-    if (e.target === modelContainer || e.target === renderer.domElement) {
+    if (isTouching && mouseInHitbox && (e.target === modelContainer || e.target === renderer.domElement)) {
       e.preventDefault();
     }
   }, { passive: false });
@@ -446,20 +500,23 @@ if (isMobileDevice) {
 
 document.addEventListener('touchstart', (event) => {
   if (event.touches.length === 1) {
-    isTouching = true;
     const touch = event.touches[0];
-    const x = (touch.clientX / window.innerWidth) * 2 - 1;
-    const y = -(touch.clientY / window.innerHeight) * 2 + 1;
-    
-    mouseInHitbox = isMouseInHitbox(x, y);
+    const pointer = getPointerInModelContainer(touch.clientX, touch.clientY);
+    if (!pointer.inside) {
+      mouseInHitbox = false;
+      return;
+    }
+
+    mouseInHitbox = isMouseInHitbox(pointer.x, pointer.y);
     if (mouseInHitbox) {
-      touchStartX = x;
-      touchStartY = y;
+      isTouching = true;
+      touchStartX = pointer.x;
+      touchStartY = pointer.y;
       lastTouchX = touch.clientX;
       lastTouchY = touch.clientY;
       if (!isMobileDevice) {
-        targetMouseX = x;
-        targetMouseY = y;
+        targetMouseX = pointer.x;
+        targetMouseY = pointer.y;
       }
     }
   }
@@ -467,13 +524,17 @@ document.addEventListener('touchstart', (event) => {
 
 document.addEventListener('touchmove', (event) => {
   if (event.touches.length === 1 && isTouching) {
-    event.preventDefault();
     const touch = event.touches[0];
-    const x = (touch.clientX / window.innerWidth) * 2 - 1;
-    const y = -(touch.clientY / window.innerHeight) * 2 + 1;
-    
-    mouseInHitbox = isMouseInHitbox(x, y);
+    const pointer = getPointerInModelContainer(touch.clientX, touch.clientY);
+    if (!pointer.inside) {
+      isTouching = false;
+      mouseInHitbox = false;
+      return;
+    }
+
+    mouseInHitbox = isMouseInHitbox(pointer.x, pointer.y);
     if (mouseInHitbox) {
+      event.preventDefault();
       if (isMobileDevice) {
         const dx = (touch.clientX - lastTouchX) / window.innerWidth;
         const dy = (touch.clientY - lastTouchY) / window.innerHeight;
@@ -529,14 +590,14 @@ function createHitboxCanvas() {
   if (hitboxCanvas) hitboxCanvas.remove();
   hitboxCanvas = document.createElement('canvas');
   hitboxCanvas.id = 'hitboxCanvas';
-  hitboxCanvas.style.position = 'fixed';
+  hitboxCanvas.style.position = 'absolute';
   hitboxCanvas.style.top = '0';
   hitboxCanvas.style.left = '0';
-  hitboxCanvas.style.zIndex = '999';
+  hitboxCanvas.style.zIndex = '10';
   hitboxCanvas.style.pointerEvents = 'none';
-  hitboxCanvas.width = window.innerWidth;
-  hitboxCanvas.height = window.innerHeight;
-  document.body.appendChild(hitboxCanvas);
+  hitboxCanvas.width = modelContainer.clientWidth;
+  hitboxCanvas.height = modelContainer.clientHeight;
+  modelContainer.appendChild(hitboxCanvas);
 }
 
 createHitboxCanvas();
@@ -632,22 +693,22 @@ const designControls = document.getElementById('designControls');
 
 const designSettings = {
   // Colors
-  primaryColor: '#667eea',
-  secondaryColor: '#764ba2',
-  accentColor: '#ffbfa8',
-  backgroundColor: '#1a1a1a',
+  primaryColor: '#f0f0f0',
+  secondaryColor: '#121212',
+  accentColor: '#949494',
+  backgroundColor: '#1c1c1c',
   sectionBackground: '#242424',
-  textColor: '#ffffff',
-  textSecondaryColor: 'rgba(255, 255, 255, 0.7)',
-  borderColor: 'rgba(255, 255, 255, 0.15)',
+  textColor: '#d6d6d6',
+  textSecondaryColor: '#9e9e9e',
+  borderColor: '#242424',
   
   // Button styles
-  buttonTextColor: '#ffffff',
+  buttonTextColor: '#e1e0e0',
   buttonOpacity: '0.6',
   
   // Section styles
   projectCardBg: 'rgba(255, 255, 255, 0.06)',
-  projectCardHoverBg: 'rgba(255, 255, 255, 0.1)',
+  projectCardHoverBg: '#383838',
   
   // Typography
   headingSize: '2.5',
@@ -1046,10 +1107,10 @@ cameraFolder.add(camera.position, 'z', 0.5, 10, 0.5).onChange(() => {
 const materialFolder = gui.addFolder('Material');
 const materialControl = {
   metalness: 0.95,
-  roughness: 0.35,
-  color: 0x656d88,
+  roughness: 0.4,
+  color: 0xa1a1a1,
   emissiveColor: 0x000000,
-  emissiveIntensity: 0,
+  emissiveIntensity: 0.9,
 };
 materialFolder.add(materialControl, 'metalness', 0, 1, 0.05).onChange((val) => {
   if (model) {
@@ -1090,7 +1151,7 @@ materialFolder.add(materialControl, 'emissiveIntensity', 0, 2, 0.1).onChange((va
 // Lighting controls
 const lightFolder = gui.addFolder('Lighting');
 
-const ambientControl = { intensity: 0.3, color: 0xe60f07, visible: true };
+const ambientControl = { intensity: 1.05, color: 0xa3a3a3, visible: true };
 lightFolder.add(ambientControl, 'intensity', 0, 2, 0.05).onChange((val) => {
   ambientLight.intensity = val;
 }).name('Ambient Intensity');
@@ -1101,7 +1162,7 @@ lightFolder.add(ambientControl, 'visible').onChange((val) => {
   ambientLight.visible = val;
 }).name('Ambient Visible');
 
-const hemiControl = { intensity: 0.4, skyColor: 0xffffff, groundColor: 0x666666, visible: true };
+const hemiControl = { intensity: 0.15, skyColor: 0xffffff, groundColor: 0x737373, visible: false };
 lightFolder.add(hemiControl, 'intensity', 0, 2, 0.05).onChange((val) => {
   hemiLight.intensity = val;
 }).name('Hemisphere Intensity');
@@ -1115,7 +1176,7 @@ lightFolder.add(hemiControl, 'visible').onChange((val) => {
   hemiLight.visible = val;
 }).name('Hemisphere Visible');
 
-const dir1Control = { intensity: 1.15, color: 0xffffff, x: -10, y: 6, z: 5, visible: true };
+const dir1Control = { intensity: 1.75, color: 0xffffff, x: -10, y: 5, z: 3, visible: true };
 lightFolder.add(dir1Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   directionalLight1.intensity = val;
 }).name('Dir Light 1 Intensity');
@@ -1132,7 +1193,7 @@ lightFolder.add(dir1Control, 'visible').onChange((val) => {
   directionalLight1.visible = val;
 }).name('Dir Light 1 Visible');
 
-const dir2Control = { intensity: 1.1, color: 0x8a45f6, x: -5, y: -3, z: 5, visible: true };
+const dir2Control = { intensity: 0.3, color: 0xb28585, x: -5, y: -3, z: 5, visible: true };
 lightFolder.add(dir2Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   directionalLight2.intensity = val;
 }).name('Dir Light 2 Intensity');
@@ -1143,7 +1204,7 @@ lightFolder.add(dir2Control, 'visible').onChange((val) => {
   directionalLight2.visible = val;
 }).name('Dir Light 2 Visible');
 
-const point1Control = { intensity: 0.6, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true };
+const point1Control = { intensity: 0.9, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true };
 lightFolder.add(point1Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point1.intensity = val;
 }).name('Point Light 1 Intensity');
@@ -1151,7 +1212,7 @@ lightFolder.add(point1Control, 'visible').onChange((val) => {
   point1.visible = val;
 }).name('Point Light 1 Visible');
 
-const point2Control = { intensity: 1.15, color: 0x8fb6ff, x: -2.5, y: 1, z: 3, visible: true };
+const point2Control = { intensity: 0.1, color: 0x8fb6ff, x: -2.5, y: 1, z: 3, visible: true };
 lightFolder.add(point2Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point2.intensity = val;
 }).name('Point Light 2 Intensity');
@@ -1169,7 +1230,7 @@ lightFolder.add(point3Control, 'visible').onChange((val) => {
 
 // Background & Rendering
 const renderFolder = gui.addFolder('Rendering');
-const renderControl = { bgColor: 0x1c1a1c, exposure: 1.5 };
+const renderControl = { bgColor: 0x1c1a1c, exposure: 1.6 };
 renderFolder.addColor(renderControl, 'bgColor').onChange((val) => {
   document.body.style.background = `#${val.toString(16).padStart(6, '0')}`;
 }).name('Background Color');
@@ -1234,6 +1295,9 @@ settingsFolder.add({ exportSettings: () => {
   console.log(JSON.stringify(settingsObj, null, 2));
   console.log('Save this to lock in your settings!');
 }}, 'exportSettings').name('📋 Export to Console');
+
+// Apply current preset values on load
+applyPreset(presetSettings);
 
 // Collapse all folders for compact sidebar appearance (user can expand as needed)
 cameraFolder.close();

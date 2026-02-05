@@ -349,7 +349,8 @@ body {
   border-radius: 0;
   border: none;
   overflow: hidden;
-  touch-action: none;
+  touch-action: pan-y;
+  position: relative;
 }
 
 /* Canvas starts hidden until the 3D model is loaded (prevents heavy GPU work on mobile until user opts in) */
