@@ -5,9 +5,19 @@ const modelContainer = document.getElementById('modelContainer');
 // Three.js Setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, modelContainer.clientWidth / modelContainer.clientHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+// Detect mobile device
+const isMobileDevice = /Android|WebOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
+const isLowPowerDevice = navigator.deviceMemory && navigator.deviceMemory <= 4;
+
+const renderer = new THREE.WebGLRenderer({ 
+  antialias: !isLowPowerDevice, 
+  alpha: true,
+  powerPreference: isMobileDevice ? 'low-power' : 'high-performance'
+});
 
 renderer.setSize(modelContainer.clientWidth, modelContainer.clientHeight);
+renderer.setPixelRatio(isMobileDevice ? Math.min(window.devicePixelRatio, 2) : window.devicePixelRatio);
 renderer.setClearColor(0x000000, 0);
 renderer.shadowMap.enabled = true;
 modelContainer.appendChild(renderer.domElement);
@@ -185,14 +195,21 @@ const interactionConfig = {
   autoOrbitSpeed: 0.5,
 };
 
+// Optimize interaction for mobile
+if (isMobileDevice) {
+  interactionConfig.rotationSpeedX = 0.6;  // Increase sensitivity for touch
+  interactionConfig.rotationSpeedY = 0.3;
+  interactionConfig.inertia = 0.85;  // Slightly higher inertia for smooth momentum
+}
+
 // Hitbox configuration
 const hitboxConfig = {
   enabled: true,
   shape: 'circle', // 'circle' or 'rectangle'
-  radius: 0.6, // for circle, normalized 0-1
+  radius: isMobileDevice ? 0.8 : 0.6, // Larger hitbox for touch
   width: 0.8, // for rectangle, normalized 0-1
   height: 0.8, // for rectangle
-  visible: true,
+  visible: false, // Hidden by default on mobile
 };
 
 // Button style configuration
@@ -200,8 +217,8 @@ const buttonConfig = {
   backgroundColor: '#667eea',
   secondaryColor: '#764ba2',
   textColor: '#ffffff',
-  padding: 15,
-  fontSize: 18,
+  padding: isMobileDevice ? 12 : 15,
+  fontSize: isMobileDevice ? 16 : 18,  // Larger touch targets on mobile
   borderRadius: 50,
   fontWeight: 600,
 };
@@ -345,6 +362,71 @@ document.addEventListener('mousemove', (event) => {
   }
 });
 
+// Touch event handling for mobile
+let touchStartX = 0;
+let touchStartY = 0;
+let isTouching = false;
+
+// Prevent default mobile browser gestures that interfere with interaction
+if (isMobileDevice) {
+  document.addEventListener('touchmove', (e) => {
+    if (e.target === modelContainer || e.target === renderer.domElement) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Prevent double-tap zoom
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+}
+
+document.addEventListener('touchstart', (event) => {
+  if (event.touches.length === 1) {
+    isTouching = true;
+    const touch = event.touches[0];
+    const x = (touch.clientX / window.innerWidth) * 2 - 1;
+    const y = -(touch.clientY / window.innerHeight) * 2 + 1;
+    
+    mouseInHitbox = isMouseInHitbox(x, y);
+    if (mouseInHitbox) {
+      touchStartX = x;
+      touchStartY = y;
+      targetMouseX = x;
+      targetMouseY = y;
+    }
+  }
+}, { passive: false });
+
+document.addEventListener('touchmove', (event) => {
+  if (event.touches.length === 1 && isTouching) {
+    event.preventDefault();
+    const touch = event.touches[0];
+    const x = (touch.clientX / window.innerWidth) * 2 - 1;
+    const y = -(touch.clientY / window.innerHeight) * 2 + 1;
+    
+    mouseInHitbox = isMouseInHitbox(x, y);
+    if (mouseInHitbox) {
+      targetMouseX = x;
+      targetMouseY = y;
+    }
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', (event) => {
+  isTouching = false;
+  if (event.touches.length === 0) {
+    // Optional: reset on touch end if desired
+    // targetMouseX = 0;
+    // targetMouseY = 0;
+  }
+}, { passive: false });
+
 // Hitbox visualization on canvas overlay
 function drawHitboxVisualization() {
   if (!hitboxCanvas) return;
@@ -384,9 +466,38 @@ function createHitboxCanvas() {
 }
 
 createHitboxCanvas();
-window.addEventListener('resize', () => {
+
+// Debounce function for resize/orientation changes
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Handle window resize and orientation changes
+const handleResize = debounce(() => {
+  const width = modelContainer.clientWidth;
+  const height = modelContainer.clientHeight;
+  
+  // Update camera
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  
+  // Update renderer
+  renderer.setSize(width, height);
+  
+  // Update hitbox canvas
   createHitboxCanvas();
-});\n\n// Apply button styles
+}, 100);
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', handleResize);\n\n// Apply button styles
 function applyButtonStyles() {
   downloadButton.style.background = `linear-gradient(135deg, ${buttonConfig.backgroundColor} 0%, ${buttonConfig.secondaryColor} 100%)`;
   downloadButton.style.color = buttonConfig.textColor;
@@ -434,15 +545,6 @@ applyButtonStyles();\n\n// Animation loop\nfunction animate() {\n  requestAnimat
 }
 
 animate();
-
-// Handle window resize
-window.addEventListener('resize', () => {
-  const width = modelContainer.clientWidth;
-  const height = modelContainer.clientHeight;
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
-});
 
 // Download button - play sound
 downloadButton.addEventListener('click', () => {

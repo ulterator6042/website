@@ -13,6 +13,7 @@ body {
   align-items: center;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
+  touch-action: manipulation;
 }
 
 .hero-section {
@@ -23,6 +24,7 @@ body {
   justify-content: center;
   align-items: center;
   gap: 40px;
+  position: relative;
 }
 
 .model-container {
@@ -32,6 +34,7 @@ body {
   border-radius: 0;
   border: none;
   overflow: hidden;
+  touch-action: none;
 }
 
 .download-btn {
@@ -45,6 +48,11 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  position: absolute;
+  bottom: 40px;
+  z-index: 100;
+  min-height: 50px;
+  white-space: nowrap;
 }
 
 .download-btn:hover {
@@ -54,4 +62,93 @@ body {
 
 .download-btn:active {
   transform: translateY(0);
+}
+
+/* Mobile optimization */
+@media (max-width: 1024px) {
+  .download-btn {
+    padding: 12px 30px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Tablet adjustments */
+  .hero-section {
+    gap: 30px;
+  }
+
+  .download-btn {
+    padding: 12px 30px;
+    font-size: 0.95rem;
+    bottom: 30px;
+  }
+
+  /* Hide lil-gui by default on small tablets */
+  .lil-gui {
+    max-height: 60vh;
+    max-width: 90vw;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Mobile phone specific */
+  .hero-section {
+    gap: 20px;
+  }
+
+  .download-btn {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 300px;
+  }
+
+  .download-btn:hover {
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  .download-btn:active {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Make GUI compact on mobile */
+  .lil-gui {
+    position: fixed !important;
+    bottom: 80px !important;
+    right: 0 !important;
+    left: auto;
+    max-width: 100vw;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    font-size: 11px !important;
+    z-index: 50;
+  }
+
+  /* Hide GUI title on mobile to save space */
+  .lil-gui > .title {
+    display: none;
+  }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (max-width: 1024px) {
+  body {
+    height: 100vh;
+  }
+
+  .hero-section {
+    height: 100vh;
+    gap: 10px;
+  }
+
+  .download-btn {
+    padding: 8px 15px;
+    font-size: 0.8rem;
+    bottom: 10px;
+  }
 }
