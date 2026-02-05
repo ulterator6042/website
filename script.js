@@ -704,6 +704,35 @@ function initDesignPanel() {
       group.appendChild(label);
       group.appendChild(input);
       designControls.appendChild(group);
+    } else if (config.type === 'range') {
+      const container = document.createElement('div');
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.gap = '10px';
+      
+      input = document.createElement('input');
+      input.type = 'range';
+      input.min = config.min;
+      input.max = config.max;
+      input.step = config.step;
+      input.value = designSettings[key];
+      
+      const valueDisplay = document.createElement('span');
+      valueDisplay.className = 'control-value';
+      valueDisplay.textContent = parseFloat(designSettings[key]).toFixed(2);
+      
+      input.addEventListener('input', (e) => {
+        designSettings[key] = e.target.value;
+        valueDisplay.textContent = parseFloat(e.target.value).toFixed(2);
+        applyDesignSettings();
+        localStorage.setItem('designSettings', JSON.stringify(designSettings));
+      });
+      
+      container.appendChild(input);
+      container.appendChild(valueDisplay);
+      group.appendChild(label);
+      group.appendChild(container);
+      designControls.appendChild(group);
     }
   });
 
@@ -813,6 +842,124 @@ if (designClose) {
 initDesignPanel();
 
 // ============================================
+// DESIGN PANEL TABS
+// ============================================
+const designTabs = document.querySelectorAll('.design-tab');
+const tabContents = document.querySelectorAll('.design-tab-content');
+
+designTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.getAttribute('data-tab');
+    
+    // Remove active from all tabs and contents
+    designTabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(content => content.classList.remove('active'));
+    
+    // Add active to clicked tab and corresponding content
+    tab.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+  });
+});
+
+// ============================================
+// COLOR EXPORT
+// ============================================
+const exportBtn = document.getElementById('exportColors');
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    const colorExport = {
+      primaryColor: designSettings.primaryColor,
+      secondaryColor: designSettings.secondaryColor,
+      accentColor: designSettings.accentColor,
+      backgroundColor: designSettings.backgroundColor,
+      sectionBackground: designSettings.sectionBackground,
+      textColor: designSettings.textColor,
+      textSecondaryColor: designSettings.textSecondaryColor,
+      borderColor: designSettings.borderColor,
+      buttonTextColor: designSettings.buttonTextColor,
+      projectCardBg: designSettings.projectCardBg,
+      projectCardHoverBg: designSettings.projectCardHoverBg,
+      exported: new Date().toISOString(),
+    };
+    
+    const jsonStr = JSON.stringify(colorExport, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `colors-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+// ============================================
+// NOTES BOARD
+// ============================================
+const noteInput = document.getElementById('noteInput');
+const addNoteBtn = document.getElementById('addNoteBtn');
+const notesList = document.getElementById('notesList');
+
+let notes = [];
+
+function loadNotes() {
+  const saved = localStorage.getItem('notes');
+  if (saved) {
+    notes = JSON.parse(saved);
+    renderNotes();
+  }
+}
+
+function saveNotes() {
+  localStorage.setItem('notes', JSON.stringify(notes));
+}
+
+function addNote() {
+  const text = noteInput.value.trim();
+  if (text === '') return;
+  
+  const note = {
+    id: Date.now(),
+    text: text,
+    timestamp: new Date().toLocaleString(),
+  };
+  
+  notes.unshift(note);
+  saveNotes();
+  renderNotes();
+  noteInput.value = '';
+}
+
+function renderNotes() {
+  notesList.innerHTML = '';
+  notes.forEach(note => {
+    const noteEl = document.createElement('div');
+    noteEl.className = 'note-item';
+    noteEl.innerHTML = `
+      <div>${note.text}</div>
+      <span class="note-time">${note.timestamp}</span>
+    `;
+    notesList.appendChild(noteEl);
+  });
+}
+
+if (addNoteBtn) {
+  addNoteBtn.addEventListener('click', addNote);
+}
+
+if (noteInput) {
+  noteInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      addNote();
+    }
+  });
+}
+
+loadNotes();
+
+// ============================================
 // NAVIGATION & SMOOTH SCROLLING
 // ============================================
 const navToggle = document.getElementById('navToggle');
@@ -845,31 +992,16 @@ navLinks.forEach(link => {
 // ============================================
 // GUI CONTROLS FOR FINE-TUNING
 // ============================================
-const gui = new window.lil.GUI({ title: 'Model Settings' });
+const guiContainer = document.getElementById('guiContainer');
 
-function setupMobileGuiToggle() {
-  if (!isMobileDevice) return;
+// Create GUI inside the design panel container
+const gui = new window.lil.GUI({ 
+  title: 'Model Settings',
+  container: guiContainer
+});
 
-  document.body.classList.add('gui-collapsed');
-  gui.close();
-
-  const toggle = document.createElement('button');
-  toggle.className = 'gui-toggle';
-  toggle.type = 'button';
-  toggle.textContent = 'GUI';
-  toggle.addEventListener('click', () => {
-    const isCollapsed = document.body.classList.toggle('gui-collapsed');
-    if (isCollapsed) {
-      gui.close();
-    } else {
-      gui.open();
-    }
-  });
-
-  document.body.appendChild(toggle);
-}
-
-setupMobileGuiToggle();
+// Remove the old setupMobileGuiToggle since GUI is now in design panel
+// GUI will be controlled through design panel tabs
 
 // Model controls
 const modelFolder = gui.addFolder('Model');
@@ -1102,5 +1234,15 @@ settingsFolder.add({ exportSettings: () => {
   console.log(JSON.stringify(settingsObj, null, 2));
   console.log('Save this to lock in your settings!');
 }}, 'exportSettings').name('📋 Export to Console');
+
+// Collapse all folders for compact sidebar appearance (user can expand as needed)
+cameraFolder.close();
+materialFolder.close();
+lightFolder.close();
+renderFolder.close();
+interactionFolder.close();
+hitboxFolder.close();
+buttonFolder.close();
+settingsFolder.close();
 
 

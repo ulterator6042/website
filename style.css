@@ -177,6 +177,142 @@ body {
   margin-top: 4px;
 }
 
+/* Design Panel Tabs */
+.design-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 10, 0.5);
+}
+
+.design-tab {
+  flex: 1;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+}
+
+.design-tab:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.design-tab.active {
+  color: rgba(102, 126, 234, 1);
+  border-bottom-color: rgba(102, 126, 234, 0.8);
+}
+
+.design-tab-content {
+  display: none;
+  padding: 16px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.design-tab-content.active {
+  display: block;
+}
+
+.export-btn, .add-note-btn {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 12px;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  color: rgba(102, 126, 234, 0.9);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover, .add-note-btn:hover {
+  background: rgba(102, 126, 234, 0.25);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.gui-container {
+  background: transparent;
+  padding: 8px 0;
+}
+
+.gui-container .lil-gui {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  width: 100% !important;
+}
+
+.notes-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.note-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.85rem;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.note-textarea:focus {
+  outline: none;
+  border-color: rgba(102, 126, 234, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.note-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  word-break: break-word;
+  position: relative;
+  padding-right: 30px;
+}
+
+.note-item::before {
+  content: '📌';
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 0.9rem;
+}
+
+.note-time {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 8px;
+}
+
 .hero-section {
   width: 100%;
   min-height: 100vh;

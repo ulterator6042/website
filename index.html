@@ -29,10 +29,35 @@
   <!-- Design Panel -->
   <div class="design-panel" id="designPanel">
     <div class="design-header">
-      <h3>Design Settings</h3>
+      <h3>Customize</h3>
       <button class="design-close" id="designClose">✕</button>
     </div>
-    <div class="design-controls" id="designControls"></div>
+    
+    <div class="design-tabs">
+      <button class="design-tab active" data-tab="colors">🎨 Colors</button>
+      <button class="design-tab" data-tab="model">🎛️ Model</button>
+      <button class="design-tab" data-tab="notes">📝 Notes</button>
+    </div>
+
+    <!-- Colors Tab -->
+    <div class="design-tab-content active" id="tab-colors">
+      <div class="design-controls" id="designControls"></div>
+      <button id="exportColors" class="export-btn">📋 Export Colors</button>
+    </div>
+
+    <!-- Model 3D Controls Tab -->
+    <div class="design-tab-content" id="tab-model">
+      <div id="guiContainer" class="gui-container"></div>
+    </div>
+
+    <!-- Notes Board Tab -->
+    <div class="design-tab-content" id="tab-notes">
+      <div class="notes-input-section">
+        <textarea id="noteInput" placeholder="Add a note or comment..." class="note-textarea"></textarea>
+        <button id="addNoteBtn" class="add-note-btn">Add Note</button>
+      </div>
+      <div id="notesList" class="notes-list"></div>
+    </div>
   </div>
 
   <div class="hero-section">
