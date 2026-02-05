@@ -449,7 +449,9 @@ function drawHitboxVisualization() {
     const height = hitboxConfig.height * hitboxCanvas.height;
     ctx.strokeRect(centerX - width / 2, centerY - height / 2, width, height);
   }
-}\n\n// Create hitbox canvas overlay
+}
+
+// Create hitbox canvas overlay
 let hitboxCanvas = null;
 function createHitboxCanvas() {
   if (hitboxCanvas) hitboxCanvas.remove();
@@ -497,7 +499,9 @@ const handleResize = debounce(() => {
 }, 100);
 
 window.addEventListener('resize', handleResize);
-window.addEventListener('orientationchange', handleResize);\n\n// Apply button styles
+window.addEventListener('orientationchange', handleResize);
+
+// Apply button styles
 function applyButtonStyles() {
   downloadButton.style.background = `linear-gradient(135deg, ${buttonConfig.backgroundColor} 0%, ${buttonConfig.secondaryColor} 100%)`;
   downloadButton.style.color = buttonConfig.textColor;
@@ -507,7 +511,11 @@ function applyButtonStyles() {
   downloadButton.style.fontWeight = buttonConfig.fontWeight;
 }
 
-applyButtonStyles();\n\n// Animation loop\nfunction animate() {\n  requestAnimationFrame(animate);"
+applyButtonStyles();
+
+// Animation loop
+function animate() {
+  requestAnimationFrame(animate);
   
   // Update mouse position with smoothing
   mouseX += (targetMouseX - mouseX) * 0.1;
