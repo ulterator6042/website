@@ -1514,4 +1514,24 @@ hitboxFolder.close();
 buttonFolder.close();
 settingsFolder.close();
 
+// ============================================
+// CUSTOM CURSOR TWINKLE EFFECT ON CLICK
+// ============================================
+document.addEventListener('click', (event) => {
+  // Create twinkle element
+  const twinkle = document.createElement('div');
+  twinkle.className = 'cursor-twinkle';
+  document.body.appendChild(twinkle);
+  
+  // Position at click location
+  twinkle.style.left = (event.clientX - 20) + 'px'; // Center the 40px element
+  twinkle.style.top = (event.clientY - 20) + 'px';
+  twinkle.style.display = 'block';
+  
+  // Remove twinkle after animation completes
+  setTimeout(() => {
+    twinkle.remove();
+  }, 600); // Match animation duration (0.6s)
+});
+
 
