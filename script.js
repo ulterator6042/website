@@ -1565,8 +1565,17 @@ function initCursorCloset() {
   const menu = document.getElementById('cursorPopupMenu');
   const grid = document.getElementById('cursorPopupGrid');
 
+  // Validate elements exist
+  if (!btn || !menu || !grid) {
+    console.error('Cursor closet elements not found!', { btn, menu, grid });
+    return;
+  }
+
+  console.log('✓ Cursor closet elements found');
+
   // Generate 4 random cursors for popup
   const randomCursors = getRandomCursors();
+  console.log('Generated random cursors:', randomCursors.map(c => c.name));
 
   randomCursors.forEach(cursor => {
     const item = document.createElement('div');
@@ -1580,6 +1589,7 @@ function initCursorCloset() {
 
     item.addEventListener('click', (e) => {
       e.stopPropagation();
+      console.log('Selected cursor:', cursor.name);
       switchCursor(cursor);
       menu.classList.remove('active');
       btn.classList.remove('active');
@@ -1588,11 +1598,16 @@ function initCursorCloset() {
     grid.appendChild(item);
   });
 
+  console.log('✓ Added cursor items to grid');
+
   // Toggle popup on button click
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
+    console.log('Button clicked, toggling menu');
+    console.log('Before toggle - menu has active?', menu.classList.contains('active'));
     menu.classList.toggle('active');
     btn.classList.toggle('active');
+    console.log('After toggle - menu has active?', menu.classList.contains('active'));
   });
 
   // Close popup when clicking outside
@@ -1602,6 +1617,8 @@ function initCursorCloset() {
       btn.classList.remove('active');
     }
   });
+
+  console.log('✓ Cursor closet initialized successfully');
 }
 
 // Switch to selected cursor
@@ -1635,9 +1652,18 @@ function loadSavedCursor() {
   switchCursor(cursorOptions[0]);
 }
 
-// Initialize on load
-initCursorCloset();
-loadSavedCursor();
+// Initialize on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing cursor closet...');
+    initCursorCloset();
+    loadSavedCursor();
+  });
+} else {
+  console.log('Initializing cursor closet (DOM already loaded)...');
+  initCursorCloset();
+  loadSavedCursor();
+}
 
 // Click twinkle effect
 document.addEventListener('click', (event) => {
