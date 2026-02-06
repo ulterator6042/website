@@ -386,7 +386,7 @@ function applyEnvironmentSettings() {
 
 // Preset settings
 const presetSettings = {
-  model: { posX: 0, posY: 0, posZ: -2, scale: 1 },
+  model: { posX: 0, posY: 0.7, posZ: -2, scale: 1.5 },
   camera: { z: 2.5 },
   material: { metalness: 0.95, roughness: 0.4, color: 10592673, emissiveColor: 0, emissiveIntensity: 0.9 },
   ambient: { intensity: 1.05, color: 10724259, visible: true },
@@ -399,6 +399,8 @@ const presetSettings = {
   rendering: { bgColor: 1841692, exposure: 1.6 },
   interaction: { rotationSpeedX: 0.4, rotationSpeedY: 0.2, inertia: 0.99, returnSpeed: 0.2, autoOrbit: false, autoOrbitSpeed: 0.5 },
 };
+
+const modelTunerDefaults = { posX: 0, posY: 0.7, posZ: -2, scale: 1.5 };
 
 function applyPreset(preset) {
   // Apply model position
@@ -1602,6 +1604,11 @@ const fontSwitcherClose = document.getElementById('fontSwitcherClose');
 const fontSwitcherSelect = document.getElementById('fontSwitcherSelect');
 const fontSwitcherList = document.getElementById('fontSwitcherList');
 const fontSwitcherPreview = document.getElementById('fontSwitcherPreview');
+const modelTunerPanel = document.getElementById('modelTunerPanel');
+const modelTunerToggle = document.getElementById('modelTunerToggle');
+const modelTunerClose = document.getElementById('modelTunerClose');
+const modelTunerGui = document.getElementById('modelTunerGui');
+const modelTunerExport = document.getElementById('modelTunerExport');
 
 const menuFonts = [
   {
@@ -1645,7 +1652,7 @@ const applyMenuFontSelection = (fontValue) => {
 // Global orbital settings
 const defaultOrbitalSettings = {
   // Trajectory
-  trajectoryHorizontal: 30,
+  trajectoryHorizontal: 15,
   trajectoryVertical: 30,
   sideBoxScale: 0.6,
   // Effects
@@ -1657,7 +1664,7 @@ const defaultOrbitalSettings = {
   enablePageLoadAnimation: false,
   // Positioning
   positionCenterX: 50,
-  positionCenterY: 65,
+  positionCenterY: 75,
   sideOffset: 110,
   // Page Load Animation
   pageLoadDuration: 300,
@@ -2504,6 +2511,51 @@ if (fontSwitcherSelect) {
   });
   fontSwitcherSelect.addEventListener('change', (event) => {
     applyMenuFontSelection(event.target.value);
+  });
+}
+
+if (modelTunerToggle && modelTunerPanel) {
+  modelTunerToggle.addEventListener('click', () => {
+    modelTunerPanel.classList.toggle('active');
+    modelTunerPanel.setAttribute('aria-hidden', modelTunerPanel.classList.contains('active') ? 'false' : 'true');
+  });
+}
+
+if (modelTunerClose && modelTunerPanel) {
+  modelTunerClose.addEventListener('click', () => {
+    modelTunerPanel.classList.remove('active');
+    modelTunerPanel.setAttribute('aria-hidden', 'true');
+  });
+}
+
+if (modelTunerGui && modelControl) {
+  const tunerGui = new window.lil.GUI({ container: modelTunerGui, title: 'Model Placement' });
+  tunerGui.domElement.style.width = '100%';
+  tunerGui.add(modelControl, 'posX', -3, 3, 0.1).name('Position X').onChange((val) => {
+    if (model) model.position.x = val;
+  });
+  tunerGui.add(modelControl, 'posY', -3, 3, 0.1).name('Position Y').onChange((val) => {
+    if (model) model.position.y = val;
+  });
+  tunerGui.add(modelControl, 'posZ', -3, 3, 0.1).name('Position Z').onChange((val) => {
+    if (model) model.position.z = val;
+  });
+  tunerGui.add(modelControl, 'scale', 0.4, 2.5, 0.05).name('Scale').onChange((val) => {
+    if (model) model.scale.setScalar(modelBaseScale * val);
+  });
+}
+
+if (modelTunerExport) {
+  modelTunerExport.addEventListener('click', () => {
+    if (!modelControl) return;
+    const changed = {};
+    Object.keys(modelTunerDefaults).forEach((key) => {
+      if (modelControl[key] !== modelTunerDefaults[key]) {
+        changed[key] = modelControl[key];
+      }
+    });
+    console.log('=== MODEL TUNER EXPORT ===');
+    console.log(JSON.stringify(changed, null, 2));
   });
 }
 

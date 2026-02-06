@@ -124,6 +124,7 @@
 
   <button class="box-settings-toggle" id="boxSettingsToggle" aria-label="Toggle customize menu">Customize Menu</button>
   <button class="font-switcher-toggle" id="fontSwitcherToggle" aria-label="Toggle font switcher">Fonts</button>
+  <button class="model-tuner-toggle" id="modelTunerToggle" aria-label="Toggle model tuner">Model</button>
 
   <!-- Floating Box Settings GUI -->
   <div class="box-settings-panel" id="boxSettingsPanel">
@@ -155,6 +156,17 @@
       <div class="font-switcher-list" id="fontSwitcherList"></div>
       <div class="font-switcher-preview" id="fontSwitcherPreview">Preview the orbit menu text</div>
     </div>
+  </div>
+
+  <div class="model-tuner-panel" id="modelTunerPanel" aria-hidden="true">
+    <div class="settings-header">
+      <h3>Model Tuner</h3>
+      <div class="settings-actions">
+        <button class="settings-export" id="modelTunerExport">Export</button>
+        <button class="settings-close" id="modelTunerClose">✕</button>
+      </div>
+    </div>
+    <div id="modelTunerGui" class="box-gui-container"></div>
   </div>
 
   <audio id="sound" src="sound.mp3"></audio>

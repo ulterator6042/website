@@ -1920,3 +1920,52 @@ body.home2-active .orbit-controls {
   opacity: 1;
   pointer-events: auto;
 }
+
+.model-tuner-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 108px;
+  z-index: 801;
+  background: rgba(20, 20, 20, 0.85);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.model-tuner-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(199, 208, 220, 0.7);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.model-tuner-panel {
+  position: fixed;
+  right: -360px;
+  top: 20px;
+  width: 320px;
+  max-height: calc(100vh - 40px);
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(199, 208, 220, 0.3);
+  border-radius: 12px;
+  z-index: 800;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: right 0.3s ease;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.model-tuner-panel.active {
+  right: 20px;
+}
