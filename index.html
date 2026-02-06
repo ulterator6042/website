@@ -120,6 +120,7 @@
   </div>
 
   <button class="box-settings-toggle" id="boxSettingsToggle" aria-label="Toggle customize menu">Customize Menu</button>
+  <button class="font-switcher-toggle" id="fontSwitcherToggle" aria-label="Toggle font switcher">Fonts</button>
 
   <!-- Floating Box Settings GUI -->
   <div class="box-settings-panel" id="boxSettingsPanel">
@@ -135,6 +136,21 @@
     </div>
     <div class="customize-pane active" data-pane="orbital" role="tabpanel">
       <div id="orbitalGuiContainer" class="box-gui-container"></div>
+    </div>
+  </div>
+
+  <div class="font-switcher-panel" id="fontSwitcherPanel" aria-hidden="true">
+    <div class="settings-header">
+      <h3>Font Switcher</h3>
+      <div class="settings-actions">
+        <button class="settings-close" id="fontSwitcherClose">✕</button>
+      </div>
+    </div>
+    <div class="font-switcher-body">
+      <label class="font-switcher-label" for="fontSwitcherSelect">Menu font</label>
+      <select id="fontSwitcherSelect" class="font-switcher-select"></select>
+      <div class="font-switcher-list" id="fontSwitcherList"></div>
+      <div class="font-switcher-preview" id="fontSwitcherPreview">Preview the orbit menu text</div>
     </div>
   </div>
 

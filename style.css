@@ -4,6 +4,38 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: 'Zen Dots';
+  src: url('ZenDots-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Akira Expanded Demo';
+  src: url('Akira Expanded Demo.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Mont Heavy Demo';
+  src: url('Mont-HeavyDEMO.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Mont ExtraLight Demo';
+  src: url('Mont-ExtraLightDEMO.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Click twinkle animation */
 @keyframes twinkle-pop {
   0% {
@@ -595,13 +627,14 @@ body {
   z-index: 1200;
   padding: 10px 16px;
   font-size: 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   color: rgba(255, 255, 255, 0.92);
-  background: rgba(18, 18, 18, 0.6);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.22), 0 8px 18px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 55%, rgba(255, 255, 255, 0.02) 100%),
+    rgba(20, 20, 20, 0.6);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 120, 80, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
 }
 
 .gui-collapsed .lil-gui {
@@ -612,6 +645,13 @@ body {
 }
 
 .lil-gui {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 55%, rgba(255, 255, 255, 0.02) 100%),
+    rgba(18, 18, 18, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 120, 80, 0.08);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
@@ -1022,17 +1062,13 @@ CORNER POPUP BOXES
   position: fixed;
     width: var(--orbit-box-size);
     height: var(--orbit-box-size);
-  background: rgba(207, 214, 227, 0.12);
-  border: 2px solid rgba(199, 208, 220, 0.6);
-  border-radius: 12px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--menu-bg);
+  border: var(--menu-border);
+  border-radius: var(--menu-radius);
+  backdrop-filter: blur(var(--menu-blur)) saturate(var(--menu-saturate));
+  -webkit-backdrop-filter: blur(var(--menu-blur)) saturate(var(--menu-saturate));
   z-index: 50;
-  box-shadow: 
-    0 0 30px rgba(199, 208, 220, 0.3),
-    0 0 60px rgba(199, 208, 220, 0.15),
-    inset 0 0 20px rgba(255, 255, 255, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--menu-shadow);
   transition: all 0.4s ease;
   display: flex;
   align-items: center;
@@ -1041,6 +1077,17 @@ CORNER POPUP BOXES
   padding: 12px;
   overflow: hidden;
   opacity: 1;
+}
+
+.corner-box::before {
+  content: '';
+  position: absolute;
+  inset: -12% -18%;
+  background: var(--menu-blob-bg);
+  filter: blur(var(--menu-blob-blur));
+  opacity: var(--menu-blob-opacity);
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* All boxes load together - no stagger */
@@ -1059,8 +1106,8 @@ CORNER POPUP BOXES
 }
 
 .corner-box.is-link:focus-visible {
-  outline: 2px solid rgba(199, 208, 220, 0.8);
-  outline-offset: 3px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28), 0 0 20px rgba(0, 0, 0, 0.6);
 }
 
 .corner-box.has-dropdown {
@@ -1138,13 +1185,8 @@ CORNER POPUP BOXES
 }
 
 .corner-box:hover {
-  background: rgba(207, 214, 227, 0.18);
-  border-color: rgba(199, 208, 220, 0.9);
-  box-shadow: 
-    0 0 40px rgba(199, 208, 220, 0.5),
-    0 0 80px rgba(199, 208, 220, 0.25),
-    inset 0 0 25px rgba(255, 255, 255, 0.1),
-    0 8px 32px rgba(0, 0, 0, 0.4);
+  background: var(--menu-bg-hover);
+  box-shadow: var(--menu-shadow-hover);
   transform: translateY(-2px);
 }
 
@@ -1169,14 +1211,17 @@ body.home2-active .corner-box {
   position: absolute !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: all var(--orbital-animation-speed) ease-in-out !important;
+  transition: left var(--orbital-animation-speed) ease-in-out,
+              top var(--orbital-animation-speed) ease-in-out,
+              transform var(--orbital-animation-speed) ease-in-out,
+              opacity var(--orbital-fade-speed) ease-in-out !important;
   z-index: 1 !important;
     width: var(--orbit-box-size) !important;
     height: var(--orbit-box-size) !important;
   margin: 0 !important;
   right: auto !important;
   bottom: auto !important;
-  border-radius: 12px !important;
+  border-radius: var(--menu-radius) !important;
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) scale(1) !important;
@@ -1200,7 +1245,7 @@ body.home2-active .corner-box::after {
   --orbital-trajectory-v: 20%;
   --orbital-side-opacity: 0.4;
   --orbital-animation-speed: 500ms;
-  --orbital-fade-speed: 200ms;
+  --orbital-fade-speed: 500ms;
   --orbital-center-x: 50%;
   --orbital-center-y: 65%;
   --orbital-side-scale: 0.65;
@@ -1217,6 +1262,44 @@ body.home2-active .corner-box::after {
   --exit-offset-x: 20px;
   --exit-offset-y: 10px;
   --exit-scale: 0.85;
+
+  /* Menu aesthetics */
+  --menu-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 55%, rgba(255, 255, 255, 0.02) 100%), rgba(20, 20, 20, 0.6);
+  --menu-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.08) 55%, rgba(255, 255, 255, 0.03) 100%), rgba(24, 24, 24, 0.65);
+  --menu-border: 1px solid rgba(255, 255, 255, 0.16);
+  --menu-radius: 999px;
+  --menu-blur: 18px;
+  --menu-saturate: 140%;
+  --menu-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -10px 24px rgba(0, 0, 0, 0.2), 0 14px 36px rgba(0, 0, 0, 0.45), 0 0 22px rgba(255, 120, 80, 0.08);
+  --menu-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.26), inset 0 -10px 26px rgba(0, 0, 0, 0.2), 0 18px 40px rgba(0, 0, 0, 0.5), 0 0 26px rgba(255, 120, 80, 0.12);
+  --menu-blob-bg: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.28) 50%, rgba(0, 0, 0, 0) 72%);
+  --menu-blob-opacity: 0.7;
+  --menu-blob-blur: 18px;
+  --menu-label-color: rgba(255, 255, 255, 0.92);
+  --menu-label-size: 0.95rem;
+  --menu-label-weight: 600;
+  --menu-label-spacing: 0.3px;
+  --menu-label-transform: uppercase;
+  --menu-label-font: 'Zen Dots', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  /* Orbit controls aesthetics */
+  --orbit-controls-bottom: 20px;
+  --orbit-controls-left: 50%;
+  --orbit-controls-gap: 32px;
+  --orbit-arrow-size: 64px;
+  --orbit-arrow-width: 96px;
+  --orbit-arrow-height: 56px;
+  --orbit-arrow-radius: 18px;
+  --orbit-arrow-font: 1.4rem;
+  --orbit-arrow-color: rgba(255, 255, 255, 0.95);
+  --orbit-arrow-blur: 16px;
+  --orbit-arrow-saturate: 140%;
+  --orbit-arrow-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 55%, rgba(255, 255, 255, 0.02) 100%), rgba(20, 20, 20, 0.6);
+  --orbit-arrow-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 55%, rgba(255, 255, 255, 0.03) 100%), rgba(24, 24, 24, 0.65);
+  --orbit-arrow-border: 1px solid rgba(255, 255, 255, 0.16);
+  --orbit-arrow-border-hover: 1px solid rgba(255, 255, 255, 0.22);
+  --orbit-arrow-shadow: 0 14px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 18px rgba(255, 120, 80, 0.1);
+  --orbit-arrow-shadow-hover: 0 18px 38px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 24px rgba(255, 120, 80, 0.14);
 }
 
 
@@ -1229,10 +1312,6 @@ body.home2-active .corner-box.orbit-prev {
   z-index: 2 !important;
   pointer-events: auto !important;
   cursor: pointer !important;
-  transition: left var(--orbital-animation-speed) ease-in-out, 
-              top var(--orbital-animation-speed) ease-in-out,
-              transform var(--orbital-animation-speed) ease-in-out,
-              opacity var(--orbital-fade-speed) ease-in-out !important;
 }
 
 /* Current active box - center (large, fully visible) */
@@ -1243,10 +1322,6 @@ body.home2-active .corner-box.orbit-active {
   opacity: 1 !important;
   z-index: 10 !important;
   pointer-events: auto !important;
-  transition: left var(--orbital-animation-speed) ease-in-out, 
-              top var(--orbital-animation-speed) ease-in-out,
-              transform var(--orbital-animation-speed) ease-in-out,
-              opacity var(--orbital-fade-speed) ease-in-out !important;
 }
 
 /* Next box - right side of orbit (small, semi-visible, clickable) */
@@ -1258,10 +1333,6 @@ body.home2-active .corner-box.orbit-next {
   z-index: 2 !important;
   pointer-events: auto !important;
   cursor: pointer !important;
-  transition: left var(--orbital-animation-speed) ease-in-out, 
-              top var(--orbital-animation-speed) ease-in-out,
-              transform var(--orbital-animation-speed) ease-in-out,
-              opacity var(--orbital-fade-speed) ease-in-out !important;
 }
 
 /* Exit animation - box leaving from center to left */
@@ -1272,7 +1343,7 @@ body.home2-active .corner-box.orbit-exit-left {
   opacity: 1 !important;
   z-index: 1 !important;
   pointer-events: none !important;
-  animation: orbitExitFade var(--orbital-animation-speed) cubic-bezier(0, 0, 0.2, 1) forwards !important;
+  animation: orbitExitFadeFast var(--orbital-animation-speed) cubic-bezier(0, 0, 0.2, 1) forwards !important;
   transition: none !important;
 }
 
@@ -1289,7 +1360,6 @@ body.home2-active .corner-box.orbit-exit-right {
 }
 
 /* Entry animation - box emerging from back to side */
-body.home2-active .corner-box.orbit-enter-right,
 body.home2-active .corner-box.orbit-enter-left {
   left: 50% !important;
   top: 50% !important;
@@ -1297,6 +1367,10 @@ body.home2-active .corner-box.orbit-enter-left {
   opacity: 0 !important;
   animation: orbitEnterFade var(--orbital-animation-speed) cubic-bezier(0.4, 0, 1, 1) forwards !important;
   transition: none !important;
+}
+
+body.home2-active .corner-box.orbit-enter-right {
+  animation: orbitEnterLate var(--orbital-animation-speed) cubic-bezier(0.4, 0, 1, 1) forwards !important;
 }
 
 @keyframes orbitExitFade {
@@ -1314,6 +1388,25 @@ body.home2-active .corner-box.orbit-enter-left {
   }
 }
 
+@keyframes orbitExitFadeFast {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  20% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  30% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+}
+
 @keyframes orbitEnterFade {
   0% {
     opacity: 0;
@@ -1322,6 +1415,21 @@ body.home2-active .corner-box.orbit-enter-left {
   45% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes orbitEnterLate {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  85% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
   }
   100% {
     opacity: 1;
@@ -1399,8 +1507,12 @@ body.home2-active .dropdown-item.muted:hover {
 }
 
 .corner-box-label {
-  font-size: 0.95rem !important;
-  font-weight: 600 !important;
+  color: var(--menu-label-color) !important;
+  font-family: var(--menu-label-font) !important;
+  font-size: var(--menu-label-size) !important;
+  font-weight: var(--menu-label-weight) !important;
+  letter-spacing: var(--menu-label-spacing) !important;
+  text-transform: var(--menu-label-transform) !important;
 }
 
 #downloadButton {
@@ -1413,32 +1525,34 @@ ORBIT CONTROLS
 
 .orbit-controls {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
+  bottom: var(--orbit-controls-bottom);
+  left: var(--orbit-controls-left);
   transform: translateX(-50%);
   display: flex;
-  gap: 32px;
+  gap: var(--orbit-controls-gap);
   z-index: 801;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
 
+body.orbit-controls-hidden .orbit-controls {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .orbit-arrow {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  background: rgba(207, 214, 227, 0.12);
-  color: rgba(255, 255, 255, 0.95);
-  border: 2px solid rgba(199, 208, 220, 0.6);
-  font-size: 1.4rem;
+  width: var(--orbit-arrow-width);
+  height: var(--orbit-arrow-height);
+  border-radius: var(--orbit-arrow-radius);
+  background: var(--orbit-arrow-bg);
+  color: var(--orbit-arrow-color);
+  border: var(--orbit-arrow-border);
+  font-size: var(--orbit-arrow-font);
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 0 30px rgba(199, 208, 220, 0.3),
-    0 0 60px rgba(199, 208, 220, 0.15),
-    inset 0 0 20px rgba(255, 255, 255, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(var(--orbit-arrow-blur)) saturate(var(--orbit-arrow-saturate));
+  -webkit-backdrop-filter: blur(var(--orbit-arrow-blur)) saturate(var(--orbit-arrow-saturate));
+  box-shadow: var(--orbit-arrow-shadow);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -1447,12 +1561,9 @@ ORBIT CONTROLS
 
 .orbit-arrow:hover {
   transform: translateY(-2px);
-  background: rgba(207, 214, 227, 0.18);
-  border-color: rgba(199, 208, 220, 0.9);
-  box-shadow: 0 0 40px rgba(199, 208, 220, 0.5),
-    0 0 80px rgba(199, 208, 220, 0.25),
-    inset 0 0 25px rgba(255, 255, 255, 0.1),
-    0 8px 32px rgba(0, 0, 0, 0.4);
+  background: var(--orbit-arrow-bg-hover);
+  border: var(--orbit-arrow-border-hover);
+  box-shadow: var(--orbit-arrow-shadow-hover);
 }
 
 .orbit-arrow:active {
@@ -1512,6 +1623,118 @@ BOX SETTINGS PANEL
   transform: translateY(-2px);
   border-color: rgba(199, 208, 220, 0.7);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.font-switcher-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 64px;
+  z-index: 801;
+  background: rgba(20, 20, 20, 0.85);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.font-switcher-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(199, 208, 220, 0.7);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.font-switcher-panel {
+  position: fixed;
+  right: -360px;
+  top: 20px;
+  width: 320px;
+  max-height: calc(100vh - 40px);
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(199, 208, 220, 0.3);
+  border-radius: 12px;
+  z-index: 800;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: right 0.3s ease;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.font-switcher-panel.active {
+  right: 20px;
+}
+
+.font-switcher-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.font-switcher-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.font-switcher-select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.font-switcher-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.font-switcher-item {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.font-switcher-item:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.font-switcher-item.active {
+  background: rgba(199, 208, 220, 0.2);
+  border-color: rgba(199, 208, 220, 0.5);
+  color: rgba(255, 255, 255, 0.98);
+}
+
+.font-switcher-preview {
+  border-radius: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  font-size: 1rem;
 }
 
 
@@ -1614,8 +1837,8 @@ BOX SETTINGS PANEL
 }
 
 .box-gui-container .lil-gui .controller {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 6px !important;
   padding: 8px 10px !important;
   margin: 6px 0 !important;
@@ -1627,9 +1850,9 @@ BOX SETTINGS PANEL
 
 .box-gui-container .lil-gui input,
 .box-gui-container .lil-gui select {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   color: rgba(255, 255, 255, 0.9) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
   border-radius: 4px !important;
   padding: 6px 8px !important;
   font-size: 12px !important;

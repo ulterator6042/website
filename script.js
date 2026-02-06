@@ -1602,34 +1602,81 @@ const contactBox = document.getElementById('boxTopRight');
 const contactDropdown = document.getElementById('contactDropdown');
 const customizeTabs = document.querySelectorAll('.customize-tab');
 const customizePanes = document.querySelectorAll('.customize-pane');
+const fontSwitcherPanel = document.getElementById('fontSwitcherPanel');
+const fontSwitcherToggle = document.getElementById('fontSwitcherToggle');
+const fontSwitcherClose = document.getElementById('fontSwitcherClose');
+const fontSwitcherSelect = document.getElementById('fontSwitcherSelect');
+const fontSwitcherList = document.getElementById('fontSwitcherList');
+const fontSwitcherPreview = document.getElementById('fontSwitcherPreview');
+
+const menuFonts = [
+  {
+    label: 'Zen Dots',
+    value: "'Zen Dots', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+  },
+  {
+    label: 'Akira Expanded',
+    value: "'Akira Expanded Demo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+  },
+  {
+    label: 'Mont Heavy',
+    value: "'Mont Heavy Demo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+  },
+  {
+    label: 'Mont ExtraLight',
+    value: "'Mont ExtraLight Demo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+  }
+];
+
+const applyMenuFontSelection = (fontValue) => {
+  uiSettings.menuLabelFont = fontValue;
+  applyUiSettings();
+
+  if (fontSwitcherPreview) {
+    fontSwitcherPreview.style.fontFamily = fontValue;
+  }
+
+  if (fontSwitcherSelect) {
+    fontSwitcherSelect.value = fontValue;
+  }
+
+  if (fontSwitcherList) {
+    const items = fontSwitcherList.querySelectorAll('[data-font-value]');
+    items.forEach(item => {
+      item.classList.toggle('active', item.dataset.fontValue === fontValue);
+    });
+  }
+};
 
 // Global orbital settings
 let orbitalSettings = {
   // Trajectory
-  trajectoryHorizontal: 20,
-  trajectoryVertical: 20,
-  sideBoxScale: 0.65,
+  trajectoryHorizontal: 30,
+  trajectoryVertical: 25,
+  sideBoxScale: 0.6,
   // Effects
-  sideBoxOpacity: 0.4,
-  animationSpeed: 500,
+  sideBoxOpacity: 0.6,
+  animationSpeed: 700,
   direction: 'forward',
   enableSideOpacity: true,
-  enableExitAnimation: true,
+  enableExitAnimation: false,
   enablePageLoadAnimation: false,
   // Positioning
   positionCenterX: 50,
   positionCenterY: 65,
   sideOffset: 110,
   // Page Load Animation
-  pageLoadDuration: 0,
+  pageLoadDuration: 300,
   pageLoadStagger1: 0,
   pageLoadStagger2: 0,
   pageLoadStagger3: 0,
   pageLoadStagger4: 0,
   // Exit Animation
-  exitOffsetX: 20,
-  exitOffsetY: 10,
-  exitScale: 85
+  exitOffsetX: 0,
+  exitOffsetY: 90,
+  exitScale: 85,
+  leftOffset: -250,
+  rightOffset: 0
 };
 
 // Load saved orbital settings
@@ -1659,6 +1706,7 @@ const applyOrbitalSettings = () => {
   const resolvedSideOpacity = orbitalSettings.enableSideOpacity ? orbitalSettings.sideBoxOpacity : 1;
   root.setProperty('--orbital-side-opacity', resolvedSideOpacity);
   root.setProperty('--orbital-animation-speed', orbitalSettings.animationSpeed + 'ms');
+  root.setProperty('--orbital-fade-speed', orbitalSettings.animationSpeed + 'ms');
   
   // Positioning
   root.setProperty('--orbital-center-x', orbitalSettings.positionCenterX + '%');
@@ -1695,6 +1743,176 @@ const applyOrbitalSettings = () => {
   localStorage.setItem('orbitalSettings', JSON.stringify(orbitalSettings));
 };
 
+// UI aesthetics settings
+let uiSettings = {
+  menuSize: 250,
+  menuRadius: 999,
+  menuBlur: 8,
+  menuSaturate: 185,
+  menuGlassOpacity: 0.56,
+  menuTintOpacity: 0.41,
+  menuBorderOpacity: 0.38,
+  menuShadowOpacity: 0.44,
+  menuGlowOpacity: 0.14,
+  menuBlobOpacity: 0.9,
+  menuBlobBlur: 29,
+  menuBaseColor: '#1a1a1a',
+  menuTintColor: '#ffffff',
+  menuAccentColor: '#5e230d',
+  menuLabelColor: '#bdbdbd',
+  menuLabelFont: "'Mont ExtraLight Demo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  menuLabelSize: 1.4,
+  menuLabelWeight: 700,
+  menuLabelSpacing: 2,
+  menuLabelUppercase: false,
+  showMenuBorder: false,
+  showMenuGlow: false,
+  showMenuBlob: true,
+  showOrbitControls: true,
+  arrowSize: 56,
+  arrowWidth: 96,
+  arrowHeight: 34,
+  arrowRadius: 999,
+  arrowBlur: 18,
+  arrowSaturate: 90,
+  arrowFontSize: 1.1,
+  arrowBorderOpacity: 0,
+  arrowGlassOpacity: 0.72,
+  arrowTintOpacity: 0.4,
+  arrowShadowOpacity: 0.4,
+  arrowGlowOpacity: 0.32,
+  arrowBaseColor: '#1a1a1a',
+  arrowTintColor: '#ffffff',
+  arrowAccentColor: '#ff7a4a',
+  arrowColor: '#bababa',
+  showArrowBorder: false,
+  showArrowGlow: false,
+  arrowRound: true,
+  arrowHeightAdjusted: true,
+  orbitControlsBottom: 16,
+  orbitControlsLeft: 50,
+  orbitControlsGap: 54
+};
+
+const savedUiSettings = localStorage.getItem('uiSettings');
+if (savedUiSettings) {
+  Object.assign(uiSettings, JSON.parse(savedUiSettings));
+}
+
+if (typeof uiSettings.arrowWidth !== 'number') {
+  uiSettings.arrowWidth = uiSettings.arrowSize || 64;
+}
+
+if (typeof uiSettings.arrowHeight !== 'number') {
+  uiSettings.arrowHeight = uiSettings.arrowSize || 64;
+}
+
+if (!uiSettings.menuLabelFont) {
+  uiSettings.menuLabelFont = "'Mont ExtraLight Demo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+}
+
+if (!uiSettings.arrowHeightAdjusted) {
+  const currentHeight = typeof uiSettings.arrowHeight === 'number' ? uiSettings.arrowHeight : (uiSettings.arrowSize || 56);
+  uiSettings.arrowHeight = Math.round(currentHeight * 0.6);
+  uiSettings.arrowHeightAdjusted = true;
+}
+
+const clamp01 = (value) => Math.max(0, Math.min(1, value));
+
+const colorToRgba = (color, alpha) => {
+  const trimmed = String(color || '').trim();
+  const alphaClamped = clamp01(alpha);
+
+  if (trimmed.startsWith('rgba(') || trimmed.startsWith('rgb(')) {
+    const match = trimmed.match(/rgba?\(([^)]+)\)/i);
+    if (!match) return trimmed;
+    const parts = match[1].split(',').map(value => value.trim());
+    const [r, g, b] = parts;
+    if (!r || !g || !b) return trimmed;
+    return `rgba(${r}, ${g}, ${b}, ${alphaClamped})`;
+  }
+
+  if (trimmed.startsWith('#')) {
+    let hex = trimmed.slice(1);
+    if (hex.length === 3) {
+      hex = hex.split('').map(char => char + char).join('');
+    }
+    if (hex.length === 6) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alphaClamped})`;
+    }
+  }
+
+  return trimmed;
+};
+
+const buildGlassBackground = (tintColor, tintAlpha, baseColor, baseAlpha) => (
+  `linear-gradient(135deg, ${colorToRgba(tintColor, clamp01(tintAlpha))} 0%, ${colorToRgba(tintColor, clamp01(tintAlpha * 0.35))} 55%, ${colorToRgba(tintColor, clamp01(tintAlpha * 0.15))} 100%), ${colorToRgba(baseColor, clamp01(baseAlpha))}`
+);
+
+const buildGlassShadow = (shadowOpacity, glowOpacity, accentColor) => (
+  `inset 0 1px 0 ${colorToRgba('#ffffff', 0.2)}, inset 0 -10px 24px ${colorToRgba('#000000', 0.2)}, 0 14px 36px ${colorToRgba('#000000', clamp01(shadowOpacity))}, 0 0 22px ${colorToRgba(accentColor, clamp01(glowOpacity))}`
+);
+
+const buildGlassShadowHover = (shadowOpacity, glowOpacity, accentColor) => (
+  `inset 0 1px 0 ${colorToRgba('#ffffff', 0.26)}, inset 0 -10px 26px ${colorToRgba('#000000', 0.2)}, 0 18px 40px ${colorToRgba('#000000', clamp01(shadowOpacity))}, 0 0 26px ${colorToRgba(accentColor, clamp01(glowOpacity))}`
+);
+
+const applyUiSettings = () => {
+  const root = document.documentElement.style;
+
+  root.setProperty('--orbit-box-size', `${uiSettings.menuSize}px`);
+  root.setProperty('--menu-radius', `${uiSettings.menuRadius}px`);
+  root.setProperty('--menu-blur', `${uiSettings.menuBlur}px`);
+  root.setProperty('--menu-saturate', `${uiSettings.menuSaturate}%`);
+  root.setProperty('--menu-label-color', uiSettings.menuLabelColor);
+  root.setProperty('--menu-label-font', uiSettings.menuLabelFont);
+  root.setProperty('--menu-label-size', `${uiSettings.menuLabelSize}rem`);
+  root.setProperty('--menu-label-weight', uiSettings.menuLabelWeight);
+  root.setProperty('--menu-label-spacing', `${uiSettings.menuLabelSpacing}px`);
+  root.setProperty('--menu-label-transform', uiSettings.menuLabelUppercase ? 'uppercase' : 'none');
+
+  const menuBorderAlpha = uiSettings.showMenuBorder ? uiSettings.menuBorderOpacity : 0;
+  const menuGlowAlpha = uiSettings.showMenuGlow ? uiSettings.menuGlowOpacity : 0;
+
+  root.setProperty('--menu-bg', buildGlassBackground(uiSettings.menuTintColor, uiSettings.menuTintOpacity, uiSettings.menuBaseColor, uiSettings.menuGlassOpacity));
+  root.setProperty('--menu-bg-hover', buildGlassBackground(uiSettings.menuTintColor, uiSettings.menuTintOpacity + 0.04, uiSettings.menuBaseColor, uiSettings.menuGlassOpacity + 0.05));
+  root.setProperty('--menu-border', `1px solid ${colorToRgba(uiSettings.menuTintColor, menuBorderAlpha)}`);
+  root.setProperty('--menu-shadow', buildGlassShadow(uiSettings.menuShadowOpacity, menuGlowAlpha, uiSettings.menuAccentColor));
+  root.setProperty('--menu-shadow-hover', buildGlassShadowHover(uiSettings.menuShadowOpacity + 0.05, menuGlowAlpha + 0.04, uiSettings.menuAccentColor));
+  root.setProperty('--menu-blob-opacity', uiSettings.showMenuBlob ? uiSettings.menuBlobOpacity : 0);
+  root.setProperty('--menu-blob-blur', `${uiSettings.menuBlobBlur}px`);
+
+  root.setProperty('--orbit-controls-bottom', `${uiSettings.orbitControlsBottom}px`);
+  root.setProperty('--orbit-controls-left', `${uiSettings.orbitControlsLeft}%`);
+  root.setProperty('--orbit-controls-gap', `${uiSettings.orbitControlsGap}px`);
+  const resolvedArrowWidth = uiSettings.arrowWidth || uiSettings.arrowSize;
+  const resolvedArrowHeight = uiSettings.arrowHeight || uiSettings.arrowSize;
+  root.setProperty('--orbit-arrow-width', `${resolvedArrowWidth}px`);
+  root.setProperty('--orbit-arrow-height', `${resolvedArrowHeight}px`);
+  const resolvedArrowRadius = uiSettings.arrowRound ? Math.min(resolvedArrowWidth, resolvedArrowHeight) / 2 : uiSettings.arrowRadius;
+  root.setProperty('--orbit-arrow-radius', `${resolvedArrowRadius}px`);
+  root.setProperty('--orbit-arrow-font', `${uiSettings.arrowFontSize}rem`);
+  root.setProperty('--orbit-arrow-color', uiSettings.arrowColor);
+  root.setProperty('--orbit-arrow-blur', `${uiSettings.arrowBlur}px`);
+  root.setProperty('--orbit-arrow-saturate', `${uiSettings.arrowSaturate}%`);
+
+  const arrowBorderAlpha = uiSettings.showArrowBorder ? uiSettings.arrowBorderOpacity : 0;
+  const arrowGlowAlpha = uiSettings.showArrowGlow ? uiSettings.arrowGlowOpacity : 0;
+  root.setProperty('--orbit-arrow-bg', buildGlassBackground(uiSettings.arrowTintColor, uiSettings.arrowTintOpacity, uiSettings.arrowBaseColor, uiSettings.arrowGlassOpacity));
+  root.setProperty('--orbit-arrow-bg-hover', buildGlassBackground(uiSettings.arrowTintColor, uiSettings.arrowTintOpacity + 0.04, uiSettings.arrowBaseColor, uiSettings.arrowGlassOpacity + 0.05));
+  root.setProperty('--orbit-arrow-border', `1px solid ${colorToRgba(uiSettings.arrowTintColor, arrowBorderAlpha)}`);
+  root.setProperty('--orbit-arrow-border-hover', `1px solid ${colorToRgba(uiSettings.arrowTintColor, arrowBorderAlpha + 0.06)}`);
+  root.setProperty('--orbit-arrow-shadow', buildGlassShadow(uiSettings.arrowShadowOpacity, arrowGlowAlpha, uiSettings.arrowAccentColor));
+  root.setProperty('--orbit-arrow-shadow-hover', buildGlassShadowHover(uiSettings.arrowShadowOpacity + 0.05, arrowGlowAlpha + 0.04, uiSettings.arrowAccentColor));
+
+  document.body.classList.toggle('orbit-controls-hidden', !uiSettings.showOrbitControls);
+
+  localStorage.setItem('uiSettings', JSON.stringify(uiSettings));
+};
+
 const updateOrbitScale = () => {
   const baseWidth = 1920;
   const baseHeight = 1080;
@@ -1704,6 +1922,7 @@ const updateOrbitScale = () => {
 };
 
 updateOrbitScale();
+applyUiSettings();
 window.addEventListener('resize', updateOrbitScale);
 
 // Orbital GUI Configuration
@@ -1815,8 +2034,162 @@ if (orbitalGuiContainer && boxesContainer) {
     .onChange(applySkyboxSettings);
   skyboxFolder.open();
 
+  const uiFolder = orbitalGui.addFolder('🎨 UI Aesthetics');
+
+  const menuLayoutFolder = uiFolder.addFolder('Menu Layout');
+  menuLayoutFolder.add(uiSettings, 'menuSize', 120, 320, 5)
+    .name('Menu Size (px)')
+    .onChange(applyUiSettings);
+  menuLayoutFolder.add(uiSettings, 'menuRadius', 20, 999, 5)
+    .name('Menu Radius (px)')
+    .onChange(applyUiSettings);
+  menuLayoutFolder.add(uiSettings, 'menuBlur', 0, 30, 1)
+    .name('Menu Blur (px)')
+    .onChange(applyUiSettings);
+  menuLayoutFolder.add(uiSettings, 'menuSaturate', 80, 200, 5)
+    .name('Menu Saturate (%)')
+    .onChange(applyUiSettings);
+  menuLayoutFolder.open();
+
+  const menuTextFolder = uiFolder.addFolder('Menu Text');
+  menuTextFolder.addColor(uiSettings, 'menuLabelColor')
+    .name('Label Color')
+    .onChange(applyUiSettings);
+  menuTextFolder.add(uiSettings, 'menuLabelSize', 0.6, 1.6, 0.05)
+    .name('Label Size (rem)')
+    .onChange(applyUiSettings);
+  menuTextFolder.add(uiSettings, 'menuLabelWeight', { Regular: 400, Medium: 500, Semibold: 600, Bold: 700 })
+    .name('Label Weight')
+    .onChange(applyUiSettings);
+  menuTextFolder.add(uiSettings, 'menuLabelSpacing', 0, 4, 0.1)
+    .name('Label Spacing (px)')
+    .onChange(applyUiSettings);
+  menuTextFolder.add(uiSettings, 'menuLabelUppercase')
+    .name('Uppercase Labels')
+    .onChange(applyUiSettings);
+
+  const menuColorFolder = uiFolder.addFolder('Menu Colors');
+  menuColorFolder.addColor(uiSettings, 'menuBaseColor')
+    .name('Base Color')
+    .onChange(applyUiSettings);
+  menuColorFolder.addColor(uiSettings, 'menuTintColor')
+    .name('Highlight Color')
+    .onChange(applyUiSettings);
+  menuColorFolder.addColor(uiSettings, 'menuAccentColor')
+    .name('Accent Glow')
+    .onChange(applyUiSettings);
+  menuColorFolder.add(uiSettings, 'menuGlassOpacity', 0.2, 0.9, 0.02)
+    .name('Glass Opacity')
+    .onChange(applyUiSettings);
+  menuColorFolder.add(uiSettings, 'menuTintOpacity', 0.05, 0.5, 0.01)
+    .name('Highlight Opacity')
+    .onChange(applyUiSettings);
+  menuColorFolder.add(uiSettings, 'menuBorderOpacity', 0, 0.6, 0.02)
+    .name('Border Opacity')
+    .onChange(applyUiSettings);
+  menuColorFolder.add(uiSettings, 'menuShadowOpacity', 0.1, 0.8, 0.02)
+    .name('Shadow Opacity')
+    .onChange(applyUiSettings);
+  menuColorFolder.add(uiSettings, 'menuGlowOpacity', 0, 0.6, 0.02)
+    .name('Glow Opacity')
+    .onChange(applyUiSettings);
+
+  const menuTogglesFolder = uiFolder.addFolder('Menu Toggles');
+  menuTogglesFolder.add(uiSettings, 'showMenuBorder')
+    .name('Show Border')
+    .onChange(applyUiSettings);
+  menuTogglesFolder.add(uiSettings, 'showMenuGlow')
+    .name('Show Glow')
+    .onChange(applyUiSettings);
+  menuTogglesFolder.add(uiSettings, 'showMenuBlob')
+    .name('Show Shadow Blob')
+    .onChange(applyUiSettings);
+  menuTogglesFolder.add(uiSettings, 'menuBlobOpacity', 0, 1, 0.05)
+    .name('Blob Opacity')
+    .onChange(applyUiSettings);
+  menuTogglesFolder.add(uiSettings, 'menuBlobBlur', 0, 40, 1)
+    .name('Blob Blur (px)')
+    .onChange(applyUiSettings);
+
+  const menuPositionFolder = uiFolder.addFolder('Menu Position');
+  menuPositionFolder.add(orbitalSettings, 'positionCenterX', 20, 80, 5)
+    .name('Center X (%)')
+    .onChange(applyOrbitalSettings);
+  menuPositionFolder.add(orbitalSettings, 'positionCenterY', 20, 80, 5)
+    .name('Center Y (%)')
+    .onChange(applyOrbitalSettings);
+
+  const controlsFolder = uiFolder.addFolder('Bottom Arrows');
+  controlsFolder.add(uiSettings, 'showOrbitControls')
+    .name('Show Arrows')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'orbitControlsBottom', 0, 120, 2)
+    .name('Bottom Offset (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'orbitControlsLeft', 30, 70, 1)
+    .name('Horizontal (%)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'orbitControlsGap', 8, 80, 2)
+    .name('Arrow Gap (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowWidth', 56, 140, 2)
+    .name('Arrow Width (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowHeight', 36, 100, 2)
+    .name('Arrow Height (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowRadius', 6, 30, 1)
+    .name('Arrow Radius (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowRound')
+    .name('Round Arrows')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowFontSize', 1, 2, 0.05)
+    .name('Arrow Font (rem)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowBlur', 0, 30, 1)
+    .name('Arrow Blur (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowSaturate', 80, 200, 5)
+    .name('Arrow Saturate (%)')
+    .onChange(applyUiSettings);
+  controlsFolder.addColor(uiSettings, 'arrowColor')
+    .name('Arrow Text')
+    .onChange(applyUiSettings);
+  controlsFolder.addColor(uiSettings, 'arrowBaseColor')
+    .name('Arrow Base')
+    .onChange(applyUiSettings);
+  controlsFolder.addColor(uiSettings, 'arrowTintColor')
+    .name('Arrow Highlight')
+    .onChange(applyUiSettings);
+  controlsFolder.addColor(uiSettings, 'arrowAccentColor')
+    .name('Arrow Accent')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowGlassOpacity', 0.2, 0.9, 0.02)
+    .name('Arrow Glass')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowTintOpacity', 0.05, 0.5, 0.01)
+    .name('Arrow Highlight Opacity')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowBorderOpacity', 0, 0.6, 0.02)
+    .name('Arrow Border')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowShadowOpacity', 0.1, 0.9, 0.02)
+    .name('Arrow Shadow')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'arrowGlowOpacity', 0, 0.6, 0.02)
+    .name('Arrow Glow')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'showArrowBorder')
+    .name('Show Border')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'showArrowGlow')
+    .name('Show Glow')
+    .onChange(applyUiSettings);
+
   // Apply initial settings
   applyOrbitalSettings();
+  applyUiSettings();
 }
 
 // Close button functionality
@@ -1888,7 +2261,7 @@ if (boxSettingsToggle) {
       if (nextBox) nextBox.classList.add('orbit-next');
 
       const enterSide = exitSide ? (exitSide === 'left' ? 'right' : 'left') : null;
-      if (enterSide) {
+      if (enterSide && orbitalSettings.enableExitAnimation) {
         const enterBox = enterSide === 'right' ? nextBox : prevBox;
         if (enterBox && !visibleBefore.has(enterBox)) {
           const enterClass = enterSide === 'right' ? 'orbit-enter-right' : 'orbit-enter-left';
@@ -1990,11 +2363,59 @@ if (boxSettingsToggle) {
 
 if (settingsExport) {
   settingsExport.addEventListener('click', () => {
-    const exportPayload = { ...orbitalSettings };
-    console.log('=== ORBITAL SETTINGS EXPORT ===');
+    const exportPayload = {
+      orbitalSettings: { ...orbitalSettings },
+      uiSettings: { ...uiSettings },
+      skyboxSettings: { ...skyboxSettings }
+    };
+    console.log('=== UI SETTINGS EXPORT ===');
     console.log(JSON.stringify(exportPayload, null, 2));
   });
 }
+
+if (fontSwitcherToggle && fontSwitcherPanel) {
+  fontSwitcherToggle.addEventListener('click', () => {
+    fontSwitcherPanel.classList.toggle('active');
+    fontSwitcherPanel.setAttribute('aria-hidden', fontSwitcherPanel.classList.contains('active') ? 'false' : 'true');
+  });
+}
+
+if (fontSwitcherClose && fontSwitcherPanel) {
+  fontSwitcherClose.addEventListener('click', () => {
+    fontSwitcherPanel.classList.remove('active');
+    fontSwitcherPanel.setAttribute('aria-hidden', 'true');
+  });
+}
+
+if (fontSwitcherSelect) {
+  fontSwitcherSelect.innerHTML = '';
+  menuFonts.forEach(font => {
+    const option = document.createElement('option');
+    option.value = font.value;
+    option.textContent = font.label;
+    fontSwitcherSelect.appendChild(option);
+  });
+  fontSwitcherSelect.addEventListener('change', (event) => {
+    applyMenuFontSelection(event.target.value);
+  });
+}
+
+if (fontSwitcherList) {
+  fontSwitcherList.innerHTML = '';
+  menuFonts.forEach(font => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'font-switcher-item';
+    button.dataset.fontValue = font.value;
+    button.textContent = font.label;
+    button.addEventListener('click', () => {
+      applyMenuFontSelection(font.value);
+    });
+    fontSwitcherList.appendChild(button);
+  });
+}
+
+applyMenuFontSelection(uiSettings.menuLabelFont);
 
 if (customizeTabs.length && customizePanes.length) {
   const setPane = (paneName) => {
