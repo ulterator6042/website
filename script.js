@@ -5,6 +5,34 @@ const heroSection = document.querySelector('.hero-section');
 const scrollHint = document.getElementById('scrollHint');
 const heroMistLayers = document.querySelectorAll('.hero-mist');
 
+const APP_VERSION = '2025-02-06-1';
+const storedAppVersion = localStorage.getItem('appVersion');
+if (storedAppVersion !== APP_VERSION) {
+  localStorage.removeItem('orbitalSettings');
+  localStorage.removeItem('uiSettings');
+  localStorage.removeItem('skyboxSettings');
+  localStorage.setItem('appVersion', APP_VERSION);
+}
+
+const runHardReset = async () => {
+  localStorage.clear();
+  sessionStorage.clear();
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((key) => caches.delete(key)));
+  }
+  const url = new URL(window.location.href);
+  url.searchParams.delete('hardReset');
+  window.location.replace(url.toString());
+};
+
+window.runHardReset = runHardReset;
+
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('hardReset') === '1') {
+  runHardReset();
+}
+
 // Mobile fallback elements (added in index.html)
 const mobileFallback = document.getElementById('mobileFallback');
 const load3DButton = document.getElementById('load3DButton');
@@ -86,6 +114,7 @@ const defaultMaterialSettings = {
 };
 
 // Load 3D Model
+THREE.Cache.enabled = true;
 const loader = new THREE.GLTFLoader();
 let model = null;
 let skybox = null;
@@ -93,11 +122,16 @@ let menuOrbitRotationY = 0;
 let menuOrbitRotationTargetY = 0;
 const menuOrbitStepY = (Math.PI / 180) * 45;
 
-const skyboxUrl = `skybox2.jpg?v=${Date.now()}`;
+const skyboxUrl = 'skybox2.jpg';
 const skyboxTexture = new THREE.TextureLoader().load(skyboxUrl, (texture) => {
   texture.encoding = THREE.sRGBEncoding;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 1;
+  texture.needsUpdate = true;
 });
-const skyboxGeometry = new THREE.SphereGeometry(60, 48, 32);
+const skyboxGeometry = new THREE.SphereGeometry(60, 32, 24);
 const skyboxMaterial = new THREE.MeshBasicMaterial({
   map: skyboxTexture,
   side: THREE.BackSide,
@@ -112,7 +146,7 @@ const skyboxSettings = {
   opacity: 0.2
 };
 
-const skyboxSettingsVersion = 3;
+const skyboxSettingsVersion = 4;
 
 const savedSkyboxSettings = localStorage.getItem('skyboxSettings');
 if (savedSkyboxSettings) {
@@ -1679,10 +1713,27 @@ let orbitalSettings = {
   rightOffset: 0
 };
 
+const orbitalSettingsVersion = 3;
+
 // Load saved orbital settings
 const savedOrbitalSettings = localStorage.getItem('orbitalSettings');
 if (savedOrbitalSettings) {
-  Object.assign(orbitalSettings, JSON.parse(savedOrbitalSettings));
+  try {
+    const parsed = JSON.parse(savedOrbitalSettings);
+    if (parsed && parsed.version === orbitalSettingsVersion && parsed.settings) {
+      Object.assign(orbitalSettings, parsed.settings);
+    } else {
+      localStorage.setItem('orbitalSettings', JSON.stringify({
+        version: orbitalSettingsVersion,
+        settings: orbitalSettings
+      }));
+    }
+  } catch (err) {
+    localStorage.setItem('orbitalSettings', JSON.stringify({
+      version: orbitalSettingsVersion,
+      settings: orbitalSettings
+    }));
+  }
 }
 
 if (typeof orbitalSettings.sideOffset !== 'number') {
@@ -1740,7 +1791,10 @@ const applyOrbitalSettings = () => {
   }
 
   // Save settings
-  localStorage.setItem('orbitalSettings', JSON.stringify(orbitalSettings));
+  localStorage.setItem('orbitalSettings', JSON.stringify({
+    version: orbitalSettingsVersion,
+    settings: orbitalSettings
+  }));
 };
 
 // UI aesthetics settings
@@ -1794,9 +1848,26 @@ let uiSettings = {
   orbitControlsGap: 54
 };
 
+const uiSettingsVersion = 3;
+
 const savedUiSettings = localStorage.getItem('uiSettings');
 if (savedUiSettings) {
-  Object.assign(uiSettings, JSON.parse(savedUiSettings));
+  try {
+    const parsed = JSON.parse(savedUiSettings);
+    if (parsed && parsed.version === uiSettingsVersion && parsed.settings) {
+      Object.assign(uiSettings, parsed.settings);
+    } else {
+      localStorage.setItem('uiSettings', JSON.stringify({
+        version: uiSettingsVersion,
+        settings: uiSettings
+      }));
+    }
+  } catch (err) {
+    localStorage.setItem('uiSettings', JSON.stringify({
+      version: uiSettingsVersion,
+      settings: uiSettings
+    }));
+  }
 }
 
 if (typeof uiSettings.arrowWidth !== 'number') {
@@ -1910,7 +1981,10 @@ const applyUiSettings = () => {
 
   document.body.classList.toggle('orbit-controls-hidden', !uiSettings.showOrbitControls);
 
-  localStorage.setItem('uiSettings', JSON.stringify(uiSettings));
+  localStorage.setItem('uiSettings', JSON.stringify({
+    version: uiSettingsVersion,
+    settings: uiSettings
+  }));
 };
 
 const updateOrbitScale = () => {
@@ -1958,7 +2032,10 @@ if (orbitalGuiContainer && boxesContainer) {
   effectsFolder.add(orbitalSettings, 'direction', ['forward', 'backward'])
     .name('Direction')
     .onChange(() => {
-      localStorage.setItem('orbitalSettings', JSON.stringify(orbitalSettings));
+      localStorage.setItem('orbitalSettings', JSON.stringify({
+        version: orbitalSettingsVersion,
+        settings: orbitalSettings
+      }));
     });
   effectsFolder.open();
 
@@ -2244,7 +2321,7 @@ if (boxSettingsToggle) {
       boxes.forEach(box => {
         // Don't remove exit classes here - they'll be removed by setTimeout
         if (!box.classList.contains('orbit-exit-left') && !box.classList.contains('orbit-exit-right')) {
-          box.classList.remove('orbit-prev', 'orbit-active', 'orbit-next', 'orbit-enter-left', 'orbit-enter-right');
+          box.classList.remove('orbit-prev', 'orbit-active', 'orbit-next', 'orbit-back', 'orbit-enter-left', 'orbit-enter-right');
         }
       });
 
@@ -2255,10 +2332,15 @@ if (boxSettingsToggle) {
       const prevBox = boxesContainer.querySelector(`.${boxOrder[prevIndex]}`);
       const activeBox = boxesContainer.querySelector(`.${boxOrder[currentOrbitIndex]}`);
       const nextBox = boxesContainer.querySelector(`.${boxOrder[nextIndex]}`);
+      const backIndex = (currentOrbitIndex + 2) % boxOrder.length;
+      const backBox = boxesContainer.querySelector(`.${boxOrder[backIndex]}`);
 
       if (prevBox) prevBox.classList.add('orbit-prev');
       if (activeBox) activeBox.classList.add('orbit-active');
       if (nextBox) nextBox.classList.add('orbit-next');
+      if (backBox && !backBox.classList.contains('orbit-exit-left') && !backBox.classList.contains('orbit-exit-right')) {
+        backBox.classList.add('orbit-back');
+      }
 
       const enterSide = exitSide ? (exitSide === 'left' ? 'right' : 'left') : null;
       if (enterSide && orbitalSettings.enableExitAnimation) {
@@ -2266,9 +2348,9 @@ if (boxSettingsToggle) {
         if (enterBox && !visibleBefore.has(enterBox)) {
           const enterClass = enterSide === 'right' ? 'orbit-enter-right' : 'orbit-enter-left';
           enterBox.classList.add(enterClass);
-          requestAnimationFrame(() => {
+          setTimeout(() => {
             enterBox.classList.remove(enterClass);
-          });
+          }, orbitalSettings.animationSpeed);
         }
       }
     };

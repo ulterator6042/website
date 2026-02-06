@@ -1335,6 +1335,16 @@ body.home2-active .corner-box.orbit-next {
   cursor: pointer !important;
 }
 
+/* Back box - hidden behind */
+body.home2-active .corner-box.orbit-back {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) scale(0.6) !important;
+  opacity: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Exit animation - box leaving from center to left */
 body.home2-active .corner-box.orbit-exit-left {
   left: 50% !important;
