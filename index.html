@@ -51,6 +51,31 @@
 
   <div class="hero-section">
     <div class="hero-backdrop"></div>
+    <svg class="hero-blobs" viewBox="0 0 1280 800" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <filter id="blob-filter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" result="noise" seed="1" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <linearGradient id="blob-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:rgba(199, 208, 220, 0.2); stop-opacity:1" />
+          <stop offset="100%" style="stop-color:rgba(110, 120, 135, 0.1); stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="blob-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:rgba(158, 170, 190, 0.15); stop-opacity:1" />
+          <stop offset="100%" style="stop-color:rgba(80, 95, 115, 0.08); stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="blob-gradient-3" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:rgba(110, 120, 135, 0.1); stop-opacity:1" />
+          <stop offset="100%" style="stop-color:rgba(199, 208, 220, 0.15); stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <g class="blob-group">
+        <ellipse class="blob" id="blob-1" cx="200" cy="150" rx="250" ry="200" fill="url(#blob-gradient-1)" filter="url(#blob-filter)" />
+        <ellipse class="blob" id="blob-2" cx="1000" cy="250" rx="280" ry="180" fill="url(#blob-gradient-2)" filter="url(#blob-filter)" />
+        <ellipse class="blob" id="blob-3" cx="600" cy="600" rx="220" ry="240" fill="url(#blob-gradient-3)" filter="url(#blob-filter)" />
+      </g>
+    </svg>
     <div class="hero-vignette"></div>
     <div class="hero-grain"></div>
     <div class="hero-mist layer-1"></div>
@@ -64,12 +89,54 @@
       </div>
     </div>
     <button id="downloadButton" class="download-btn">Download CV</button>
-    <div class="scroll-hint" id="scrollHint">
-      <span class="scroll-dot"></span>
-    </div>
   </div>
 
+  <!-- Corner Popup Boxes -->
+  <div class="boxes-container" id="boxesContainer">
+    <div class="corner-box top-left" id="boxTopLeft">
+      <span class="corner-box-label">Download Portfolio</span>
+    </div>
+    <div class="corner-box top-right is-link has-dropdown" id="boxTopRight" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+      <span class="corner-box-label">Contacts</span>
+      <div class="contact-dropdown" id="contactDropdown">
+        <div class="dropdown-title">Contact</div>
+        <a class="dropdown-item" href="mailto:matteo.isabella@gmail.com">matteo.isabella@gmail.com</a>
+        <a class="dropdown-item" href="tel:+393917229267">+39 391 722 9267</a>
+        <div class="dropdown-item muted">Milan, Italy</div>
+      </div>
+    </div>
+    <a class="corner-box bottom-left is-link" id="boxBottomLeft" href="projects.html">
+      <span class="corner-box-label">Other Projects</span>
+    </a>
+    <a class="corner-box bottom-right is-link" id="boxBottomRight" href="about.html">
+      <span class="corner-box-label">About Me</span>
+    </a>
+  </div>
 
+  <!-- Orbit Controls for Home3 -->
+  <div class="orbit-controls" id="orbitControls">
+    <button class="orbit-arrow orbit-prev" id="orbitPrev" aria-label="Rotate orbit counter-clockwise">❮</button>
+    <button class="orbit-arrow orbit-next" id="orbitNext" aria-label="Rotate orbit clockwise">❯</button>
+  </div>
+
+  <button class="box-settings-toggle" id="boxSettingsToggle" aria-label="Toggle customize menu">Customize Menu</button>
+
+  <!-- Floating Box Settings GUI -->
+  <div class="box-settings-panel" id="boxSettingsPanel">
+    <div class="settings-header">
+      <h3>Customize Menu</h3>
+      <div class="settings-actions">
+        <button class="settings-export" id="settingsExport">Export</button>
+        <button class="settings-close" id="settingsClose">✕</button>
+      </div>
+    </div>
+    <div class="customize-tabs" role="tablist">
+      <button class="customize-tab active" data-pane="orbital" role="tab" aria-selected="true">Orbital</button>
+    </div>
+    <div class="customize-pane active" data-pane="orbital" role="tabpanel">
+      <div id="orbitalGuiContainer" class="box-gui-container"></div>
+    </div>
+  </div>
 
   <audio id="sound" src="sound.mp3"></audio>
   <script src="script.js"></script>

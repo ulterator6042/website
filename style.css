@@ -42,14 +42,14 @@ CURSOR CLOSET SECTION
 
 
 :root {
-  --primary-color: #667eea;
-  --secondary-color: #764ba2;
-  --accent-color: #ffbfa8;
-  --text-color: #ffffff;
-  --hero-bg-1: #1a1a1a;
-  --hero-bg-2: #242424;
-  --hero-accent: rgba(255, 255, 255, 0.08);
-  --hero-glow: rgba(255, 255, 255, 0.06);
+  --primary-color: #c7d0dc;
+  --secondary-color: #8a93a4;
+  --accent-color: #d7dee7;
+  --text-color: #f1f4f8;
+  --hero-bg-1: #0f1216;
+  --hero-bg-2: #1a2028;
+  --hero-accent: rgba(255, 255, 255, 0.06);
+  --hero-glow: rgba(255, 255, 255, 0.08);
   --hero-vignette-opacity: 0.35;
   --hero-grain-opacity: 0.08;
   --hero-backdrop-opacity: 1;
@@ -58,15 +58,23 @@ CURSOR CLOSET SECTION
   --mist-opacity: 0.45;
   --mist-blur: 70px;
   --mist-scale: 1.2;
-  --mist-color-1: rgba(255, 255, 255, 0.12);
-  --mist-color-2: rgba(180, 180, 180, 0.08);
-  --mist-color-3: rgba(120, 120, 120, 0.06);
+  --mist-color-1: rgba(200, 210, 225, 0.12);
+  --mist-color-2: rgba(150, 160, 175, 0.08);
+  --mist-color-3: rgba(110, 120, 135, 0.06);
   --radial-1-size: 900px;
   --radial-1-x: 15%;
   --radial-1-y: 20%;
   --radial-2-size: 700px;
   --radial-2-x: 85%;
   --radial-2-y: 15%;
+  --blob-opacity: 0.5;
+  --blob-blur: 45px;
+  --blob-speed: 20s;
+  --blob-range: 30px;
+  --blob-scale: 1;
+  --blob-color-1: #c7d0dc;
+  --blob-color-2: #8a93a4;
+  --blob-color-3: #6e7887;
 }
 
 /* Navigation Bar */
@@ -85,8 +93,8 @@ CURSOR CLOSET SECTION
   max-width: 100%;
   padding: 0 40px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   height: 60px;
 }
 
@@ -104,11 +112,15 @@ CURSOR CLOSET SECTION
   gap: 40px;
 }
 
-.nav-link {
+.nav-menu a {
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.3s ease;
+}
+
+.nav-menu a:hover {
+  color: rgba(255, 255, 255, 1);
 }
 
 .nav-actions {
@@ -142,7 +154,7 @@ CURSOR CLOSET SECTION
 
 body {
   width: 100%;
-  background: #1a1a1a;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08), rgba(26, 26, 26, 1) 70%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow-x: hidden;
   overflow-y: hidden;
@@ -408,6 +420,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  display: none;
 }
 
 .hero-backdrop {
@@ -436,6 +449,63 @@ body {
   mix-blend-mode: soft-light;
 }
 
+@keyframes blob-drift-1 {
+  0% { transform: translate(0px, 0px) scale(var(--blob-scale, 1)); }
+  25% { transform: translate(var(--blob-range, 30px), calc(var(--blob-range, 30px) * -1)) scale(var(--blob-scale, 1)); }
+  50% { transform: translate(calc(var(--blob-range, 30px) * -1), calc(var(--blob-range, 30px) * -1)) scale(var(--blob-scale, 1)); }
+  75% { transform: translate(calc(var(--blob-range, 30px) * -1), var(--blob-range, 30px)) scale(var(--blob-scale, 1)); }
+  100% { transform: translate(0px, 0px) scale(var(--blob-scale, 1)); }
+}
+
+@keyframes blob-drift-2 {
+  0% { transform: translate(0px, 0px) scale(var(--blob-scale, 1)); }
+  25% { transform: translate(calc(var(--blob-range, 30px) * -1), var(--blob-range, 30px)) scale(var(--blob-scale, 1)); }
+  50% { transform: translate(var(--blob-range, 30px), var(--blob-range, 30px)) scale(var(--blob-scale, 1)); }
+  75% { transform: translate(var(--blob-range, 30px), calc(var(--blob-range, 30px) * -1)) scale(var(--blob-scale, 1)); }
+  100% { transform: translate(0px, 0px) scale(var(--blob-scale, 1)); }
+}
+
+@keyframes blob-drift-3 {
+  0% { transform: translate(0px, 0px) scale(var(--blob-scale, 1)); }
+  25% { transform: translate(var(--blob-range, 30px), var(--blob-range, 30px)) scale(var(--blob-scale, 1)); }
+  50% { transform: translate(calc(var(--blob-range, 30px) * -1), var(--blob-range, 30px)) scale(var(--blob-scale, 1)); }
+  75% { transform: translate(calc(var(--blob-range, 30px) * -1), calc(var(--blob-range, 30px) * -1)) scale(var(--blob-scale, 1)); }
+  100% { transform: translate(0px, 0px) scale(var(--blob-scale, 1)); }
+}
+
+.hero-blobs {
+  position: absolute;
+  inset: -10%;
+  z-index: 2;
+  pointer-events: none;
+  width: 120%;
+  height: 120%;
+  opacity: var(--blob-opacity, 0.5);
+  filter: blur(var(--blob-blur, 45px));
+  mix-blend-mode: screen;
+}
+
+.blob {
+  animation: var(--blob-animation-1, blob-drift-1) var(--blob-speed, 20s) ease-in-out infinite;
+  transform-origin: center;
+}
+
+.blob#blob-1 {
+  animation-name: blob-drift-1;
+  animation-duration: calc(var(--blob-speed, 20s) * 0.95);
+}
+
+.blob#blob-2 {
+  animation-name: blob-drift-2;
+  animation-duration: calc(var(--blob-speed, 20s) * 1.05);
+  animation-delay: -3s;
+}
+
+.blob#blob-3 {
+  animation-name: blob-drift-3;
+  animation-duration: calc(var(--blob-speed, 20s) * 1);
+  animation-delay: -6s;
+}
 
 .hero-section > .model-container {
   width: 100%;
@@ -497,27 +567,16 @@ body {
   position: relative;
 }
 
-/* Canvas starts hidden until the 3D model is loaded (prevents heavy GPU work on mobile until user opts in) */
+/* Canvas visible immediately for instant render */
 .model-container canvas {
-  display: none;
-  width: 100%;
-  height: 100%;
-}
-
-.model-container.model-loaded canvas {
   display: block;
-}
-
-/* Mobile fallback preview shown on small devices until user loads 3D */
-.mobile-fallback {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), rgba(0,0,0,0.6));
+}
+
+/* Mobile fallback hidden - always use instant 3D */
+.mobile-fallback {
+  display: none !important;
 }
 
 .fallback-copy {
@@ -667,7 +726,7 @@ body {
   }
 
   .hero-section > .model-container {
-    height: 55vh;
+    height: 100vh;
   }
 
   .hero-section > .download-btn {
@@ -678,8 +737,12 @@ body {
 
   /* Add breathing room on small screens */
   .model-container {
-    width: calc(100vw - 24px);
-    margin: 12px;
+    width: 100vw;
+    margin: 0;
+  }
+
+  .orbit-controls {
+    display: none;
   }
 
   .gui-toggle {
@@ -949,4 +1012,643 @@ body {
 
 .hero-mist.layer-3 {
   background: radial-gradient(480px circle at 50% 60%, var(--mist-color-3) 0%, rgba(0, 0, 0, 0) 75%);
+}
+
+/* ============================================
+CORNER POPUP BOXES
+============================================ */
+
+.corner-box {
+  position: fixed;
+    width: var(--orbit-box-size);
+    height: var(--orbit-box-size);
+  background: rgba(207, 214, 227, 0.12);
+  border: 2px solid rgba(199, 208, 220, 0.6);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 50;
+  box-shadow: 
+    0 0 30px rgba(199, 208, 220, 0.3),
+    0 0 60px rgba(199, 208, 220, 0.15),
+    inset 0 0 20px rgba(255, 255, 255, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  overflow: hidden;
+  opacity: 1;
+}
+
+/* All boxes load together - no stagger */
+.corner-box.top-left,
+.corner-box.top-right,
+.corner-box.bottom-left,
+.corner-box.bottom-right {
+  animation-delay: 0s;
+}
+
+
+
+.corner-box.is-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.corner-box.is-link:focus-visible {
+  outline: 2px solid rgba(199, 208, 220, 0.8);
+  outline-offset: 3px;
+}
+
+.corner-box.has-dropdown {
+  overflow: visible;
+}
+
+.contact-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 200px;
+  background: rgba(15, 18, 17, 0.95);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 70;
+  box-shadow: 
+    0 0 30px rgba(199, 208, 220, 0.2),
+    0 16px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.corner-box.has-dropdown:hover .contact-dropdown,
+.corner-box.has-dropdown.dropdown-open .contact-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dropdown-item {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(199, 208, 220, 0.2);
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(199, 208, 220, 0.15);
+  border-color: rgba(199, 208, 220, 0.6);
+  box-shadow: 0 0 12px rgba(199, 208, 220, 0.2);
+}
+
+.dropdown-item.muted {
+  border-style: dashed;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.corner-box-label {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+.corner-box:hover {
+  background: rgba(207, 214, 227, 0.18);
+  border-color: rgba(199, 208, 220, 0.9);
+  box-shadow: 
+    0 0 40px rgba(199, 208, 220, 0.5),
+    0 0 80px rgba(199, 208, 220, 0.25),
+    inset 0 0 25px rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+ORBITAL BOX LAYOUT (Default)
+============================================ */
+
+body.home2-active .boxes-container {
+  position: fixed !important;
+  left: var(--orbital-center-x) !important;
+  top: var(--orbital-center-y) !important;
+  width: 100% !important;
+  height: 400px !important;
+  transform: translate(-50%, -50%) scale(var(--orbit-scale)) !important;
+  z-index: 50 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.home2-active .corner-box {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: all var(--orbital-animation-speed) ease-in-out !important;
+  z-index: 1 !important;
+    width: var(--orbit-box-size) !important;
+    height: var(--orbit-box-size) !important;
+  margin: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  border-radius: 12px !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) scale(1) !important;
+}
+
+body.home2-active:not(.orbit-ready) .corner-box {
+  transition: none !important;
+}
+
+body.home2-active .corner-box::after {
+  display: none !important;
+}
+
+/* Orbital CSS Variables */
+
+:root {
+  /* Orbital positioning */
+  --orbit-scale: 1;
+  --orbit-box-size: 200px;
+  --orbital-trajectory-h: 20%;
+  --orbital-trajectory-v: 20%;
+  --orbital-side-opacity: 0.4;
+  --orbital-animation-speed: 500ms;
+  --orbital-fade-speed: 200ms;
+  --orbital-center-x: 50%;
+  --orbital-center-y: 65%;
+  --orbital-side-scale: 0.65;
+  --orbital-side-offset: 110px;
+  
+  /* Page load animation */
+  --page-load-duration: 800ms;
+  --page-load-stagger-1: 100ms;
+  --page-load-stagger-2: 200ms;
+  --page-load-stagger-3: 300ms;
+  --page-load-stagger-4: 400ms;
+  
+  /* Exit animation */
+  --exit-offset-x: 20px;
+  --exit-offset-y: 10px;
+  --exit-scale: 0.85;
+}
+
+
+/* Previous box - left side of orbit (small, semi-visible, clickable) */
+body.home2-active .corner-box.orbit-prev {
+  left: calc(50% - (var(--orbital-trajectory-h) + var(--orbital-side-offset))) !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) scale(var(--orbital-side-scale)) !important;
+  opacity: var(--orbital-side-opacity) !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  transition: left var(--orbital-animation-speed) ease-in-out, 
+              top var(--orbital-animation-speed) ease-in-out,
+              transform var(--orbital-animation-speed) ease-in-out,
+              opacity var(--orbital-fade-speed) ease-in-out !important;
+}
+
+/* Current active box - center (large, fully visible) */
+body.home2-active .corner-box.orbit-active {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translateX(-50%) translateY(-50%) scale(1) !important;
+  opacity: 1 !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
+  transition: left var(--orbital-animation-speed) ease-in-out, 
+              top var(--orbital-animation-speed) ease-in-out,
+              transform var(--orbital-animation-speed) ease-in-out,
+              opacity var(--orbital-fade-speed) ease-in-out !important;
+}
+
+/* Next box - right side of orbit (small, semi-visible, clickable) */
+body.home2-active .corner-box.orbit-next {
+  left: calc(50% + (var(--orbital-trajectory-h) + var(--orbital-side-offset))) !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) scale(var(--orbital-side-scale)) !important;
+  opacity: var(--orbital-side-opacity) !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  transition: left var(--orbital-animation-speed) ease-in-out, 
+              top var(--orbital-animation-speed) ease-in-out,
+              transform var(--orbital-animation-speed) ease-in-out,
+              opacity var(--orbital-fade-speed) ease-in-out !important;
+}
+
+/* Exit animation - box leaving from center to left */
+body.home2-active .corner-box.orbit-exit-left {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) scale(1) !important;
+  opacity: 1 !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  animation: orbitExitFade var(--orbital-animation-speed) cubic-bezier(0, 0, 0.2, 1) forwards !important;
+  transition: none !important;
+}
+
+/* Exit animation - box leaving from center to right */
+body.home2-active .corner-box.orbit-exit-right {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) scale(1) !important;
+  opacity: 1 !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  animation: orbitExitFade var(--orbital-animation-speed) cubic-bezier(0, 0, 0.2, 1) forwards !important;
+  transition: none !important;
+}
+
+/* Entry animation - box emerging from back to side */
+body.home2-active .corner-box.orbit-enter-right,
+body.home2-active .corner-box.orbit-enter-left {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) scale(0.7) !important;
+  opacity: 0 !important;
+  animation: orbitEnterFade var(--orbital-animation-speed) cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  transition: none !important;
+}
+
+@keyframes orbitExitFade {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+}
+
+@keyframes orbitEnterFade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+body.home2-active .corner-box.has-dropdown {
+  overflow: visible !important;
+}
+
+body.home2-active .corner-box.has-dropdown .contact-dropdown {
+  position: absolute !important;
+  top: calc(100% + 12px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 260px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: all 0.2s ease !important;
+  z-index: 100 !important;
+  margin: 0 !important;
+  padding: 16px !important;
+  background: rgba(20, 20, 20, 0.95) !important;
+  border: 1px solid rgba(199, 208, 220, 0.3) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  height: auto !important;
+}
+
+body.home2-active .corner-box.orbit-active.has-dropdown:hover .contact-dropdown {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+body.home2-active .dropdown-title {
+  font-size: 0.9rem !important;
+  color: rgba(199, 208, 220, 0.9) !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid rgba(199, 208, 220, 0.2) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+}
+
+body.home2-active .dropdown-item {
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-decoration: none !important;
+  font-size: 0.85rem !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(199, 208, 220, 0.1) !important;
+  transition: all 0.2s ease !important;
+  margin-bottom: 6px !important;
+  cursor: pointer !important;
+  display: block !important;
+}
+
+body.home2-active .dropdown-item:hover {
+  background: rgba(199, 208, 220, 0.15) !important;
+  border-color: rgba(199, 208, 220, 0.4) !important;
+}
+
+body.home2-active .dropdown-item.muted {
+  border-style: dashed !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  cursor: default !important;
+}
+
+body.home2-active .dropdown-item.muted:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(199, 208, 220, 0.1) !important;
+}
+
+.corner-box-label {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+#downloadButton {
+  display: none !important;
+}
+
+/* ============================================
+ORBIT CONTROLS
+============================================ */
+
+.orbit-controls {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 32px;
+  z-index: 801;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.orbit-arrow {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: rgba(207, 214, 227, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(199, 208, 220, 0.6);
+  font-size: 1.4rem;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 0 30px rgba(199, 208, 220, 0.3),
+    0 0 60px rgba(199, 208, 220, 0.15),
+    inset 0 0 20px rgba(255, 255, 255, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbit-arrow:hover {
+  transform: translateY(-2px);
+  background: rgba(207, 214, 227, 0.18);
+  border-color: rgba(199, 208, 220, 0.9);
+  box-shadow: 0 0 40px rgba(199, 208, 220, 0.5),
+    0 0 80px rgba(199, 208, 220, 0.25),
+    inset 0 0 25px rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.orbit-arrow:active {
+  transform: translateY(0);
+}
+
+
+
+/* ============================================
+BOX SETTINGS PANEL
+============================================ */
+
+.box-settings-panel {
+  position: fixed;
+  right: -350px;
+  top: 20px;
+  width: 320px;
+  max-height: calc(100vh - 40px);
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(199, 208, 220, 0.3);
+  border-radius: 12px;
+  z-index: 800;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: right 0.3s ease;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.box-settings-panel.active {
+  right: 20px;
+}
+
+.box-settings-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 801;
+  background: rgba(20, 20, 20, 0.85);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.box-settings-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(199, 208, 220, 0.7);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(199, 208, 220, 0.2);
+}
+
+.customize-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.customize-tab {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.customize-tab.active {
+  background: rgba(199, 208, 220, 0.18);
+  border-color: rgba(199, 208, 220, 0.5);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.customize-pane {
+  display: none;
+}
+
+.customize-pane.active {
+  display: block;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-header h3 {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.settings-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.settings-export {
+  background: rgba(199, 208, 220, 0.15);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-export:hover {
+  background: rgba(199, 208, 220, 0.25);
+  border-color: rgba(199, 208, 220, 0.6);
+}
+
+.settings-close:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.box-gui-container {
+  padding: 8px 0;
+}
+
+.box-gui-container .lil-gui {
+  background: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.box-gui-container .lil-gui .controller {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  padding: 8px 10px !important;
+  margin: 6px 0 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.box-gui-container .lil-gui input,
+.box-gui-container .lil-gui select {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 4px !important;
+  padding: 6px 8px !important;
+  font-size: 12px !important;
+  flex: 1 !important;
+}
+
+/* Mobile adjustments for corner boxes */
+@media (max-width: 768px) {
+  .corner-box {
+    width: 120px;
+    height: 120px;
+  }
+
+  .box-settings-panel {
+    width: 280px;
+  }
+}
+
+body.home2-active .orbit-controls {
+  opacity: 1;
+  pointer-events: auto;
 }

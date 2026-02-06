@@ -39,7 +39,7 @@ renderer.physicallyCorrectLights = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.6;
 
-camera.position.z = 2.5;
+camera.position.z = 2.75;
 
 // Lighting (richer environment with multiple light sources)
 const ambientLight = new THREE.AmbientLight(0xa3a3a3, 1.05);
@@ -88,6 +88,65 @@ const defaultMaterialSettings = {
 // Load 3D Model
 const loader = new THREE.GLTFLoader();
 let model = null;
+let skybox = null;
+let menuOrbitRotationY = 0;
+let menuOrbitRotationTargetY = 0;
+const menuOrbitStepY = (Math.PI / 180) * 45;
+
+const skyboxUrl = `skybox2.jpg?v=${Date.now()}`;
+const skyboxTexture = new THREE.TextureLoader().load(skyboxUrl, (texture) => {
+  texture.encoding = THREE.sRGBEncoding;
+});
+const skyboxGeometry = new THREE.SphereGeometry(60, 48, 32);
+const skyboxMaterial = new THREE.MeshBasicMaterial({
+  map: skyboxTexture,
+  side: THREE.BackSide,
+  depthWrite: false,
+  transparent: true,
+  opacity: 0.2
+});
+skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+scene.add(skybox);
+
+const skyboxSettings = {
+  opacity: 0.2
+};
+
+const skyboxSettingsVersion = 3;
+
+const savedSkyboxSettings = localStorage.getItem('skyboxSettings');
+if (savedSkyboxSettings) {
+  try {
+    const parsed = JSON.parse(savedSkyboxSettings);
+    if (parsed && parsed.version === skyboxSettingsVersion && parsed.settings) {
+      Object.assign(skyboxSettings, parsed.settings);
+    } else {
+      localStorage.setItem('skyboxSettings', JSON.stringify({
+        version: skyboxSettingsVersion,
+        settings: skyboxSettings
+      }));
+    }
+  } catch (err) {
+    localStorage.setItem('skyboxSettings', JSON.stringify({
+      version: skyboxSettingsVersion,
+      settings: skyboxSettings
+    }));
+  }
+}
+
+const applySkyboxSettings = () => {
+  if (!skyboxMaterial) return;
+  skyboxMaterial.color.set(0xffffff);
+  skyboxMaterial.opacity = Math.max(0, Math.min(1, skyboxSettings.opacity));
+  skyboxMaterial.needsUpdate = true;
+
+  localStorage.setItem('skyboxSettings', JSON.stringify({
+    version: skyboxSettingsVersion,
+    settings: skyboxSettings
+  }));
+};
+
+applySkyboxSettings();
 
 console.log('Initializing loader and renderer...');
 
@@ -130,8 +189,8 @@ fallbackTimer = setTimeout(() => {
   if (!model) createFallbackCube();
 }, 8000);
 
-// Decide whether to auto-load the 3D model. On phones/low-power devices we wait for explicit user action.
-const shouldAutoLoadModel = !isLowPowerDevice;
+// Always auto-load the 3D model instantly
+const shouldAutoLoadModel = true;
 
 // Prefer a lighter model first for mobile devices
 const modelUrls = isMobileDevice ? ['3d/3d_nodraco.glb', '3d/3d.glb', '3d/3d.gltf', '3d/abstract.glb', '3d/abstract/scene.gltf'] : ['3d/abstract.glb', '3d/abstract/scene.gltf', '3d/3d_nodraco.glb', '3d/3d.glb', '3d/3d.gltf'];
@@ -224,17 +283,16 @@ function tryLoadNext() {
   });
 }
 
-// Kick off loading depending on device - on mobile, wait for user to press 'View 3D'
+// Kick off loading instantly
 function startModelLoading() {
   if (startedLoading) return;
   startedLoading = true;
   tryLoadNext();
 }
 
-if (shouldAutoLoadModel) {
-  if (mobileFallback) mobileFallback.style.display = 'none';
-  startModelLoading();
-}
+// Always hide mobile fallback and start loading immediately
+if (mobileFallback) mobileFallback.style.display = 'none';
+startModelLoading();
 
 function resizeRendererToContainer() {
   const width = modelContainer.clientWidth;
@@ -245,33 +303,14 @@ function resizeRendererToContainer() {
   renderer.setSize(width, height);
 }
 
-if (load3DButton) {
-  load3DButton.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (mobileFallback) mobileFallback.style.display = 'none';
-    modelContainer.classList.add('model-loaded');
-    startModelLoading();
-    resizeRendererToContainer();
-  });
-}
+// Remove manual load button handlers - always auto-load
+// Model loads instantly on page load
 
-// On mobile, allow tapping the model area to start loading if auto-load is disabled
-if (isMobileDevice && !shouldAutoLoadModel) {
-  modelContainer.addEventListener('touchstart', () => {
-    if (mobileFallback) mobileFallback.style.display = 'none';
-    modelContainer.classList.add('model-loaded');
-    startModelLoading();
-    resizeRendererToContainer();
-  }, { passive: true });
-}
-
-// Mouse tracking with inertia
+// Mouse tracking - normalized coordinates for cursor-following
 let mouseX = 0;
 let mouseY = 0;
 let targetMouseX = 0;
 let targetMouseY = 0;
-let rotationVelocityX = 0;
-let rotationVelocityY = 0;
 let lastTouchX = 0;
 let lastTouchY = 0;
 
@@ -294,7 +333,7 @@ if (isMobileDevice) {
 
 // Hitbox configuration
 const hitboxConfig = {
-  enabled: true,
+  enabled: false, // Full-page cursor detection
   shape: 'circle', // 'circle' or 'rectangle'
   radius: isMobileDevice ? 0.8 : 0.6, // Larger hitbox for touch
   width: 0.8, // for rectangle, normalized 0-1
@@ -619,13 +658,12 @@ document.addEventListener('touchmove', (event) => {
       if (touchIntent === 'rotate') {
         event.preventDefault();
         if (isMobileDevice) {
-          const dx = (touch.clientX - lastTouchX) / window.innerWidth;
-          const dy = (touch.clientY - lastTouchY) / window.innerHeight;
           lastTouchX = touch.clientX;
           lastTouchY = touch.clientY;
-
-          rotationVelocityY += dx * Math.PI * interactionConfig.rotationSpeedX * 1.5;
-          rotationVelocityX += dy * Math.PI * interactionConfig.rotationSpeedY * 1.5;
+          
+          // Update mouse position for cursor-following
+          mouseX = (touch.clientX / window.innerWidth) * 2 - 1;
+          mouseY = -(touch.clientY / window.innerHeight) * 2 + 1;
         }
       }
     }
@@ -756,26 +794,25 @@ function animate() {
   }
   
   if (model) {
+    // Smooth menu-driven Y rotation to sync with orbital navigation
+    menuOrbitRotationY += (menuOrbitRotationTargetY - menuOrbitRotationY) * 0.0324;
+
     // Auto-orbit
     if (interactionConfig.autoOrbit) {
       model.rotation.y += interactionConfig.autoOrbitSpeed * 0.01;
-    } else {
-      // Manual rotation with inertia (only if in hitbox)
-      if (mouseInHitbox && (!isMobileDevice || !isTouching)) {
-        rotationVelocityX += (mouseY * Math.PI * 0.5 * interactionConfig.rotationSpeedY - model.rotation.x) * 0.01;
-        rotationVelocityY += (mouseX * Math.PI * interactionConfig.rotationSpeedX - model.rotation.y) * 0.01;
-      }
-      
-      rotationVelocityX *= interactionConfig.inertia;
-      rotationVelocityY *= interactionConfig.inertia;
-      
-      model.rotation.x += rotationVelocityX;
-      model.rotation.y += rotationVelocityY;
-      
-      // Return to center when mouse leaves
-      rotationVelocityX *= (1 - interactionConfig.returnSpeed);
-      rotationVelocityY *= (1 - interactionConfig.returnSpeed);
     }
+
+    const baseTargetX = interactionConfig.autoOrbit ? 0 : -mouseY * Math.PI * 0.15;
+    const baseTargetY = interactionConfig.autoOrbit ? 0 : mouseX * Math.PI * 0.25;
+    const targetRotationX = baseTargetX;
+    const targetRotationY = baseTargetY + menuOrbitRotationY;
+    model.rotation.x += (targetRotationX - model.rotation.x) * 0.06;
+    model.rotation.y += (targetRotationY - model.rotation.y) * 0.06;
+  }
+
+  if (skybox && model) {
+    skybox.rotation.x = model.rotation.x * 0.2;
+    skybox.rotation.y = model.rotation.y * 0.2;
   }
   
   // Draw hitbox visualization
@@ -803,28 +840,28 @@ const designControls = document.getElementById('designControls');
 
 const defaultDesignSettings = {
   // Colors
-  primaryColor: '#f0f0f0',
-  secondaryColor: '#121212',
-  accentColor: '#949494',
-  backgroundColor: '#1c1c1c',
-  sectionBackground: '#242424',
-  textColor: '#d6d6d6',
-  textSecondaryColor: '#9e9e9e',
-  borderColor: '#242424',
+  primaryColor: '#c7d0dc',
+  secondaryColor: '#8a93a4',
+  accentColor: '#d7dee7',
+  backgroundColor: '#0f1216',
+  sectionBackground: '#1a2028',
+  textColor: '#f1f4f8',
+  textSecondaryColor: '#b8c0ce',
+  borderColor: '#2a323d',
 
   // Hero environment colors
-  heroBg1: '#1c1c1c',
-  heroBg2: '#242424',
-  heroAccent: '#3a3a3a',
-  heroGlow: '#4a4a4a',
+  heroBg1: '#0f1216',
+  heroBg2: '#1a2028',
+  heroAccent: '#2a313b',
+  heroGlow: '#353f4b',
   
   // Button styles
-  buttonTextColor: '#e1e0e0',
+  buttonTextColor: '#f1f4f8',
   buttonOpacity: '0.6',
   
   // Section styles
-  projectCardBg: 'rgba(255, 255, 255, 0.06)',
-  projectCardHoverBg: '#383838',
+  projectCardBg: 'rgba(255, 255, 255, 0.05)',
+  projectCardHoverBg: 'rgba(255, 255, 255, 0.09)',
   
   // Typography
   headingSize: '2.5',
@@ -833,6 +870,25 @@ const defaultDesignSettings = {
 };
 
 const designSettings = { ...defaultDesignSettings };
+
+const globalAppearance = (() => {
+  try {
+    return JSON.parse(localStorage.getItem('globalAppearance') || '{}');
+  } catch (err) {
+    return {};
+  }
+})();
+
+if (Object.keys(globalAppearance).length) {
+  designSettings.primaryColor = globalAppearance.primaryColor || designSettings.primaryColor;
+  designSettings.secondaryColor = globalAppearance.secondaryColor || designSettings.secondaryColor;
+  designSettings.accentColor = globalAppearance.accentColor || designSettings.accentColor;
+  designSettings.textColor = globalAppearance.textColor || designSettings.textColor;
+  designSettings.textSecondaryColor = globalAppearance.textMuted || designSettings.textSecondaryColor;
+  designSettings.backgroundColor = globalAppearance.pageBg || designSettings.backgroundColor;
+  designSettings.sectionBackground = globalAppearance.panelBg || designSettings.sectionBackground;
+  designSettings.borderColor = globalAppearance.panelBorder || designSettings.borderColor;
+}
 
 const controlConfig = {
   primaryColor: { type: 'color', label: 'Primary Color' },
@@ -1268,8 +1324,6 @@ modelFolder.add({ resetTransform: () => {
   mouseY = 0;
   targetMouseX = 0;
   targetMouseY = 0;
-  rotationVelocityX = 0;
-  rotationVelocityY = 0;
   modelFolder.updateDisplay();
 }}, 'resetTransform').name('🔄 Reset Transform');
 
@@ -1509,7 +1563,6 @@ materialFolder.close();
 lightFolder.close();
 renderFolder.close();
 envFolder.close();
-interactionFolder.close();
 hitboxFolder.close();
 buttonFolder.close();
 settingsFolder.close();
@@ -1530,6 +1583,470 @@ document.addEventListener('click', (event) => {
   setTimeout(() => {
     twinkle.remove();
   }, 600);
+});
+
+/* ============================================
+ORBITAL MENU CONTROLS
+============================================ */
+
+// Get elements
+const boxSettingsPanel = document.getElementById('boxSettingsPanel');
+const settingsClose = document.getElementById('settingsClose');
+const boxSettingsToggle = document.getElementById('boxSettingsToggle');
+const settingsExport = document.getElementById('settingsExport');
+const boxesContainer = document.getElementById('boxesContainer');
+const orbitControls = document.getElementById('orbitControls');
+const orbitPrev = document.getElementById('orbitPrev');
+const orbitNext = document.getElementById('orbitNext');
+const contactBox = document.getElementById('boxTopRight');
+const contactDropdown = document.getElementById('contactDropdown');
+const customizeTabs = document.querySelectorAll('.customize-tab');
+const customizePanes = document.querySelectorAll('.customize-pane');
+
+// Global orbital settings
+let orbitalSettings = {
+  // Trajectory
+  trajectoryHorizontal: 20,
+  trajectoryVertical: 20,
+  sideBoxScale: 0.65,
+  // Effects
+  sideBoxOpacity: 0.4,
+  animationSpeed: 500,
+  direction: 'forward',
+  enableSideOpacity: true,
+  enableExitAnimation: true,
+  enablePageLoadAnimation: false,
+  // Positioning
+  positionCenterX: 50,
+  positionCenterY: 65,
+  sideOffset: 110,
+  // Page Load Animation
+  pageLoadDuration: 0,
+  pageLoadStagger1: 0,
+  pageLoadStagger2: 0,
+  pageLoadStagger3: 0,
+  pageLoadStagger4: 0,
+  // Exit Animation
+  exitOffsetX: 20,
+  exitOffsetY: 10,
+  exitScale: 85
+};
+
+// Load saved orbital settings
+const savedOrbitalSettings = localStorage.getItem('orbitalSettings');
+if (savedOrbitalSettings) {
+  Object.assign(orbitalSettings, JSON.parse(savedOrbitalSettings));
+}
+
+if (typeof orbitalSettings.sideOffset !== 'number') {
+  const legacyLeft = Number(orbitalSettings.leftOffset) || 0;
+  const legacyRight = Number(orbitalSettings.rightOffset) || 0;
+  orbitalSettings.sideOffset = Math.round((legacyLeft + legacyRight) / 2);
+}
+
+orbitalSettings.sideOffset = 110;
+
+const applyOrbitalSettings = () => {
+  // Update CSS variables
+  const root = document.documentElement.style;
+  
+  // Trajectory
+  root.setProperty('--orbital-trajectory-h', orbitalSettings.trajectoryHorizontal + '%');
+  root.setProperty('--orbital-trajectory-v', orbitalSettings.trajectoryVertical + '%');
+  root.setProperty('--orbital-side-scale', orbitalSettings.sideBoxScale);
+  
+  // Effects
+  const resolvedSideOpacity = orbitalSettings.enableSideOpacity ? orbitalSettings.sideBoxOpacity : 1;
+  root.setProperty('--orbital-side-opacity', resolvedSideOpacity);
+  root.setProperty('--orbital-animation-speed', orbitalSettings.animationSpeed + 'ms');
+  
+  // Positioning
+  root.setProperty('--orbital-center-x', orbitalSettings.positionCenterX + '%');
+  root.setProperty('--orbital-center-y', orbitalSettings.positionCenterY + '%');
+  root.setProperty('--orbital-side-offset', orbitalSettings.sideOffset + 'px');
+  
+  // Page Load Animation
+  const resolvedPageLoadDuration = orbitalSettings.enablePageLoadAnimation ? orbitalSettings.pageLoadDuration : 0;
+  const resolvedStagger = orbitalSettings.enablePageLoadAnimation ? {
+    s1: orbitalSettings.pageLoadStagger1,
+    s2: orbitalSettings.pageLoadStagger2,
+    s3: orbitalSettings.pageLoadStagger3,
+    s4: orbitalSettings.pageLoadStagger4
+  } : { s1: 0, s2: 0, s3: 0, s4: 0 };
+  root.setProperty('--page-load-duration', resolvedPageLoadDuration + 'ms');
+  root.setProperty('--page-load-stagger-1', resolvedStagger.s1 + 'ms');
+  root.setProperty('--page-load-stagger-2', resolvedStagger.s2 + 'ms');
+  root.setProperty('--page-load-stagger-3', resolvedStagger.s3 + 'ms');
+  root.setProperty('--page-load-stagger-4', resolvedStagger.s4 + 'ms');
+  
+  // Exit Animation
+  root.setProperty('--exit-offset-x', orbitalSettings.exitOffsetX + 'px');
+  root.setProperty('--exit-offset-y', orbitalSettings.exitOffsetY + 'px');
+  root.setProperty('--exit-scale', orbitalSettings.exitScale / 100);
+
+  if (boxesContainer) {
+    const boxes = boxesContainer.querySelectorAll('.corner-box');
+    boxes.forEach(box => {
+      box.style.setProperty('--orbital-side-opacity', orbitalSettings.sideBoxOpacity, 'important');
+    });
+  }
+
+  // Save settings
+  localStorage.setItem('orbitalSettings', JSON.stringify(orbitalSettings));
+};
+
+const updateOrbitScale = () => {
+  const baseWidth = 1920;
+  const baseHeight = 1080;
+  const scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight, 1);
+  const clamped = Math.max(0.6, Math.min(scale, 1));
+  document.documentElement.style.setProperty('--orbit-scale', clamped.toFixed(3));
+};
+
+updateOrbitScale();
+window.addEventListener('resize', updateOrbitScale);
+
+// Orbital GUI Configuration
+const orbitalGuiContainer = document.getElementById('orbitalGuiContainer');
+if (orbitalGuiContainer && boxesContainer) {
+  const orbitalGui = new window.lil.GUI({ container: orbitalGuiContainer, title: 'Orbital Controls' });
+  orbitalGui.domElement.style.width = '100%';
+
+  // ===== TRAJECTORY SECTION =====
+  const trajectoryFolder = orbitalGui.addFolder('🔄 Trajectory & Path');
+  trajectoryFolder.add(orbitalSettings, 'trajectoryHorizontal', 10, 80, 5)
+    .name('Horizontal Spread (%)')
+    .onChange(applyOrbitalSettings);
+  trajectoryFolder.add(orbitalSettings, 'trajectoryVertical', 5, 50, 5)
+    .name('Vertical Spread (%)')
+    .onChange(applyOrbitalSettings);
+  trajectoryFolder.add(orbitalSettings, 'sideBoxScale', 0.3, 1, 0.05)
+    .name('Side Box Scale')
+    .onChange(applyOrbitalSettings);
+  trajectoryFolder.open();
+
+  // ===== EFFECTS SECTION =====
+  const effectsFolder = orbitalGui.addFolder('✨ Effects & Motion');
+  effectsFolder.add(orbitalSettings, 'sideBoxOpacity', 0, 1, 0.05)
+    .name('Side Box Opacity')
+    .onChange(applyOrbitalSettings);
+  effectsFolder.add(orbitalSettings, 'animationSpeed', 200, 1000, 50)
+    .name('Animation Speed (ms)')
+    .onChange(applyOrbitalSettings);
+  effectsFolder.add(orbitalSettings, 'enableSideOpacity')
+    .name('Enable Side Fade')
+    .onChange(applyOrbitalSettings);
+  effectsFolder.add(orbitalSettings, 'direction', ['forward', 'backward'])
+    .name('Direction')
+    .onChange(() => {
+      localStorage.setItem('orbitalSettings', JSON.stringify(orbitalSettings));
+    });
+  effectsFolder.open();
+
+  // ===== POSITIONING SECTION =====
+  const positioningFolder = orbitalGui.addFolder('📍 Positioning');
+  positioningFolder.add(orbitalSettings, 'positionCenterX', 20, 80, 5)
+    .name('Center X (%)')
+    .onChange(applyOrbitalSettings);
+  positioningFolder.add(orbitalSettings, 'positionCenterY', 20, 80, 5)
+    .name('Center Y (%)')
+    .onChange(applyOrbitalSettings);
+  positioningFolder.add(orbitalSettings, 'sideOffset', -300, 300, 10)
+    .name('Side Offset (px)')
+    .onChange(applyOrbitalSettings);
+  positioningFolder.open();
+
+  // ===== PAGE LOAD ANIMATION SECTION =====
+  const pageLoadFolder = orbitalGui.addFolder('🎬 Page Load Animation');
+  pageLoadFolder.add(orbitalSettings, 'enablePageLoadAnimation')
+    .name('Enable Page Load')
+    .onChange(applyOrbitalSettings);
+  pageLoadFolder.add(orbitalSettings, 'pageLoadDuration', 300, 2000, 50)
+    .name('Duration (ms)')
+    .onChange(applyOrbitalSettings);
+  
+  const staggerSubFolder = pageLoadFolder.addFolder('Stagger Delays');
+  staggerSubFolder.add(orbitalSettings, 'pageLoadStagger1', 0, 1000, 50)
+    .name('Box 1 Delay (ms)')
+    .onChange(applyOrbitalSettings);
+  staggerSubFolder.add(orbitalSettings, 'pageLoadStagger2', 0, 1000, 50)
+    .name('Box 2 Delay (ms)')
+    .onChange(applyOrbitalSettings);
+  staggerSubFolder.add(orbitalSettings, 'pageLoadStagger3', 0, 1000, 50)
+    .name('Box 3 Delay (ms)')
+    .onChange(applyOrbitalSettings);
+  staggerSubFolder.add(orbitalSettings, 'pageLoadStagger4', 0, 1000, 50)
+    .name('Box 4 Delay (ms)')
+    .onChange(applyOrbitalSettings);
+  staggerSubFolder.close();
+
+  const exitFolder = orbitalGui.addFolder('🚪 Exit Animation');
+  exitFolder.add(orbitalSettings, 'enableExitAnimation')
+    .name('Enable Exit')
+    .onChange(applyOrbitalSettings);
+  exitFolder.add(orbitalSettings, 'exitOffsetX', 0, 60, 2)
+    .name('Offset X (px)')
+    .onChange(applyOrbitalSettings);
+  exitFolder.add(orbitalSettings, 'exitOffsetY', -40, 40, 2)
+    .name('Offset Y (px)')
+    .onChange(applyOrbitalSettings);
+  exitFolder.add(orbitalSettings, 'exitScale', 60, 100, 1)
+    .name('Scale (%)')
+    .onChange(applyOrbitalSettings);
+  exitFolder.open();
+  pageLoadFolder.close();
+
+  // ===== EXIT ANIMATION SECTION =====
+  const exitAnimFolder = orbitalGui.addFolder('🚀 Exit Animation');
+  exitAnimFolder.add(orbitalSettings, 'exitOffsetX', 0, 100, 5)
+    .name('Horizontal Offset (px)')
+    .onChange(applyOrbitalSettings);
+  exitAnimFolder.add(orbitalSettings, 'exitOffsetY', 0, 100, 5)
+    .name('Vertical Offset (px)')
+    .onChange(applyOrbitalSettings);
+  exitAnimFolder.add(orbitalSettings, 'exitScale', 50, 100, 5)
+    .name('Exit Scale (%)')
+    .onChange(applyOrbitalSettings);
+  exitAnimFolder.close();
+
+  const skyboxFolder = orbitalGui.addFolder('🌌 Skybox');
+  skyboxFolder.add(skyboxSettings, 'opacity', 0, 1, 0.01)
+    .name('Opacity')
+    .onChange(applySkyboxSettings);
+  skyboxFolder.open();
+
+  // Apply initial settings
+  applyOrbitalSettings();
+}
+
+// Close button functionality
+settingsClose.addEventListener('click', () => {
+  boxSettingsPanel.classList.remove('active');
+});
+
+if (boxSettingsToggle) {
+  boxSettingsToggle.addEventListener('click', () => {
+    boxSettingsPanel.classList.toggle('active');
+  });
+}
+
+// Initialize orbital layout automatically on page load
+{
+  // Initialize orbital layout for Home2
+  const initializeOrbitalLayout = () => {
+    if (!boxesContainer) return;
+
+    document.body.classList.remove('orbit-ready');
+    
+    const boxOrder = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+    let currentOrbitIndex = 0;
+
+    const rotateSphereForOrbit = (exitSide) => {
+      if (!exitSide) return;
+      const direction = exitSide === 'left' ? -1 : 1;
+      menuOrbitRotationTargetY += menuOrbitStepY * direction;
+    };
+
+    const updateOrbitPositions = (exitSide = null) => {
+      const prevBoxBefore = boxesContainer.querySelector('.orbit-prev');
+      const nextBoxBefore = boxesContainer.querySelector('.orbit-next');
+      const activeBoxBefore = boxesContainer.querySelector('.orbit-active');
+      const visibleBefore = new Set([prevBoxBefore, nextBoxBefore, activeBoxBefore].filter(Boolean));
+
+      // If there's an exit side, fade/shrink the side box moving to the back
+      if (exitSide && orbitalSettings.enableExitAnimation) {
+        const exitBox = exitSide === 'left' ? prevBoxBefore : nextBoxBefore;
+        if (exitBox) {
+          exitBox.classList.remove('orbit-prev', 'orbit-next', 'orbit-active');
+          exitBox.classList.add(exitSide === 'left' ? 'orbit-exit-left' : 'orbit-exit-right');
+
+          // Remove exit class after animation completes
+          setTimeout(() => {
+            exitBox.classList.remove('orbit-exit-left', 'orbit-exit-right');
+          }, orbitalSettings.animationSpeed);
+        }
+      }
+
+      const boxes = boxesContainer.querySelectorAll('.corner-box');
+      boxes.forEach(box => {
+        // Don't remove exit classes here - they'll be removed by setTimeout
+        if (!box.classList.contains('orbit-exit-left') && !box.classList.contains('orbit-exit-right')) {
+          box.classList.remove('orbit-prev', 'orbit-active', 'orbit-next', 'orbit-enter-left', 'orbit-enter-right');
+        }
+      });
+
+      // Set positions for prev, active, next
+      const prevIndex = (currentOrbitIndex - 1 + boxOrder.length) % boxOrder.length;
+      const nextIndex = (currentOrbitIndex + 1) % boxOrder.length;
+
+      const prevBox = boxesContainer.querySelector(`.${boxOrder[prevIndex]}`);
+      const activeBox = boxesContainer.querySelector(`.${boxOrder[currentOrbitIndex]}`);
+      const nextBox = boxesContainer.querySelector(`.${boxOrder[nextIndex]}`);
+
+      if (prevBox) prevBox.classList.add('orbit-prev');
+      if (activeBox) activeBox.classList.add('orbit-active');
+      if (nextBox) nextBox.classList.add('orbit-next');
+
+      const enterSide = exitSide ? (exitSide === 'left' ? 'right' : 'left') : null;
+      if (enterSide) {
+        const enterBox = enterSide === 'right' ? nextBox : prevBox;
+        if (enterBox && !visibleBefore.has(enterBox)) {
+          const enterClass = enterSide === 'right' ? 'orbit-enter-right' : 'orbit-enter-left';
+          enterBox.classList.add(enterClass);
+          requestAnimationFrame(() => {
+            enterBox.classList.remove(enterClass);
+          });
+        }
+      }
+    };
+
+    const navigatePrev = () => {
+      const exitSide = orbitalSettings.direction === 'forward' ? 'right' : 'left';
+
+      if (orbitalSettings.direction === 'forward') {
+        currentOrbitIndex = (currentOrbitIndex - 1 + boxOrder.length) % boxOrder.length;
+      } else {
+        currentOrbitIndex = (currentOrbitIndex + 1) % boxOrder.length;
+      }
+      rotateSphereForOrbit(exitSide);
+      updateOrbitPositions(exitSide);
+    };
+
+    const navigateNext = () => {
+      const exitSide = orbitalSettings.direction === 'forward' ? 'left' : 'right';
+
+      if (orbitalSettings.direction === 'forward') {
+        currentOrbitIndex = (currentOrbitIndex + 1) % boxOrder.length;
+      } else {
+        currentOrbitIndex = (currentOrbitIndex - 1 + boxOrder.length) % boxOrder.length;
+      }
+      rotateSphereForOrbit(exitSide);
+      updateOrbitPositions(exitSide);
+    };
+
+    // Initial state
+    updateOrbitPositions();
+
+    requestAnimationFrame(() => {
+      document.body.classList.add('orbit-ready');
+    });
+
+    // Arrow button navigation
+    if (orbitPrev && orbitNext) {
+      orbitPrev.addEventListener('click', navigatePrev);
+      orbitNext.addEventListener('click', navigateNext);
+    }
+
+    // Add click handlers to side boxes to bring them to center
+    const addBoxClickHandlers = () => {
+      const boxes = boxesContainer.querySelectorAll('.corner-box');
+      boxes.forEach(box => {
+        box.addEventListener('click', (e) => {
+          // Only handle clicks on prev/next boxes, not active or links
+          if (box.classList.contains('orbit-prev')) {
+            e.preventDefault();
+            navigatePrev();
+          } else if (box.classList.contains('orbit-next')) {
+            e.preventDefault();
+            navigateNext();
+          }
+          // If orbit-active, allow normal link behavior
+        });
+      });
+    };
+
+    addBoxClickHandlers();
+
+    if (isMobileDevice && boxesContainer) {
+      let touchStartX = 0;
+      let touchStartY = 0;
+      const swipeThreshold = 40;
+
+      boxesContainer.addEventListener('touchstart', (event) => {
+        const touch = event.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      }, { passive: true });
+
+      boxesContainer.addEventListener('touchend', (event) => {
+        const touch = event.changedTouches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
+          if (deltaX > 0) {
+            navigatePrev();
+          } else {
+            navigateNext();
+          }
+        }
+      }, { passive: true });
+    }
+  };
+
+  document.body.classList.add('home2-active');
+  initializeOrbitalLayout();
+}
+
+if (settingsExport) {
+  settingsExport.addEventListener('click', () => {
+    const exportPayload = { ...orbitalSettings };
+    console.log('=== ORBITAL SETTINGS EXPORT ===');
+    console.log(JSON.stringify(exportPayload, null, 2));
+  });
+}
+
+if (customizeTabs.length && customizePanes.length) {
+  const setPane = (paneName) => {
+    customizeTabs.forEach(tab => {
+      const isActive = tab.dataset.pane === paneName;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    customizePanes.forEach(pane => {
+      pane.classList.toggle('active', pane.dataset.pane === paneName);
+    });
+  };
+
+  customizeTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      setPane(tab.dataset.pane);
+    });
+  });
+}
+
+if (contactBox && contactDropdown) {
+  const setContactOpen = (isOpen) => {
+    contactBox.classList.toggle('dropdown-open', isOpen);
+    contactBox.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  };
+
+  contactBox.addEventListener('click', (event) => {
+    if (event.target.closest('.contact-dropdown a')) return;
+    event.preventDefault();
+    setContactOpen(!contactBox.classList.contains('dropdown-open'));
+  });
+
+  contactBox.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setContactOpen(!contactBox.classList.contains('dropdown-open'));
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!contactBox.contains(event.target)) {
+      setContactOpen(false);
+    }
+  });
+}
+
+// Open settings panel (could be triggered by a button or interaction)
+// For now, add a keyboard shortcut: Press 'B' to toggle box settings
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'b' && boxSettingsPanel) {
+    boxSettingsPanel.classList.toggle('active');
+  }
 });
 
 

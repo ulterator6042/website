@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Me</title>
+  <link rel="stylesheet" href="pages.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <a class="home-link" href="index.html">Back to Home</a>
+      <h1 class="page-title">About Me</h1>
+    </header>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h2>Product designer from Milan, Italy.</h2>
+        <p>Hi, I’m a young product designer who loves immersing myself in a wide range of creative projects, from sewing to 3D printing and artistic 3D modeling. I always try to bring something from each passion into my design process.</p>
+        <div class="button-row">
+          <a class="btn" href="mailto:matteo.isabella@gmail.com">Start a Project</a>
+          <a class="btn outline" href="#experience">View Experience</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <h2>Current Focus</h2>
+        <p>Product development, user research support, rapid prototyping, and cross-functional collaboration.</p>
+        <div class="tag-row">
+          <span class="tag">Product Design</span>
+          <span class="tag">Interaction</span>
+          <span class="tag">Prototyping</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>Core Skills</h3>
+      <div class="grid">
+        <div class="card">
+          <h4>Product Development</h4>
+          <p>Hands-on design support for grooming innovations and product details.</p>
+        </div>
+        <div class="card">
+          <h4>User Research</h4>
+          <p>Supporting insight gathering and translating findings into design decisions.</p>
+        </div>
+        <div class="card">
+          <h4>Prototyping</h4>
+          <p>Rapid iteration to validate ideas early and align teams.</p>
+        </div>
+        <div class="card">
+          <h4>Visual Storytelling</h4>
+          <p>Blending creative crafts and modeling into product narratives.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="experience">
+      <h3>Experience</h3>
+      <div class="grid">
+        <div class="card">
+          <h4>2025 - Ongoing · Philips, Amsterdam</h4>
+          <p>Product Designer Intern for the shaving & grooming team. Worked on product development and design for grooming innovations, supporting user research, prototyping, and cross-functional collaboration.</p>
+        </div>
+        <div class="card">
+          <h4>2023 - 2025 · VIE Network, Milano Design Week</h4>
+          <p>Graphic Designer, exhibition installer, gallery guide, and event organizer for the 5VIE district.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>Education & Languages</h3>
+      <div class="grid">
+        <div class="card">
+          <h4>Education</h4>
+          <p>Master’s degree in Interaction Design, TU Delft (2024 - ongoing).</p>
+          <p>Bachelor’s degree in Product Design, Politecnico di Milano (2021 - 2024).</p>
+        </div>
+        <div class="card">
+          <h4>Languages</h4>
+          <p>Italian (native).</p>
+          <p>English (fluent, C2).</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">I am always open to ambitious ideas and thoughtful collaborations.</p>
+  </main>
+
+  <button class="box-settings-toggle" id="boxSettingsToggle" aria-label="Toggle customize menu">Customize Menu</button>
+
+  <div class="box-settings-panel" id="boxSettingsPanel">
+    <div class="settings-header">
+      <h3>Customize Menu</h3>
+      <div class="settings-actions">
+        <button class="settings-close" id="settingsClose">✕</button>
+      </div>
+    </div>
+    <div class="customize-tabs" role="tablist">
+      <button class="customize-tab active" data-pane="appearance" role="tab" aria-selected="true">Appearance</button>
+      <button class="customize-tab" data-pane="boxes" role="tab" aria-selected="false">Boxes</button>
+    </div>
+    <div class="customize-pane active" data-pane="appearance" role="tabpanel">
+      <div id="appearanceGuiContainer" class="box-gui-container"></div>
+    </div>
+    <div class="customize-pane" data-pane="boxes" role="tabpanel">
+      <div class="customize-note">Boxes are available on the home page.</div>
+    </div>
+  </div>
+
+  <script src="libs/lil-gui.js"></script>
+  <script src="customize-menu.js"></script>
+</body>
+</html>

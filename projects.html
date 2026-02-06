@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Other Projects</title>
+  <link rel="stylesheet" href="pages.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <a class="home-link" href="index.html">Back to Home</a>
+      <h1 class="page-title">Other Projects</h1>
+    </header>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h2>Selected Experiments</h2>
+        <p>A mix of speculative concepts, product explorations, and interaction prototypes. Each project was built to test a specific idea.</p>
+        <div class="button-row">
+          <a class="btn" href="#project-grid">Explore Grid</a>
+          <a class="btn outline" href="#featured-project">Featured Case</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <h2>Focus Areas</h2>
+        <p>Visual systems, 3D storytelling, and immersive microsites built with careful motion and typography.</p>
+        <div class="tag-row">
+          <span class="tag">Creative Direction</span>
+          <span class="tag">UI Systems</span>
+          <span class="tag">Prototyping</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="featured-project">
+      <h3>Featured Case</h3>
+      <div class="card">
+        <h4>Project Atlas</h4>
+        <p>A cinematic product launch microsite designed for a new AI hardware studio. Built an interactive timeline, custom 3D narrative, and adaptive layout system.</p>
+        <div class="tag-row">
+          <span class="tag">2025</span>
+          <span class="tag">WebGL</span>
+          <span class="tag">Motion</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="project-grid">
+      <h3>Project Grid</h3>
+      <div class="grid">
+        <div class="card">
+          <h4>Studio Relay</h4>
+          <p>Brand refresh and responsive web experience for a boutique tech studio.</p>
+        </div>
+        <div class="card">
+          <h4>Signal Pavilion</h4>
+          <p>Immersive landing page with audio-reactive gradients and scroll narrative.</p>
+        </div>
+        <div class="card">
+          <h4>Vector Labs</h4>
+          <p>Dark mode SaaS dashboard prototype with modular components.</p>
+        </div>
+        <div class="card">
+          <h4>Neon Orchard</h4>
+          <p>Experimental typography piece exploring organic motion in 3D space.</p>
+        </div>
+        <div class="card">
+          <h4>Orbit Glass</h4>
+          <p>AR-enabled product showcase for consumer devices.</p>
+        </div>
+        <div class="card">
+          <h4>Linebreak</h4>
+          <p>Micro interaction toolkit for portfolio builders.</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">Want to see full case studies? Reach out and I will share detailed walkthroughs.</p>
+  </main>
+
+  <button class="box-settings-toggle" id="boxSettingsToggle" aria-label="Toggle customize menu">Customize Menu</button>
+
+  <div class="box-settings-panel" id="boxSettingsPanel">
+    <div class="settings-header">
+      <h3>Customize Menu</h3>
+      <div class="settings-actions">
+        <button class="settings-close" id="settingsClose">✕</button>
+      </div>
+    </div>
+    <div class="customize-tabs" role="tablist">
+      <button class="customize-tab active" data-pane="appearance" role="tab" aria-selected="true">Appearance</button>
+      <button class="customize-tab" data-pane="boxes" role="tab" aria-selected="false">Boxes</button>
+    </div>
+    <div class="customize-pane active" data-pane="appearance" role="tabpanel">
+      <div id="appearanceGuiContainer" class="box-gui-container"></div>
+    </div>
+    <div class="customize-pane" data-pane="boxes" role="tabpanel">
+      <div class="customize-note">Boxes are available on the home page.</div>
+    </div>
+  </div>
+
+  <script src="libs/lil-gui.js"></script>
+  <script src="customize-menu.js"></script>
+</body>
+</html>
