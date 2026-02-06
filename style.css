@@ -186,7 +186,7 @@ CURSOR CLOSET SECTION
 
 body {
   width: 100%;
-  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08), rgba(26, 26, 26, 1) 70%);
+  background: radial-gradient(circle at 50% 20%, rgba(70, 70, 70, 0.35) 0%, rgba(30, 30, 30, 0.85) 55%, rgba(18, 18, 18, 1) 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow-x: hidden;
   overflow-y: hidden;
@@ -1286,6 +1286,11 @@ body.home2-active .corner-box::after {
   --orbit-controls-bottom: 20px;
   --orbit-controls-left: 50%;
   --orbit-controls-gap: 32px;
+  --orbit-indicator-offset: 16px;
+  --orbit-indicator-size: 8px;
+  --orbit-indicator-gap: 10px;
+  --orbit-indicator-active-scale: 1.4;
+  --orbit-indicator-glow: 0.5;
   --orbit-arrow-size: 64px;
   --orbit-arrow-width: 96px;
   --orbit-arrow-height: 56px;
@@ -1544,6 +1549,36 @@ ORBIT CONTROLS
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+}
+
+.orbit-indicators {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--orbit-indicator-offset));
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--orbit-indicator-gap);
+  pointer-events: none;
+}
+
+.orbit-indicators.hidden {
+  display: none;
+}
+
+.orbit-dot {
+  width: var(--orbit-indicator-size);
+  height: var(--orbit-indicator-size);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
+  transform: scale(1);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.orbit-dot.active {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 12px rgba(255, 255, 255, var(--orbit-indicator-glow));
+  transform: scale(var(--orbit-indicator-active-scale));
 }
 
 body.orbit-controls-hidden .orbit-controls {

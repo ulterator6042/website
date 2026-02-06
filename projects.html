@@ -3,83 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Other Projects</title>
+  <title>Products</title>
   <link rel="stylesheet" href="pages.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <main class="page-shell">
     <header class="page-header">
       <a class="home-link" href="index.html">Back to Home</a>
-      <h1 class="page-title">Other Projects</h1>
+      <div class="header-actions">
+        <span class="header-pill">Product Lab</span>
+        <button class="header-cta">Request deck</button>
+      </div>
     </header>
 
     <section class="hero">
-      <div class="hero-card">
-        <h2>Selected Experiments</h2>
-        <p>A mix of speculative concepts, product explorations, and interaction prototypes. Each project was built to test a specific idea.</p>
+      <div class="hero-copy">
+        <p class="eyebrow">Products</p>
+        <h1 class="page-title">Curated concepts with the same glass-mist language as the home page.</h1>
+        <p class="hero-lead">A focused collection of product explorations, each shaped around narrative motion, tactile glass UI, and a 3D-centric visual system.</p>
         <div class="button-row">
-          <a class="btn" href="#project-grid">Explore Grid</a>
-          <a class="btn outline" href="#featured-project">Featured Case</a>
+          <a class="btn" href="#product-grid">Browse products</a>
+          <a class="btn outline" href="#featured">Featured case</a>
+        </div>
+        <div class="stat-row">
+          <div class="stat">
+            <span class="stat-value">06</span>
+            <span class="stat-label">Product stories</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">03</span>
+            <span class="stat-label">WebGL launches</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">2025</span>
+            <span class="stat-label">Latest build</span>
+          </div>
         </div>
       </div>
-      <div class="hero-card">
-        <h2>Focus Areas</h2>
-        <p>Visual systems, 3D storytelling, and immersive microsites built with careful motion and typography.</p>
-        <div class="tag-row">
-          <span class="tag">Creative Direction</span>
-          <span class="tag">UI Systems</span>
-          <span class="tag">Prototyping</span>
+      <div class="hero-visual">
+        <div class="orbit-stack">
+          <div class="orbit-card is-front">
+            <div class="orbit-media" role="img" aria-label="Product hero preview"></div>
+            <div class="orbit-meta">
+              <span>Atlas Core</span>
+              <strong>Glass interface</strong>
+            </div>
+          </div>
+          <div class="orbit-card is-mid">
+            <div class="orbit-media"></div>
+            <div class="orbit-meta">
+              <span>Studio Relay</span>
+              <strong>Spatial launch</strong>
+            </div>
+          </div>
+          <div class="orbit-card is-back">
+            <div class="orbit-media"></div>
+            <div class="orbit-meta">
+              <span>Signal Pavilion</span>
+              <strong>Ambient UI</strong>
+            </div>
+          </div>
         </div>
+        <div class="hero-glow"></div>
       </div>
     </section>
 
-    <section class="section" id="featured-project">
-      <h3>Featured Case</h3>
-      <div class="card">
-        <h4>Project Atlas</h4>
-        <p>A cinematic product launch microsite designed for a new AI hardware studio. Built an interactive timeline, custom 3D narrative, and adaptive layout system.</p>
-        <div class="tag-row">
-          <span class="tag">2025</span>
-          <span class="tag">WebGL</span>
-          <span class="tag">Motion</span>
-        </div>
+    <section class="section" id="featured">
+      <div class="section-header">
+        <h2>Featured case</h2>
+        <p>Deep dive into the full launch experience for Atlas Core, a premium hardware narrative.</p>
       </div>
+      <article class="feature-card">
+        <div class="feature-media" role="img" aria-label="Featured product preview"></div>
+        <div class="feature-body">
+          <p class="eyebrow">Atlas Core</p>
+          <h3>Cinematic WebGL launch with tactile glass controls.</h3>
+          <p>Built a guided product reveal with ambient sound cues, orbital menu navigation, and a minimal glass UI toolkit.</p>
+          <div class="tag-row">
+            <span class="tag">WebGL</span>
+            <span class="tag">Storytelling</span>
+            <span class="tag">Interaction</span>
+          </div>
+          <button class="btn outline">View synopsis</button>
+        </div>
+      </article>
     </section>
 
-    <section class="section" id="project-grid">
-      <h3>Project Grid</h3>
+    <section class="section" id="product-grid">
+      <div class="section-header">
+        <h2>Product grid</h2>
+        <p>Short, punchy summaries for every product experiment.</p>
+      </div>
       <div class="grid">
-        <div class="card">
+        <article class="product-card">
+          <div class="product-media"></div>
           <h4>Studio Relay</h4>
-          <p>Brand refresh and responsive web experience for a boutique tech studio.</p>
-        </div>
-        <div class="card">
+          <p>Responsive brand platform for a boutique hardware collective.</p>
+          <div class="tag-row"><span class="tag">Brand</span><span class="tag">Web</span></div>
+        </article>
+        <article class="product-card">
+          <div class="product-media"></div>
           <h4>Signal Pavilion</h4>
-          <p>Immersive landing page with audio-reactive gradients and scroll narrative.</p>
-        </div>
-        <div class="card">
+          <p>Ambient scroll narrative with audio-reactive gradients.</p>
+          <div class="tag-row"><span class="tag">Audio</span><span class="tag">Motion</span></div>
+        </article>
+        <article class="product-card">
+          <div class="product-media"></div>
           <h4>Vector Labs</h4>
-          <p>Dark mode SaaS dashboard prototype with modular components.</p>
-        </div>
-        <div class="card">
+          <p>Modular SaaS dashboard prototype for AI workflows.</p>
+          <div class="tag-row"><span class="tag">UI</span><span class="tag">System</span></div>
+        </article>
+        <article class="product-card">
+          <div class="product-media"></div>
           <h4>Neon Orchard</h4>
-          <p>Experimental typography piece exploring organic motion in 3D space.</p>
-        </div>
-        <div class="card">
+          <p>Typography experiment in 3D space and luminous fog.</p>
+          <div class="tag-row"><span class="tag">Type</span><span class="tag">3D</span></div>
+        </article>
+        <article class="product-card">
+          <div class="product-media"></div>
           <h4>Orbit Glass</h4>
-          <p>AR-enabled product showcase for consumer devices.</p>
-        </div>
-        <div class="card">
+          <p>AR product showcase with layered glass surfaces.</p>
+          <div class="tag-row"><span class="tag">AR</span><span class="tag">Prototype</span></div>
+        </article>
+        <article class="product-card">
+          <div class="product-media"></div>
           <h4>Linebreak</h4>
           <p>Micro interaction toolkit for portfolio builders.</p>
-        </div>
+          <div class="tag-row"><span class="tag">Toolkit</span><span class="tag">UI</span></div>
+        </article>
       </div>
     </section>
 
-    <p class="footer-note">Want to see full case studies? Reach out and I will share detailed walkthroughs.</p>
+    <section class="section callout">
+      <div>
+        <h2>Need a full case study?</h2>
+        <p>Reach out and I will share the private build, research notes, and the interaction breakdown.</p>
+      </div>
+      <button class="btn">Start a conversation</button>
+    </section>
   </main>
 
   <button class="box-settings-toggle" id="boxSettingsToggle" aria-label="Toggle customize menu">Customize Menu</button>

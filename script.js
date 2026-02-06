@@ -4,13 +4,14 @@ const modelContainer = document.getElementById('modelContainer');
 const heroSection = document.querySelector('.hero-section');
 const scrollHint = document.getElementById('scrollHint');
 const heroMistLayers = document.querySelectorAll('.hero-mist');
+let modelControl = null;
+let modelBaseScale = 1;
 
 const APP_VERSION = '2025-02-06-1';
 const storedAppVersion = localStorage.getItem('appVersion');
 if (storedAppVersion !== APP_VERSION) {
   localStorage.removeItem('orbitalSettings');
   localStorage.removeItem('uiSettings');
-  localStorage.removeItem('skyboxSettings');
   localStorage.setItem('appVersion', APP_VERSION);
 }
 
@@ -117,70 +118,9 @@ const defaultMaterialSettings = {
 THREE.Cache.enabled = true;
 const loader = new THREE.GLTFLoader();
 let model = null;
-let skybox = null;
 let menuOrbitRotationY = 0;
 let menuOrbitRotationTargetY = 0;
 const menuOrbitStepY = (Math.PI / 180) * 45;
-
-const skyboxUrl = 'skybox2.jpg';
-const skyboxTexture = new THREE.TextureLoader().load(skyboxUrl, (texture) => {
-  texture.encoding = THREE.sRGBEncoding;
-  texture.generateMipmaps = false;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.anisotropy = 1;
-  texture.needsUpdate = true;
-});
-const skyboxGeometry = new THREE.SphereGeometry(60, 32, 24);
-const skyboxMaterial = new THREE.MeshBasicMaterial({
-  map: skyboxTexture,
-  side: THREE.BackSide,
-  depthWrite: false,
-  transparent: true,
-  opacity: 0.2
-});
-skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
-scene.add(skybox);
-
-const skyboxSettings = {
-  opacity: 0.2
-};
-
-const skyboxSettingsVersion = 4;
-
-const savedSkyboxSettings = localStorage.getItem('skyboxSettings');
-if (savedSkyboxSettings) {
-  try {
-    const parsed = JSON.parse(savedSkyboxSettings);
-    if (parsed && parsed.version === skyboxSettingsVersion && parsed.settings) {
-      Object.assign(skyboxSettings, parsed.settings);
-    } else {
-      localStorage.setItem('skyboxSettings', JSON.stringify({
-        version: skyboxSettingsVersion,
-        settings: skyboxSettings
-      }));
-    }
-  } catch (err) {
-    localStorage.setItem('skyboxSettings', JSON.stringify({
-      version: skyboxSettingsVersion,
-      settings: skyboxSettings
-    }));
-  }
-}
-
-const applySkyboxSettings = () => {
-  if (!skyboxMaterial) return;
-  skyboxMaterial.color.set(0xffffff);
-  skyboxMaterial.opacity = Math.max(0, Math.min(1, skyboxSettings.opacity));
-  skyboxMaterial.needsUpdate = true;
-
-  localStorage.setItem('skyboxSettings', JSON.stringify({
-    version: skyboxSettingsVersion,
-    settings: skyboxSettings
-  }));
-};
-
-applySkyboxSettings();
 
 console.log('Initializing loader and renderer...');
 
@@ -216,6 +156,11 @@ function createFallbackCube() {
   cube.receiveShadow = true;
   scene.add(cube);
   model = cube;
+  modelBaseScale = model.scale.x || 1;
+  if (modelControl) {
+    model.scale.setScalar(modelBaseScale * modelControl.scale);
+    model.position.set(modelControl.posX, modelControl.posY, modelControl.posZ);
+  }
 }
 
 // Give the GLTF loader a bit more time for external .bin/.wasm fetches
@@ -272,6 +217,11 @@ function tryLoadNext() {
     model.scale.multiplyScalar(scale);
     if (maxDim > 0) {
       model.position.sub(center.multiplyScalar(scale));
+    }
+    modelBaseScale = model.scale.x || 1;
+    if (modelControl) {
+      model.scale.setScalar(modelBaseScale * modelControl.scale);
+      model.position.set(modelControl.posX, modelControl.posY, modelControl.posZ);
     }
     
     // Count meshes
@@ -436,7 +386,7 @@ function applyEnvironmentSettings() {
 
 // Preset settings
 const presetSettings = {
-  model: { posX: 0, posY: 0, posZ: -2 },
+  model: { posX: 0, posY: 0, posZ: -2, scale: 1 },
   camera: { z: 2.5 },
   material: { metalness: 0.95, roughness: 0.4, color: 10592673, emissiveColor: 0, emissiveIntensity: 0.9 },
   ambient: { intensity: 1.05, color: 10724259, visible: true },
@@ -452,10 +402,17 @@ const presetSettings = {
 
 function applyPreset(preset) {
   // Apply model position
-  modelControl.posX = preset.model.posX;
-  modelControl.posY = preset.model.posY;
-  modelControl.posZ = preset.model.posZ;
-  if (model) model.position.set(preset.model.posX, preset.model.posY, preset.model.posZ);
+  if (modelControl) {
+    modelControl.scale = typeof preset.model.scale === 'number' ? preset.model.scale : 1;
+    modelControl.posX = preset.model.posX;
+    modelControl.posY = preset.model.posY;
+    modelControl.posZ = preset.model.posZ;
+  }
+  if (model) {
+    const scaleValue = typeof preset.model.scale === 'number' ? preset.model.scale : 1;
+    model.scale.setScalar(modelBaseScale * scaleValue);
+    model.position.set(preset.model.posX, preset.model.posY, preset.model.posZ);
+  }
 
   // Apply camera
   camera.position.z = preset.camera.z;
@@ -844,10 +801,6 @@ function animate() {
     model.rotation.y += (targetRotationY - model.rotation.y) * 0.06;
   }
 
-  if (skybox && model) {
-    skybox.rotation.x = model.rotation.x * 0.2;
-    skybox.rotation.y = model.rotation.y * 0.2;
-  }
   
   // Draw hitbox visualization
   if (hitboxConfig.visible) {
@@ -1332,10 +1285,11 @@ const gui = new window.lil.GUI({
 
 // Model controls
 const modelFolder = gui.addFolder('Model');
-const modelControl = {
+modelControl = {
   posX: 0,
   posY: 0,
   posZ: 0,
+  scale: 1,
 };
 modelFolder.add(modelControl, 'posX', -3, 3, 0.1).onChange((val) => {
   if (model) model.position.x = val;
@@ -1346,12 +1300,17 @@ modelFolder.add(modelControl, 'posY', -3, 3, 0.1).onChange((val) => {
 modelFolder.add(modelControl, 'posZ', -2, 2, 0.1).onChange((val) => {
   if (model) model.position.z = val;
 }).name('Position Z');
+modelFolder.add(modelControl, 'scale', 0.4, 2.5, 0.05).onChange((val) => {
+  if (model) model.scale.setScalar(modelBaseScale * val);
+}).name('Scale');
 modelFolder.add({ resetTransform: () => {
   modelControl.posX = 0;
   modelControl.posY = 0;
   modelControl.posZ = 0;
+  modelControl.scale = 1;
   if (model) {
     model.position.set(0, 0, 0);
+    model.scale.setScalar(modelBaseScale);
     model.rotation.set(0, 0, 0);
   }
   mouseX = 0;
@@ -1632,6 +1591,7 @@ const boxesContainer = document.getElementById('boxesContainer');
 const orbitControls = document.getElementById('orbitControls');
 const orbitPrev = document.getElementById('orbitPrev');
 const orbitNext = document.getElementById('orbitNext');
+const orbitIndicators = document.getElementById('orbitIndicators');
 const contactBox = document.getElementById('boxTopRight');
 const contactDropdown = document.getElementById('contactDropdown');
 const customizeTabs = document.querySelectorAll('.customize-tab');
@@ -1683,10 +1643,10 @@ const applyMenuFontSelection = (fontValue) => {
 };
 
 // Global orbital settings
-let orbitalSettings = {
+const defaultOrbitalSettings = {
   // Trajectory
   trajectoryHorizontal: 30,
-  trajectoryVertical: 25,
+  trajectoryVertical: 30,
   sideBoxScale: 0.6,
   // Effects
   sideBoxOpacity: 0.6,
@@ -1712,6 +1672,8 @@ let orbitalSettings = {
   leftOffset: -250,
   rightOffset: 0
 };
+
+let orbitalSettings = { ...defaultOrbitalSettings };
 
 const orbitalSettingsVersion = 3;
 
@@ -1798,28 +1760,28 @@ const applyOrbitalSettings = () => {
 };
 
 // UI aesthetics settings
-let uiSettings = {
+const defaultUiSettings = {
   menuSize: 250,
   menuRadius: 999,
   menuBlur: 8,
   menuSaturate: 185,
-  menuGlassOpacity: 0.56,
-  menuTintOpacity: 0.41,
-  menuBorderOpacity: 0.38,
-  menuShadowOpacity: 0.44,
-  menuGlowOpacity: 0.14,
+  menuGlassOpacity: 0.46,
+  menuTintOpacity: 0.5,
+  menuBorderOpacity: 0.24,
+  menuShadowOpacity: 0.52,
+  menuGlowOpacity: 0.22,
   menuBlobOpacity: 0.9,
   menuBlobBlur: 29,
-  menuBaseColor: '#1a1a1a',
+  menuBaseColor: '#d6d6d6',
   menuTintColor: '#ffffff',
-  menuAccentColor: '#5e230d',
-  menuLabelColor: '#bdbdbd',
+  menuAccentColor: '#ffffff',
+  menuLabelColor: '#dddada',
   menuLabelFont: "'Mont ExtraLight Demo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   menuLabelSize: 1.4,
   menuLabelWeight: 700,
   menuLabelSpacing: 2,
   menuLabelUppercase: false,
-  showMenuBorder: false,
+  showMenuBorder: true,
   showMenuGlow: false,
   showMenuBlob: true,
   showOrbitControls: true,
@@ -1830,23 +1792,31 @@ let uiSettings = {
   arrowBlur: 18,
   arrowSaturate: 90,
   arrowFontSize: 1.1,
-  arrowBorderOpacity: 0,
-  arrowGlassOpacity: 0.72,
-  arrowTintOpacity: 0.4,
+  arrowBorderOpacity: 0.2,
+  arrowGlassOpacity: 0.44,
+  arrowTintOpacity: 0.5,
   arrowShadowOpacity: 0.4,
-  arrowGlowOpacity: 0.32,
-  arrowBaseColor: '#1a1a1a',
+  arrowGlowOpacity: 0.2,
+  arrowBaseColor: '#d6d6d6',
   arrowTintColor: '#ffffff',
-  arrowAccentColor: '#ff7a4a',
-  arrowColor: '#bababa',
-  showArrowBorder: false,
+  arrowAccentColor: '#ffffff',
+  arrowColor: '#e3e3e3',
+  showArrowBorder: true,
   showArrowGlow: false,
   arrowRound: true,
   arrowHeightAdjusted: true,
   orbitControlsBottom: 16,
   orbitControlsLeft: 50,
-  orbitControlsGap: 54
+  orbitControlsGap: 54,
+  showOrbitIndicators: true,
+  indicatorSize: 8,
+  indicatorGap: 10,
+  indicatorOffset: 16,
+  indicatorGlow: 0.5,
+  indicatorActiveScale: 1.4
 };
+
+let uiSettings = { ...defaultUiSettings };
 
 const uiSettingsVersion = 3;
 
@@ -1959,6 +1929,11 @@ const applyUiSettings = () => {
   root.setProperty('--orbit-controls-bottom', `${uiSettings.orbitControlsBottom}px`);
   root.setProperty('--orbit-controls-left', `${uiSettings.orbitControlsLeft}%`);
   root.setProperty('--orbit-controls-gap', `${uiSettings.orbitControlsGap}px`);
+  root.setProperty('--orbit-indicator-size', `${uiSettings.indicatorSize}px`);
+  root.setProperty('--orbit-indicator-gap', `${uiSettings.indicatorGap}px`);
+  root.setProperty('--orbit-indicator-offset', `${uiSettings.indicatorOffset}px`);
+  root.setProperty('--orbit-indicator-glow', `${uiSettings.indicatorGlow}`);
+  root.setProperty('--orbit-indicator-active-scale', `${uiSettings.indicatorActiveScale}`);
   const resolvedArrowWidth = uiSettings.arrowWidth || uiSettings.arrowSize;
   const resolvedArrowHeight = uiSettings.arrowHeight || uiSettings.arrowSize;
   root.setProperty('--orbit-arrow-width', `${resolvedArrowWidth}px`);
@@ -1980,6 +1955,10 @@ const applyUiSettings = () => {
   root.setProperty('--orbit-arrow-shadow-hover', buildGlassShadowHover(uiSettings.arrowShadowOpacity + 0.05, arrowGlowAlpha + 0.04, uiSettings.arrowAccentColor));
 
   document.body.classList.toggle('orbit-controls-hidden', !uiSettings.showOrbitControls);
+
+  if (orbitIndicators) {
+    orbitIndicators.classList.toggle('hidden', !uiSettings.showOrbitIndicators);
+  }
 
   localStorage.setItem('uiSettings', JSON.stringify({
     version: uiSettingsVersion,
@@ -2105,12 +2084,6 @@ if (orbitalGuiContainer && boxesContainer) {
     .onChange(applyOrbitalSettings);
   exitAnimFolder.close();
 
-  const skyboxFolder = orbitalGui.addFolder('🌌 Skybox');
-  skyboxFolder.add(skyboxSettings, 'opacity', 0, 1, 0.01)
-    .name('Opacity')
-    .onChange(applySkyboxSettings);
-  skyboxFolder.open();
-
   const uiFolder = orbitalGui.addFolder('🎨 UI Aesthetics');
 
   const menuLayoutFolder = uiFolder.addFolder('Menu Layout');
@@ -2200,6 +2173,9 @@ if (orbitalGuiContainer && boxesContainer) {
   controlsFolder.add(uiSettings, 'showOrbitControls')
     .name('Show Arrows')
     .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'showOrbitIndicators')
+    .name('Show Dots')
+    .onChange(applyUiSettings);
   controlsFolder.add(uiSettings, 'orbitControlsBottom', 0, 120, 2)
     .name('Bottom Offset (px)')
     .onChange(applyUiSettings);
@@ -2208,6 +2184,21 @@ if (orbitalGuiContainer && boxesContainer) {
     .onChange(applyUiSettings);
   controlsFolder.add(uiSettings, 'orbitControlsGap', 8, 80, 2)
     .name('Arrow Gap (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'indicatorOffset', 6, 40, 2)
+    .name('Dots Offset (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'indicatorSize', 4, 16, 1)
+    .name('Dot Size (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'indicatorGap', 6, 24, 1)
+    .name('Dot Gap (px)')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'indicatorActiveScale', 1, 2.2, 0.05)
+    .name('Dot Active Scale')
+    .onChange(applyUiSettings);
+  controlsFolder.add(uiSettings, 'indicatorGlow', 0, 1, 0.05)
+    .name('Dot Glow')
     .onChange(applyUiSettings);
   controlsFolder.add(uiSettings, 'arrowWidth', 56, 140, 2)
     .name('Arrow Width (px)')
@@ -2291,6 +2282,27 @@ if (boxSettingsToggle) {
     const boxOrder = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
     let currentOrbitIndex = 0;
 
+    const renderOrbitIndicators = () => {
+      if (!orbitIndicators) return;
+      orbitIndicators.innerHTML = '';
+      boxOrder.forEach((_, index) => {
+        const dot = document.createElement('span');
+        dot.className = 'orbit-dot';
+        dot.dataset.index = String(index);
+        orbitIndicators.appendChild(dot);
+      });
+    };
+
+    const updateOrbitIndicators = () => {
+      if (!orbitIndicators) return;
+      const dots = orbitIndicators.querySelectorAll('.orbit-dot');
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentOrbitIndex);
+      });
+    };
+
+    renderOrbitIndicators();
+
     const rotateSphereForOrbit = (exitSide) => {
       if (!exitSide) return;
       const direction = exitSide === 'left' ? -1 : 1;
@@ -2341,6 +2353,8 @@ if (boxSettingsToggle) {
       if (backBox && !backBox.classList.contains('orbit-exit-left') && !backBox.classList.contains('orbit-exit-right')) {
         backBox.classList.add('orbit-back');
       }
+
+      updateOrbitIndicators();
 
       const enterSide = exitSide ? (exitSide === 'left' ? 'right' : 'left') : null;
       if (enterSide && orbitalSettings.enableExitAnimation) {
@@ -2445,10 +2459,21 @@ if (boxSettingsToggle) {
 
 if (settingsExport) {
   settingsExport.addEventListener('click', () => {
+    const getChangedSettings = (base, current) => {
+      const changes = {};
+      Object.keys(current).forEach((key) => {
+        const baseValue = base[key];
+        const currentValue = current[key];
+        if (JSON.stringify(baseValue) !== JSON.stringify(currentValue)) {
+          changes[key] = currentValue;
+        }
+      });
+      return changes;
+    };
+
     const exportPayload = {
-      orbitalSettings: { ...orbitalSettings },
-      uiSettings: { ...uiSettings },
-      skyboxSettings: { ...skyboxSettings }
+      orbitalSettings: getChangedSettings(defaultOrbitalSettings, orbitalSettings),
+      uiSettings: getChangedSettings(defaultUiSettings, uiSettings)
     };
     console.log('=== UI SETTINGS EXPORT ===');
     console.log(JSON.stringify(exportPayload, null, 2));
