@@ -1872,6 +1872,11 @@ const ORBIT_PALETTE_STORAGE_KEY = 'orbitPalettePresets';
 let orbitPaletteStorage = null;
 
 const defaultOrbitColorSettings = {
+  flatColorMode: false,
+  menuOutlineThickness: 1,
+  menuOutlineColor: '#ffffff',
+  arrowOutlineThickness: 1,
+  arrowOutlineColor: '#ffffff',
   menuBaseColor: '#d6d6d6',
   menuTintColor: '#ffffff',
   menuAccentColor: '#ffffff',
@@ -1893,6 +1898,11 @@ const defaultOrbitColorSettings = {
 };
 
 const buildOrbitPaletteFromCurrent = () => ({
+  flatColorMode: uiSettings.flatColorMode,
+  menuOutlineThickness: uiSettings.menuOutlineThickness,
+  menuOutlineColor: uiSettings.menuOutlineColor,
+  arrowOutlineThickness: uiSettings.arrowOutlineThickness,
+  arrowOutlineColor: uiSettings.arrowOutlineColor,
   menuBaseColor: uiSettings.menuBaseColor,
   menuTintColor: uiSettings.menuTintColor,
   menuAccentColor: uiSettings.menuAccentColor,
@@ -1966,6 +1976,13 @@ const applyOrbitPaletteById = (paletteId, persistSelection = true) => {
 
   const palette = entry.palette;
   
+  // Apply mode settings
+  if (typeof palette.flatColorMode === 'boolean') uiSettings.flatColorMode = palette.flatColorMode;
+  if (typeof palette.menuOutlineThickness === 'number') uiSettings.menuOutlineThickness = palette.menuOutlineThickness;
+  if (palette.menuOutlineColor) uiSettings.menuOutlineColor = palette.menuOutlineColor;
+  if (typeof palette.arrowOutlineThickness === 'number') uiSettings.arrowOutlineThickness = palette.arrowOutlineThickness;
+  if (palette.arrowOutlineColor) uiSettings.arrowOutlineColor = palette.arrowOutlineColor;
+  
   // Apply colors to uiSettings
   if (palette.menuBaseColor) uiSettings.menuBaseColor = palette.menuBaseColor;
   if (palette.menuTintColor) uiSettings.menuTintColor = palette.menuTintColor;
@@ -1997,6 +2014,25 @@ const initOrbitColorsGui = () => {
   const orbitColorsGui = new window.lil.GUI({ container: orbitColorsGuiContainer, title: 'Orbit Menu Colors' });
   orbitColorsGui.domElement.style.width = '100%';
   window.orbitColorsGui = orbitColorsGui;
+
+  // Style Mode Folder
+  const modeFolder = orbitColorsGui.addFolder('⚡ Style Mode');
+  modeFolder.add(uiSettings, 'flatColorMode')
+    .name('Flat Colors')
+    .onChange(applyUiSettings);
+  modeFolder.add(uiSettings, 'menuOutlineThickness', 0, 30, 1)
+    .name('Menu Outline')
+    .onChange(applyUiSettings);
+  modeFolder.addColor(uiSettings, 'menuOutlineColor')
+    .name('Menu Outline Color')
+    .onChange(applyUiSettings);
+  modeFolder.add(uiSettings, 'arrowOutlineThickness', 0, 30, 1)
+    .name('Arrow Outline')
+    .onChange(applyUiSettings);
+  modeFolder.addColor(uiSettings, 'arrowOutlineColor')
+    .name('Arrow Outline Color')
+    .onChange(applyUiSettings);
+  modeFolder.open();
 
   // Menu Colors Folder
   const menuColorsFolder = orbitColorsGui.addFolder('🔮 Menu Box Colors');
@@ -2850,6 +2886,11 @@ const applyOrbitalSettings = () => {
 
 // UI aesthetics settings
 const defaultUiSettings = {
+  flatColorMode: false,
+  menuOutlineThickness: 1,
+  menuOutlineColor: '#ffffff',
+  arrowOutlineThickness: 1,
+  arrowOutlineColor: '#ffffff',
   menuSize: 250,
   menuRadius: 999,
   menuBlur: 8,
@@ -2947,6 +2988,23 @@ if (!uiSettings.arrowHeightAdjusted) {
   uiSettings.arrowHeightAdjusted = true;
 }
 
+// Migrate new flat mode and outline settings
+if (typeof uiSettings.flatColorMode !== 'boolean') {
+  uiSettings.flatColorMode = false;
+}
+if (typeof uiSettings.menuOutlineThickness !== 'number') {
+  uiSettings.menuOutlineThickness = 1;
+}
+if (!uiSettings.menuOutlineColor) {
+  uiSettings.menuOutlineColor = '#ffffff';
+}
+if (typeof uiSettings.arrowOutlineThickness !== 'number') {
+  uiSettings.arrowOutlineThickness = 1;
+}
+if (!uiSettings.arrowOutlineColor) {
+  uiSettings.arrowOutlineColor = '#ffffff';
+}
+
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
 const colorToRgba = (color, alpha) => {
@@ -2992,11 +3050,12 @@ const buildGlassShadowHover = (shadowOpacity, glowOpacity, accentColor) => (
 
 const applyUiSettings = () => {
   const root = document.documentElement.style;
+  const isFlat = uiSettings.flatColorMode;
 
   root.setProperty('--orbit-box-size', `${uiSettings.menuSize}px`);
   root.setProperty('--menu-radius', `${uiSettings.menuRadius}px`);
-  root.setProperty('--menu-blur', `${uiSettings.menuBlur}px`);
-  root.setProperty('--menu-saturate', `${uiSettings.menuSaturate}%`);
+  root.setProperty('--menu-blur', isFlat ? '0px' : `${uiSettings.menuBlur}px`);
+  root.setProperty('--menu-saturate', isFlat ? '100%' : `${uiSettings.menuSaturate}%`);
   root.setProperty('--menu-label-color', uiSettings.menuLabelColor);
   root.setProperty('--menu-label-font', uiSettings.menuLabelFont);
   root.setProperty('--menu-label-size', `${uiSettings.menuLabelSize}rem`);
@@ -3006,13 +3065,23 @@ const applyUiSettings = () => {
 
   const menuBorderAlpha = uiSettings.showMenuBorder ? uiSettings.menuBorderOpacity : 0;
   const menuGlowAlpha = uiSettings.showMenuGlow ? uiSettings.menuGlowOpacity : 0;
+  const menuOutline = uiSettings.menuOutlineThickness || 1;
+  const menuOutlineColor = uiSettings.menuOutlineColor || '#ffffff';
 
-  root.setProperty('--menu-bg', buildGlassBackground(uiSettings.menuTintColor, uiSettings.menuTintOpacity, uiSettings.menuBaseColor, uiSettings.menuGlassOpacity));
-  root.setProperty('--menu-bg-hover', buildGlassBackground(uiSettings.menuTintColor, uiSettings.menuTintOpacity + 0.04, uiSettings.menuBaseColor, uiSettings.menuGlassOpacity + 0.05));
-  root.setProperty('--menu-border', `1px solid ${colorToRgba(uiSettings.menuTintColor, menuBorderAlpha)}`);
-  root.setProperty('--menu-shadow', buildGlassShadow(uiSettings.menuShadowOpacity, menuGlowAlpha, uiSettings.menuAccentColor));
-  root.setProperty('--menu-shadow-hover', buildGlassShadowHover(uiSettings.menuShadowOpacity + 0.05, menuGlowAlpha + 0.04, uiSettings.menuAccentColor));
-  root.setProperty('--menu-blob-opacity', uiSettings.showMenuBlob ? uiSettings.menuBlobOpacity : 0);
+  if (isFlat) {
+    root.setProperty('--menu-bg', uiSettings.menuBaseColor);
+    root.setProperty('--menu-bg-hover', uiSettings.menuBaseColor);
+    root.setProperty('--menu-border', `${menuOutline}px solid ${menuOutlineColor}`);
+    root.setProperty('--menu-shadow', 'none');
+    root.setProperty('--menu-shadow-hover', 'none');
+  } else {
+    root.setProperty('--menu-bg', buildGlassBackground(uiSettings.menuTintColor, uiSettings.menuTintOpacity, uiSettings.menuBaseColor, uiSettings.menuGlassOpacity));
+    root.setProperty('--menu-bg-hover', buildGlassBackground(uiSettings.menuTintColor, uiSettings.menuTintOpacity + 0.04, uiSettings.menuBaseColor, uiSettings.menuGlassOpacity + 0.05));
+    root.setProperty('--menu-border', `${menuOutline}px solid ${colorToRgba(menuOutlineColor, menuBorderAlpha)}`);
+    root.setProperty('--menu-shadow', buildGlassShadow(uiSettings.menuShadowOpacity, menuGlowAlpha, uiSettings.menuAccentColor));
+    root.setProperty('--menu-shadow-hover', buildGlassShadowHover(uiSettings.menuShadowOpacity + 0.05, menuGlowAlpha + 0.04, uiSettings.menuAccentColor));
+  }
+  root.setProperty('--menu-blob-opacity', isFlat ? 0 : (uiSettings.showMenuBlob ? uiSettings.menuBlobOpacity : 0));
   root.setProperty('--menu-blob-blur', `${uiSettings.menuBlobBlur}px`);
 
   root.setProperty('--orbit-controls-bottom', `${uiSettings.orbitControlsBottom}px`);
@@ -3031,19 +3100,32 @@ const applyUiSettings = () => {
   root.setProperty('--orbit-arrow-radius', `${resolvedArrowRadius}px`);
   root.setProperty('--orbit-arrow-font', `${uiSettings.arrowFontSize}rem`);
   root.setProperty('--orbit-arrow-color', uiSettings.arrowColor);
-  root.setProperty('--orbit-arrow-blur', `${uiSettings.arrowBlur}px`);
-  root.setProperty('--orbit-arrow-saturate', `${uiSettings.arrowSaturate}%`);
+  root.setProperty('--orbit-arrow-blur', isFlat ? '0px' : `${uiSettings.arrowBlur}px`);
+  root.setProperty('--orbit-arrow-saturate', isFlat ? '100%' : `${uiSettings.arrowSaturate}%`);
 
   const arrowBorderAlpha = uiSettings.showArrowBorder ? uiSettings.arrowBorderOpacity : 0;
   const arrowGlowAlpha = uiSettings.showArrowGlow ? uiSettings.arrowGlowOpacity : 0;
-  root.setProperty('--orbit-arrow-bg', buildGlassBackground(uiSettings.arrowTintColor, uiSettings.arrowTintOpacity, uiSettings.arrowBaseColor, uiSettings.arrowGlassOpacity));
-  root.setProperty('--orbit-arrow-bg-hover', buildGlassBackground(uiSettings.arrowTintColor, uiSettings.arrowTintOpacity + 0.04, uiSettings.arrowBaseColor, uiSettings.arrowGlassOpacity + 0.05));
-  root.setProperty('--orbit-arrow-border', `1px solid ${colorToRgba(uiSettings.arrowTintColor, arrowBorderAlpha)}`);
-  root.setProperty('--orbit-arrow-border-hover', `1px solid ${colorToRgba(uiSettings.arrowTintColor, arrowBorderAlpha + 0.06)}`);
-  root.setProperty('--orbit-arrow-shadow', buildGlassShadow(uiSettings.arrowShadowOpacity, arrowGlowAlpha, uiSettings.arrowAccentColor));
-  root.setProperty('--orbit-arrow-shadow-hover', buildGlassShadowHover(uiSettings.arrowShadowOpacity + 0.05, arrowGlowAlpha + 0.04, uiSettings.arrowAccentColor));
+  const arrowOutline = uiSettings.arrowOutlineThickness || 1;
+  const arrowOutlineColor = uiSettings.arrowOutlineColor || '#ffffff';
+
+  if (isFlat) {
+    root.setProperty('--orbit-arrow-bg', uiSettings.arrowBaseColor);
+    root.setProperty('--orbit-arrow-bg-hover', uiSettings.arrowBaseColor);
+    root.setProperty('--orbit-arrow-border', `${arrowOutline}px solid ${arrowOutlineColor}`);
+    root.setProperty('--orbit-arrow-border-hover', `${arrowOutline}px solid ${arrowOutlineColor}`);
+    root.setProperty('--orbit-arrow-shadow', 'none');
+    root.setProperty('--orbit-arrow-shadow-hover', 'none');
+  } else {
+    root.setProperty('--orbit-arrow-bg', buildGlassBackground(uiSettings.arrowTintColor, uiSettings.arrowTintOpacity, uiSettings.arrowBaseColor, uiSettings.arrowGlassOpacity));
+    root.setProperty('--orbit-arrow-bg-hover', buildGlassBackground(uiSettings.arrowTintColor, uiSettings.arrowTintOpacity + 0.04, uiSettings.arrowBaseColor, uiSettings.arrowGlassOpacity + 0.05));
+    root.setProperty('--orbit-arrow-border', `${arrowOutline}px solid ${colorToRgba(arrowOutlineColor, arrowBorderAlpha)}`);
+    root.setProperty('--orbit-arrow-border-hover', `${arrowOutline}px solid ${colorToRgba(arrowOutlineColor, arrowBorderAlpha + 0.06)}`);
+    root.setProperty('--orbit-arrow-shadow', buildGlassShadow(uiSettings.arrowShadowOpacity, arrowGlowAlpha, uiSettings.arrowAccentColor));
+    root.setProperty('--orbit-arrow-shadow-hover', buildGlassShadowHover(uiSettings.arrowShadowOpacity + 0.05, arrowGlowAlpha + 0.04, uiSettings.arrowAccentColor));
+  }
 
   document.body.classList.toggle('orbit-controls-hidden', !uiSettings.showOrbitControls);
+  document.body.classList.toggle('orbit-flat-mode', isFlat);
 
   if (orbitIndicators) {
     orbitIndicators.classList.toggle('hidden', !uiSettings.showOrbitIndicators);
