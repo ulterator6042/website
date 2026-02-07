@@ -6,6 +6,7 @@ const scrollHint = document.getElementById('scrollHint');
 const heroMistLayers = document.querySelectorAll('.hero-mist');
 let modelControl = null;
 let modelBaseScale = 1;
+let materialControl = null;
 
 const APP_VERSION = '2025-02-06-1';
 const storedAppVersion = localStorage.getItem('appVersion');
@@ -65,13 +66,14 @@ modelContainer.appendChild(renderer.domElement);
 // Better renderer settings for PBR and color
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.physicallyCorrectLights = true;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.6;
+renderer.shadowMap.type = THREE.BasicShadowMap;
+renderer.toneMapping = THREE.NoToneMapping;
+renderer.toneMappingExposure = 1.1;
 
 camera.position.z = 2.75;
 
 // Lighting (richer environment with multiple light sources)
-const ambientLight = new THREE.AmbientLight(0xa3a3a3, 1.05);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
 scene.add(ambientLight);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x737373, 0.15);
@@ -79,40 +81,502 @@ hemiLight.position.set(0, 50, 0);
 hemiLight.visible = false;
 scene.add(hemiLight);
 
-const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.75);
+const directionalLight1 = new THREE.DirectionalLight(0xffffff, 2.4);
 directionalLight1.position.set(-10, 5, 3);
 directionalLight1.castShadow = true;
+directionalLight1.shadow.mapSize.set(2048, 2048);
+directionalLight1.shadow.bias = -0.0005;
+directionalLight1.shadow.normalBias = 0.02;
+directionalLight1.shadow.camera.near = 0.5;
+directionalLight1.shadow.camera.far = 50;
+directionalLight1.shadow.camera.left = -10;
+directionalLight1.shadow.camera.right = 10;
+directionalLight1.shadow.camera.top = 10;
+directionalLight1.shadow.camera.bottom = -10;
 scene.add(directionalLight1);
 
-const directionalLight2 = new THREE.DirectionalLight(0xb28585, 0.3);
+const directionalLight2 = new THREE.DirectionalLight(0xffcfb3, 0.6);
 directionalLight2.position.set(-5, -3, 5);
 scene.add(directionalLight2);
 
 // Soft colored rim/fill point lights
-const point1 = new THREE.PointLight(0xffbfa8, 0.9, 10);
+const point1 = new THREE.PointLight(0xffbfa8, 0.25, 12);
 point1.position.set(2.5, 1.5, 2);
 scene.add(point1);
 
-const point2 = new THREE.PointLight(0x8fb6ff, 0.1, 10);
+const point2 = new THREE.PointLight(0x7fd3ff, 0.2, 12);
 point2.position.set(-2.5, 1, 3);
 scene.add(point2);
 
-const point3 = new THREE.PointLight(0xffffff, 0.3, 15);
+const point3 = new THREE.PointLight(0xffffff, 0.2, 15);
 point3.position.set(0, -3, 5);
 scene.add(point3);
 
 // Rim light for metallic edge definition
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.85);
 rimLight.position.set(6, 4, -6);
 scene.add(rimLight);
 
-const defaultMaterialSettings = {
-  metalness: 0.95,
-  roughness: 0.4,
-  color: 0xa1a1a1,
-  emissiveColor: 0x000000,
-  emissiveIntensity: 0.9,
+const defaultToonMaterialSettings = {
+  color: 0xff6b5a,
+  shadowColor: 0x1a0f0f,
+  highlightColor: 0xfff2e8,
+  emissiveColor: 0x1a0f0f,
+  emissiveIntensity: 0.35,
+  shadeSteps: 4,
+  shadowStrength: 0.35,
+  highlightStrength: 0.7,
+  strictColors: true,
+  outlineThickness: 0.05,
+  outlineColor: 0x141414,
+  outlineOpacity: 1,
+  outlineTextureIntensity: 0,
+  outlineTextureScale: 1.6,
+  pencilIntensity: 0.35,
+  pencilScale: 1.4,
+  edgeEnabled: false,
+  edgeColor: 0x0b0b0b,
+  edgeOpacity: 0.65,
+  edgeThreshold: 24,
+  edgeDashSize: 2,
+  edgeGapSize: 1.5,
+  edgeJitter: 0.002,
+  edgeScale: 1.002,
 };
+
+const getChangedSettings = (base, current) => {
+  const changes = {};
+  Object.keys(current).forEach((key) => {
+    const baseValue = base[key];
+    const currentValue = current[key];
+    if (JSON.stringify(baseValue) !== JSON.stringify(currentValue)) {
+      changes[key] = currentValue;
+    }
+  });
+  return changes;
+};
+
+let toonResources = null;
+let strictLightingSnapshot = null;
+const defaultBodyBackground = {
+  image: window.getComputedStyle(document.body).backgroundImage,
+  color: window.getComputedStyle(document.body).backgroundColor,
+};
+
+function buildToonGradientMap(steps, shadowColor, baseColor, highlightColor, shadowStrength, highlightStrength) {
+  const safeSteps = Math.max(2, Math.round(steps || defaultToonMaterialSettings.shadeSteps));
+  const shadow = Math.max(0, Math.min(1, shadowStrength ?? defaultToonMaterialSettings.shadowStrength));
+  const highlight = Math.max(shadow + 0.1, Math.min(1, highlightStrength ?? defaultToonMaterialSettings.highlightStrength));
+  const canvas = document.createElement('canvas');
+  canvas.width = safeSteps;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d');
+  const base = new THREE.Color(baseColor);
+  const shadowTint = new THREE.Color(shadowColor);
+  const highlightTint = new THREE.Color(highlightColor);
+  for (let i = 0; i < safeSteps; i += 1) {
+    const t = i / (safeSteps - 1);
+    let color = base;
+    if (t <= shadow) {
+      color = shadowTint;
+    } else if (t >= highlight) {
+      color = highlightTint;
+    }
+    const value = color.toArray().map((channel) => Math.round(channel * 255));
+    ctx.fillStyle = `rgb(${value[0]}, ${value[1]}, ${value[2]})`;
+    ctx.fillRect(i, 0, 1, 1);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  if (typeof THREE.SRGBColorSpace !== 'undefined') {
+    texture.colorSpace = THREE.SRGBColorSpace;
+  } else if (typeof THREE.sRGBEncoding !== 'undefined') {
+    texture.encoding = THREE.sRGBEncoding;
+  }
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function buildPencilTexture(intensity) {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgb(255, 255, 255)';
+  ctx.fillRect(0, 0, size, size);
+
+  if (!intensity || intensity <= 0) {
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  const lineAlpha = Math.max(0.05, Math.min(0.6, intensity * 0.5));
+  ctx.strokeStyle = `rgba(0, 0, 0, ${lineAlpha})`;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 900; i += 1) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const length = 10 + Math.random() * 40;
+    const angle = Math.random() * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+    ctx.stroke();
+  }
+
+  const imageData = ctx.getImageData(0, 0, size, size);
+  const noiseScale = intensity * 30;
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    const noise = (Math.random() - 0.5) * noiseScale;
+    imageData.data[i] = Math.max(0, Math.min(255, imageData.data[i] + noise));
+    imageData.data[i + 1] = Math.max(0, Math.min(255, imageData.data[i + 1] + noise));
+    imageData.data[i + 2] = Math.max(0, Math.min(255, imageData.data[i + 2] + noise));
+  }
+  ctx.putImageData(imageData, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function getToonResources(settings) {
+  const resolved = settings || defaultToonMaterialSettings;
+  const steps = Math.max(2, Math.round(resolved.shadeSteps || defaultToonMaterialSettings.shadeSteps));
+  const baseColor = resolved.color ?? defaultToonMaterialSettings.color;
+  const shadowColor = resolved.shadowColor ?? defaultToonMaterialSettings.shadowColor;
+  const highlightColor = resolved.highlightColor ?? defaultToonMaterialSettings.highlightColor;
+  const shadowStrength = typeof resolved.shadowStrength === 'number'
+    ? resolved.shadowStrength
+    : defaultToonMaterialSettings.shadowStrength;
+  const highlightStrength = typeof resolved.highlightStrength === 'number'
+    ? resolved.highlightStrength
+    : defaultToonMaterialSettings.highlightStrength;
+  const pencilIntensity = typeof resolved.pencilIntensity === 'number'
+    ? resolved.pencilIntensity
+    : defaultToonMaterialSettings.pencilIntensity;
+  const pencilScale = typeof resolved.pencilScale === 'number'
+    ? resolved.pencilScale
+    : defaultToonMaterialSettings.pencilScale;
+  const outlineTextureIntensity = typeof resolved.outlineTextureIntensity === 'number'
+    ? resolved.outlineTextureIntensity
+    : defaultToonMaterialSettings.outlineTextureIntensity;
+  const outlineTextureScale = typeof resolved.outlineTextureScale === 'number'
+    ? resolved.outlineTextureScale
+    : defaultToonMaterialSettings.outlineTextureScale;
+
+  const gradientKey = `${steps}-${shadowStrength.toFixed(2)}-${highlightStrength.toFixed(2)}-${baseColor}-${shadowColor}-${highlightColor}`;
+
+  if (!toonResources || toonResources.gradientKey !== gradientKey) {
+    if (toonResources && toonResources.gradientMap) toonResources.gradientMap.dispose();
+    toonResources = toonResources || {};
+    toonResources.gradientMap = buildToonGradientMap(
+      steps,
+      shadowColor,
+      baseColor,
+      highlightColor,
+      shadowStrength,
+      highlightStrength
+    );
+    toonResources.gradientKey = gradientKey;
+  }
+
+  if (!toonResources || toonResources.pencilIntensity !== pencilIntensity) {
+    if (toonResources && toonResources.pencilTexture) toonResources.pencilTexture.dispose();
+    toonResources = toonResources || {};
+    toonResources.pencilTexture = buildPencilTexture(pencilIntensity);
+    toonResources.pencilIntensity = pencilIntensity;
+  }
+
+  if (!toonResources || toonResources.outlineTextureIntensity !== outlineTextureIntensity) {
+    if (toonResources && toonResources.outlineTexture) toonResources.outlineTexture.dispose();
+    toonResources = toonResources || {};
+    toonResources.outlineTexture = buildPencilTexture(outlineTextureIntensity);
+    toonResources.outlineTextureIntensity = outlineTextureIntensity;
+  }
+
+  if (toonResources.pencilTexture) {
+    toonResources.pencilTexture.repeat.set(pencilScale, pencilScale);
+  }
+
+  if (toonResources.outlineTexture) {
+    toonResources.outlineTexture.repeat.set(outlineTextureScale, outlineTextureScale);
+  }
+
+  return toonResources;
+}
+
+function applyOutlineMesh(mesh, settings) {
+  if (!mesh || !mesh.geometry || mesh.isSkinnedMesh || (mesh.userData && mesh.userData.isOutline)) return;
+
+  const resolved = settings || defaultToonMaterialSettings;
+  if (!resolved.outlineThickness || resolved.outlineThickness <= 0) return;
+  const resources = getToonResources(resolved);
+  const existing = mesh.userData.outlineMesh;
+  if (existing) {
+    mesh.remove(existing);
+    if (existing.material) existing.material.dispose();
+    mesh.userData.outlineMesh = null;
+  }
+
+  const outlineMaterial = new THREE.MeshBasicMaterial({
+    color: resolved.outlineColor,
+    side: THREE.BackSide,
+    transparent: resolved.outlineOpacity < 1,
+    opacity: resolved.outlineOpacity,
+    map: resources.outlineTexture,
+    depthWrite: false,
+    depthTest: true,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
+  });
+  const outlineMesh = new THREE.Mesh(mesh.geometry, outlineMaterial);
+  outlineMesh.scale.setScalar(1 + resolved.outlineThickness);
+  outlineMesh.renderOrder = -1;
+  outlineMesh.frustumCulled = false;
+  outlineMesh.userData.isOutline = true;
+  mesh.add(outlineMesh);
+  mesh.userData.outlineMesh = outlineMesh;
+}
+
+function applyEdgeLines(mesh, settings) {
+  if (!mesh || !mesh.geometry || (mesh.userData && mesh.userData.isOutline)) return;
+  const resolved = settings || defaultToonMaterialSettings;
+  const existing = mesh.userData.edgeLines;
+  if (existing) {
+    mesh.remove(existing);
+    if (existing.material) existing.material.dispose();
+    if (existing.geometry) existing.geometry.dispose();
+    mesh.userData.edgeLines = null;
+  }
+
+  if (!resolved.edgeEnabled) return;
+
+  const edgeGeometry = new THREE.EdgesGeometry(mesh.geometry, resolved.edgeThreshold);
+  if (resolved.edgeJitter > 0) {
+    const pos = edgeGeometry.attributes.position;
+    for (let i = 0; i < pos.count; i += 1) {
+      pos.setXYZ(
+        i,
+        pos.getX(i) + (Math.random() - 0.5) * resolved.edgeJitter,
+        pos.getY(i) + (Math.random() - 0.5) * resolved.edgeJitter,
+        pos.getZ(i) + (Math.random() - 0.5) * resolved.edgeJitter
+      );
+    }
+    pos.needsUpdate = true;
+  }
+
+  const edgeMaterial = new THREE.LineDashedMaterial({
+    color: resolved.edgeColor,
+    opacity: resolved.edgeOpacity,
+    transparent: true,
+    dashSize: resolved.edgeDashSize,
+    gapSize: resolved.edgeGapSize,
+    depthTest: true,
+  });
+  const edgeLines = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+  edgeLines.computeLineDistances();
+  edgeLines.scale.setScalar(resolved.edgeScale);
+  edgeLines.renderOrder = -1;
+  edgeLines.userData.isOutline = true;
+  mesh.add(edgeLines);
+  mesh.userData.edgeLines = edgeLines;
+}
+
+function createToonMaterial(settings) {
+  const resolved = { ...defaultToonMaterialSettings, ...settings };
+  const resources = getToonResources(resolved);
+  const strictColors = !!resolved.strictColors;
+  const material = new THREE.MeshToonMaterial({
+    color: 0xffffff,
+    emissive: new THREE.Color(resolved.emissiveColor),
+    emissiveIntensity: strictColors ? 0 : resolved.emissiveIntensity,
+    gradientMap: resources.gradientMap,
+    map: strictColors ? null : resources.pencilTexture,
+  });
+  material.toneMapped = !strictColors;
+  return material;
+}
+
+function applyStrictColorLighting() {
+  if (!materialControl) return;
+
+  if (materialControl.strictColors) {
+    if (!strictLightingSnapshot) {
+      strictLightingSnapshot = {
+        ambient: { ...ambientControl },
+        hemisphere: { ...hemiControl },
+        directional1: { ...dir1Control },
+        directional2: { ...dir2Control },
+        point1: { ...point1Control },
+        point2: { ...point2Control },
+        point3: { ...point3Control },
+        rim: {
+          intensity: rimLight.intensity,
+          color: rimLight.color.getHex(),
+          position: rimLight.position.clone(),
+          visible: rimLight.visible,
+        },
+        environment: {
+          vignetteOpacity: environmentConfig.vignetteOpacity,
+          grainOpacity: environmentConfig.grainOpacity,
+          mistEnabled: environmentConfig.mistEnabled,
+        }
+      };
+    }
+
+    ambientControl.intensity = 0;
+    ambientControl.visible = false;
+    ambientLight.intensity = 0;
+    ambientLight.visible = false;
+
+    hemiControl.intensity = 0;
+    hemiControl.visible = false;
+    hemiLight.intensity = 0;
+    hemiLight.visible = false;
+
+    dir1Control.intensity = Math.PI;
+    dir1Control.color = 0xffffff;
+    dir1Control.visible = true;
+    directionalLight1.intensity = Math.PI;
+    directionalLight1.color.setHex(0xffffff);
+    directionalLight1.visible = true;
+
+    dir2Control.intensity = 0;
+    dir2Control.visible = false;
+    directionalLight2.intensity = 0;
+    directionalLight2.visible = false;
+
+    point1Control.intensity = 0;
+    point1Control.visible = false;
+    point1.intensity = 0;
+    point1.visible = false;
+
+    point2Control.intensity = 0;
+    point2Control.visible = false;
+    point2.intensity = 0;
+    point2.visible = false;
+
+    point3Control.intensity = 0;
+    point3Control.visible = false;
+    point3.intensity = 0;
+    point3.visible = false;
+
+    rimLight.intensity = 0;
+    rimLight.visible = false;
+
+    environmentConfig.vignetteOpacity = 0;
+    environmentConfig.grainOpacity = 0;
+    environmentConfig.mistEnabled = false;
+    applyEnvironmentSettings();
+
+  } else if (strictLightingSnapshot) {
+    Object.assign(ambientControl, strictLightingSnapshot.ambient);
+    ambientLight.intensity = strictLightingSnapshot.ambient.intensity;
+    ambientLight.color.setHex(strictLightingSnapshot.ambient.color);
+    ambientLight.visible = strictLightingSnapshot.ambient.visible;
+
+    Object.assign(hemiControl, strictLightingSnapshot.hemisphere);
+    hemiLight.intensity = strictLightingSnapshot.hemisphere.intensity;
+    hemiLight.color.setHex(strictLightingSnapshot.hemisphere.skyColor);
+    hemiLight.groundColor.setHex(strictLightingSnapshot.hemisphere.groundColor);
+    hemiLight.visible = strictLightingSnapshot.hemisphere.visible;
+
+    Object.assign(dir1Control, strictLightingSnapshot.directional1);
+    directionalLight1.intensity = strictLightingSnapshot.directional1.intensity;
+    directionalLight1.color.setHex(strictLightingSnapshot.directional1.color);
+    directionalLight1.position.set(strictLightingSnapshot.directional1.x, strictLightingSnapshot.directional1.y, strictLightingSnapshot.directional1.z);
+    directionalLight1.visible = strictLightingSnapshot.directional1.visible;
+
+    Object.assign(dir2Control, strictLightingSnapshot.directional2);
+    directionalLight2.intensity = strictLightingSnapshot.directional2.intensity;
+    directionalLight2.color.setHex(strictLightingSnapshot.directional2.color);
+    directionalLight2.position.set(strictLightingSnapshot.directional2.x, strictLightingSnapshot.directional2.y, strictLightingSnapshot.directional2.z);
+    directionalLight2.visible = strictLightingSnapshot.directional2.visible;
+
+    Object.assign(point1Control, strictLightingSnapshot.point1);
+    point1.intensity = strictLightingSnapshot.point1.intensity;
+    point1.color.setHex(strictLightingSnapshot.point1.color);
+    point1.position.set(strictLightingSnapshot.point1.x, strictLightingSnapshot.point1.y, strictLightingSnapshot.point1.z);
+    point1.visible = strictLightingSnapshot.point1.visible;
+
+    Object.assign(point2Control, strictLightingSnapshot.point2);
+    point2.intensity = strictLightingSnapshot.point2.intensity;
+    point2.color.setHex(strictLightingSnapshot.point2.color);
+    point2.position.set(strictLightingSnapshot.point2.x, strictLightingSnapshot.point2.y, strictLightingSnapshot.point2.z);
+    point2.visible = strictLightingSnapshot.point2.visible;
+
+    Object.assign(point3Control, strictLightingSnapshot.point3);
+    point3.intensity = strictLightingSnapshot.point3.intensity;
+    point3.color.setHex(strictLightingSnapshot.point3.color);
+    point3.position.set(strictLightingSnapshot.point3.x, strictLightingSnapshot.point3.y, strictLightingSnapshot.point3.z);
+    point3.visible = strictLightingSnapshot.point3.visible;
+
+    rimLight.intensity = strictLightingSnapshot.rim.intensity;
+    rimLight.color.setHex(strictLightingSnapshot.rim.color);
+    rimLight.position.copy(strictLightingSnapshot.rim.position);
+    rimLight.visible = strictLightingSnapshot.rim.visible;
+
+    if (strictLightingSnapshot.environment) {
+      environmentConfig.vignetteOpacity = strictLightingSnapshot.environment.vignetteOpacity;
+      environmentConfig.grainOpacity = strictLightingSnapshot.environment.grainOpacity;
+      environmentConfig.mistEnabled = strictLightingSnapshot.environment.mistEnabled;
+      applyEnvironmentSettings();
+    }
+
+    strictLightingSnapshot = null;
+  }
+
+  if (window.gui) window.gui.updateDisplay();
+}
+
+function applyBackgroundSetting() {
+  if (!renderControl) return;
+  if (renderControl.useSolidBg) {
+    document.body.style.backgroundImage = 'none';
+    document.body.style.backgroundColor = `#${renderControl.bgColor.toString(16).padStart(6, '0')}`;
+  } else {
+    document.body.style.backgroundImage = defaultBodyBackground.image;
+    document.body.style.backgroundColor = defaultBodyBackground.color;
+  }
+}
+
+function applyToonMaterialToMesh(mesh, settings) {
+  if (!mesh || !mesh.isMesh || (mesh.userData && mesh.userData.isOutline)) return;
+  const resolved = settings || defaultToonMaterialSettings;
+  const strictColors = !!resolved.strictColors;
+  const material = createToonMaterial(settings);
+  if (Array.isArray(mesh.material)) {
+    mesh.material.forEach((mat) => {
+      if (mat && mat.dispose) mat.dispose();
+    });
+  } else if (mesh.material && mesh.material.dispose) {
+    mesh.material.dispose();
+  }
+  mesh.material = material;
+  mesh.castShadow = !strictColors;
+  mesh.receiveShadow = !strictColors;
+  applyOutlineMesh(mesh, settings);
+  applyEdgeLines(mesh, settings);
+}
+
+function applyToonMaterialToModel() {
+  if (!model) return;
+  const resolved = materialControl || defaultToonMaterialSettings;
+  model.traverse((child) => {
+    if (child.isMesh && !(child.userData && child.userData.isOutline)) {
+      applyToonMaterialToMesh(child, resolved);
+    }
+  });
+}
 
 // Load 3D Model
 THREE.Cache.enabled = true;
@@ -144,14 +608,8 @@ let fallbackTimer = null;
 function createFallbackCube() {
   console.warn('Using fallback cube — model did not load.');
   const geo = new THREE.BoxGeometry(1, 1, 1);
-  const mat = new THREE.MeshStandardMaterial({
-    metalness: defaultMaterialSettings.metalness,
-    roughness: defaultMaterialSettings.roughness,
-    color: defaultMaterialSettings.color,
-    emissive: defaultMaterialSettings.emissiveColor,
-    emissiveIntensity: defaultMaterialSettings.emissiveIntensity,
-  });
-  const cube = new THREE.Mesh(geo, mat);
+  const cube = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  applyToonMaterialToMesh(cube, materialControl || defaultToonMaterialSettings);
   cube.castShadow = true;
   cube.receiveShadow = true;
   scene.add(cube);
@@ -229,15 +687,7 @@ function tryLoadNext() {
     model.traverse((child) => {
       if (child.isMesh) {
         meshCount++;
-        child.material = new THREE.MeshStandardMaterial({
-          metalness: defaultMaterialSettings.metalness,
-          roughness: defaultMaterialSettings.roughness,
-          color: defaultMaterialSettings.color,
-          emissive: defaultMaterialSettings.emissiveColor,
-          emissiveIntensity: defaultMaterialSettings.emissiveIntensity,
-        });
-        child.castShadow = true;
-        child.receiveShadow = true;
+        applyToonMaterialToMesh(child, materialControl || defaultToonMaterialSettings);
       }
     });
     console.log('Mesh count:', meshCount);
@@ -388,15 +838,40 @@ function applyEnvironmentSettings() {
 const presetSettings = {
   model: { posX: 0, posY: 0.7, posZ: -2, scale: 1.5 },
   camera: { z: 2.5 },
-  material: { metalness: 0.95, roughness: 0.4, color: 10592673, emissiveColor: 0, emissiveIntensity: 0.9 },
-  ambient: { intensity: 1.05, color: 10724259, visible: true },
+  material: {
+    color: 0xff6b5a,
+    shadowColor: 0x1a0f0f,
+    highlightColor: 0xfff2e8,
+    emissiveColor: 0x1a0f0f,
+    emissiveIntensity: 0.35,
+    shadeSteps: 4,
+    shadowStrength: 0.35,
+    highlightStrength: 0.7,
+    strictColors: true,
+    outlineThickness: 0.05,
+    outlineColor: 0x141414,
+    outlineOpacity: 1,
+    outlineTextureIntensity: 0,
+    outlineTextureScale: 1.6,
+    pencilIntensity: 0.35,
+    pencilScale: 1.4,
+    edgeEnabled: false,
+    edgeColor: 0x0b0b0b,
+    edgeOpacity: 0.65,
+    edgeThreshold: 24,
+    edgeDashSize: 2,
+    edgeGapSize: 1.5,
+    edgeJitter: 0.002,
+    edgeScale: 1.002,
+  },
+  ambient: { intensity: 0.35, color: 0xffffff, visible: true },
   hemisphere: { intensity: 0.15, skyColor: 16777215, groundColor: 7566195, visible: false },
-  directional1: { intensity: 1.75, color: 16777215, x: -10, y: 5, z: 3, visible: true },
-  directional2: { intensity: 0.3, color: 11699589, x: -5, y: -3, z: 5, visible: true },
-  point1: { intensity: 0.9, color: 16760744, x: 2.5, y: 1.5, z: 2, visible: true },
-  point2: { intensity: 0.1, color: 9418495, x: -2.5, y: 1, z: 3, visible: true },
-  point3: { intensity: 0.3, color: 16777215, x: 0, y: -3, z: 5, visible: true },
-  rendering: { bgColor: 1841692, exposure: 1.6 },
+  directional1: { intensity: 2.4, color: 0xffffff, x: -10, y: 5, z: 3, visible: true },
+  directional2: { intensity: 0.6, color: 0xffcfb3, x: -5, y: -3, z: 5, visible: true },
+  point1: { intensity: 0.25, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true },
+  point2: { intensity: 0.2, color: 0x7fd3ff, x: -2.5, y: 1, z: 3, visible: true },
+  point3: { intensity: 0.2, color: 0xffffff, x: 0, y: -3, z: 5, visible: true },
+  rendering: { bgColor: 1841692, exposure: 1.1, useSolidBg: false },
   interaction: { rotationSpeedX: 0.4, rotationSpeedY: 0.2, inertia: 0.99, returnSpeed: 0.2, autoOrbit: false, autoOrbitSpeed: 0.5 },
 };
 
@@ -421,22 +896,33 @@ function applyPreset(preset) {
   camera.updateProjectionMatrix();
 
   // Apply material
-  materialControl.metalness = preset.material.metalness;
-  materialControl.roughness = preset.material.roughness;
-  materialControl.color = preset.material.color;
-  materialControl.emissiveColor = preset.material.emissiveColor;
-  materialControl.emissiveIntensity = preset.material.emissiveIntensity;
-  if (model) {
-    model.traverse((child) => {
-      if (child.isMesh) {
-        child.material.metalness = preset.material.metalness;
-        child.material.roughness = preset.material.roughness;
-        child.material.color.setHex(preset.material.color);
-        child.material.emissive.setHex(preset.material.emissiveColor);
-        child.material.emissiveIntensity = preset.material.emissiveIntensity;
-      }
-    });
+  if (materialControl) {
+    materialControl.color = preset.material.color;
+    materialControl.shadowColor = preset.material.shadowColor;
+    materialControl.highlightColor = preset.material.highlightColor;
+    materialControl.emissiveColor = preset.material.emissiveColor;
+    materialControl.emissiveIntensity = preset.material.emissiveIntensity;
+    materialControl.shadeSteps = preset.material.shadeSteps;
+    materialControl.shadowStrength = preset.material.shadowStrength;
+    materialControl.highlightStrength = preset.material.highlightStrength;
+    materialControl.strictColors = preset.material.strictColors;
+    materialControl.outlineThickness = preset.material.outlineThickness;
+    materialControl.outlineColor = preset.material.outlineColor;
+    materialControl.outlineOpacity = preset.material.outlineOpacity;
+    materialControl.outlineTextureIntensity = preset.material.outlineTextureIntensity;
+    materialControl.outlineTextureScale = preset.material.outlineTextureScale;
+    materialControl.pencilIntensity = preset.material.pencilIntensity;
+    materialControl.pencilScale = preset.material.pencilScale;
+    materialControl.edgeEnabled = preset.material.edgeEnabled;
+    materialControl.edgeColor = preset.material.edgeColor;
+    materialControl.edgeOpacity = preset.material.edgeOpacity;
+    materialControl.edgeThreshold = preset.material.edgeThreshold;
+    materialControl.edgeDashSize = preset.material.edgeDashSize;
+    materialControl.edgeGapSize = preset.material.edgeGapSize;
+    materialControl.edgeJitter = preset.material.edgeJitter;
+    materialControl.edgeScale = preset.material.edgeScale;
   }
+  applyToonMaterialToModel();
 
   // Apply lighting
   ambientControl.intensity = preset.ambient.intensity;
@@ -510,10 +996,13 @@ function applyPreset(preset) {
   point3.position.set(preset.point3.x, preset.point3.y, preset.point3.z);
   point3.visible = preset.point3.visible;
 
+  applyStrictColorLighting();
+
   // Apply rendering
   renderControl.bgColor = preset.rendering.bgColor;
   renderControl.exposure = preset.rendering.exposure;
-  document.body.style.background = `#${preset.rendering.bgColor.toString(16).padStart(6, '0')}`;
+  renderControl.useSolidBg = !!preset.rendering.useSolidBg;
+  applyBackgroundSetting();
   renderer.toneMappingExposure = preset.rendering.exposure;
 
   // Apply interaction
@@ -1330,53 +1819,69 @@ cameraFolder.add(camera.position, 'z', 0.5, 10, 0.5).onChange(() => {
 
 // Material controls
 const materialFolder = gui.addFolder('Material');
-const materialControl = {
-  metalness: 0.95,
-  roughness: 0.4,
-  color: 0xa1a1a1,
-  emissiveColor: 0x000000,
-  emissiveIntensity: 0.9,
+materialControl = {
+  color: defaultToonMaterialSettings.color,
+  shadowColor: defaultToonMaterialSettings.shadowColor,
+  highlightColor: defaultToonMaterialSettings.highlightColor,
+  emissiveColor: defaultToonMaterialSettings.emissiveColor,
+  emissiveIntensity: defaultToonMaterialSettings.emissiveIntensity,
+  shadeSteps: defaultToonMaterialSettings.shadeSteps,
+  shadowStrength: defaultToonMaterialSettings.shadowStrength,
+  highlightStrength: defaultToonMaterialSettings.highlightStrength,
+  strictColors: defaultToonMaterialSettings.strictColors,
+  outlineThickness: defaultToonMaterialSettings.outlineThickness,
+  outlineColor: defaultToonMaterialSettings.outlineColor,
+  outlineOpacity: defaultToonMaterialSettings.outlineOpacity,
+  outlineTextureIntensity: defaultToonMaterialSettings.outlineTextureIntensity,
+  outlineTextureScale: defaultToonMaterialSettings.outlineTextureScale,
+  pencilIntensity: defaultToonMaterialSettings.pencilIntensity,
+  pencilScale: defaultToonMaterialSettings.pencilScale,
+  edgeEnabled: defaultToonMaterialSettings.edgeEnabled,
+  edgeColor: defaultToonMaterialSettings.edgeColor,
+  edgeOpacity: defaultToonMaterialSettings.edgeOpacity,
+  edgeThreshold: defaultToonMaterialSettings.edgeThreshold,
+  edgeDashSize: defaultToonMaterialSettings.edgeDashSize,
+  edgeGapSize: defaultToonMaterialSettings.edgeGapSize,
+  edgeJitter: defaultToonMaterialSettings.edgeJitter,
+  edgeScale: defaultToonMaterialSettings.edgeScale,
 };
-materialFolder.add(materialControl, 'metalness', 0, 1, 0.05).onChange((val) => {
-  if (model) {
-    model.traverse((child) => {
-      if (child.isMesh) child.material.metalness = val;
-    });
-  }
-}).name('Metalness');
-materialFolder.add(materialControl, 'roughness', 0, 1, 0.05).onChange((val) => {
-  if (model) {
-    model.traverse((child) => {
-      if (child.isMesh) child.material.roughness = val;
-    });
-  }
-}).name('Roughness');
-materialFolder.addColor(materialControl, 'color').onChange((val) => {
-  if (model) {
-    model.traverse((child) => {
-      if (child.isMesh) child.material.color.setHex(val);
-    });
-  }
-}).name('Color');
-materialFolder.addColor(materialControl, 'emissiveColor').onChange((val) => {
-  if (model) {
-    model.traverse((child) => {
-      if (child.isMesh) child.material.emissive.setHex(val);
-    });
-  }
-}).name('Emissive Color');
-materialFolder.add(materialControl, 'emissiveIntensity', 0, 2, 0.1).onChange((val) => {
-  if (model) {
-    model.traverse((child) => {
-      if (child.isMesh) child.material.emissiveIntensity = val;
-    });
-  }
-}).name('Emissive Intensity');
+materialFolder.addColor(materialControl, 'color').onChange(applyToonMaterialToModel).name('Base Color');
+materialFolder.addColor(materialControl, 'shadowColor').onChange(applyToonMaterialToModel).name('Shadow Color');
+materialFolder.addColor(materialControl, 'highlightColor').onChange(applyToonMaterialToModel).name('Highlight Color');
+materialFolder.addColor(materialControl, 'emissiveColor').onChange(applyToonMaterialToModel).name('Emissive Color');
+materialFolder.add(materialControl, 'emissiveIntensity', 0, 1.5, 0.05).onChange(applyToonMaterialToModel).name('Emissive Power');
+materialFolder.add(materialControl, 'shadeSteps', 2, 6, 1).onChange(applyToonMaterialToModel).name('Shade Steps');
+materialFolder.add(materialControl, 'shadowStrength', 0, 0.6, 0.02).onChange(applyToonMaterialToModel).name('Shadow Cutoff');
+materialFolder.add(materialControl, 'highlightStrength', 0.4, 1, 0.02).onChange(applyToonMaterialToModel).name('Highlight Cutoff');
+materialFolder.add(materialControl, 'strictColors').onChange(() => {
+  applyStrictColorLighting();
+  applyToonMaterialToModel();
+}).name('Strict Colors');
+materialFolder.add(materialControl, 'outlineThickness', 0.01, 0.12, 0.005).onChange(applyToonMaterialToModel).name('Outline Thickness');
+materialFolder.addColor(materialControl, 'outlineColor').onChange(applyToonMaterialToModel).name('Outline Color');
+materialFolder.add(materialControl, 'outlineOpacity', 0.1, 1, 0.05).onChange(applyToonMaterialToModel).name('Outline Opacity');
+materialFolder.add(materialControl, 'outlineTextureIntensity', 0, 0.8, 0.05).onChange(applyToonMaterialToModel).name('Outline Sketch');
+materialFolder.add(materialControl, 'outlineTextureScale', 0.6, 3, 0.1).onChange(applyToonMaterialToModel).name('Outline Texture Scale');
+materialFolder.add(materialControl, 'pencilIntensity', 0, 0.8, 0.05).onChange(applyToonMaterialToModel).name('Pencil Intensity');
+materialFolder.add(materialControl, 'pencilScale', 0.6, 3, 0.1).onChange(applyToonMaterialToModel).name('Pencil Scale');
+materialFolder.add(materialControl, 'edgeEnabled').onChange(applyToonMaterialToModel).name('Edge Lines');
+materialFolder.addColor(materialControl, 'edgeColor').onChange(applyToonMaterialToModel).name('Edge Color');
+materialFolder.add(materialControl, 'edgeOpacity', 0, 1, 0.05).onChange(applyToonMaterialToModel).name('Edge Opacity');
+materialFolder.add(materialControl, 'edgeThreshold', 1, 60, 1).onChange(applyToonMaterialToModel).name('Edge Threshold');
+materialFolder.add(materialControl, 'edgeDashSize', 0.5, 6, 0.1).onChange(applyToonMaterialToModel).name('Edge Dash');
+materialFolder.add(materialControl, 'edgeGapSize', 0.5, 6, 0.1).onChange(applyToonMaterialToModel).name('Edge Gap');
+materialFolder.add(materialControl, 'edgeJitter', 0, 0.01, 0.0005).onChange(applyToonMaterialToModel).name('Edge Jitter');
+materialFolder.add(materialControl, 'edgeScale', 1, 1.01, 0.0005).onChange(applyToonMaterialToModel).name('Edge Scale');
+materialFolder.add({ exportToon: () => {
+  const exportPayload = getChangedSettings(defaultToonMaterialSettings, materialControl);
+  console.log('=== TOON SETTINGS EXPORT ===');
+  console.log(JSON.stringify(exportPayload, null, 2));
+}}, 'exportToon').name('📋 Export Toon');
 
 // Lighting controls
 const lightFolder = gui.addFolder('Lighting');
 
-const ambientControl = { intensity: 1.05, color: 0xa3a3a3, visible: true };
+const ambientControl = { intensity: 0.35, color: 0xffffff, visible: true };
 lightFolder.add(ambientControl, 'intensity', 0, 2, 0.05).onChange((val) => {
   ambientLight.intensity = val;
 }).name('Ambient Intensity');
@@ -1401,7 +1906,7 @@ lightFolder.add(hemiControl, 'visible').onChange((val) => {
   hemiLight.visible = val;
 }).name('Hemisphere Visible');
 
-const dir1Control = { intensity: 1.75, color: 0xffffff, x: -10, y: 5, z: 3, visible: true };
+const dir1Control = { intensity: 2.4, color: 0xffffff, x: -10, y: 5, z: 3, visible: true };
 lightFolder.add(dir1Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   directionalLight1.intensity = val;
 }).name('Dir Light 1 Intensity');
@@ -1418,7 +1923,7 @@ lightFolder.add(dir1Control, 'visible').onChange((val) => {
   directionalLight1.visible = val;
 }).name('Dir Light 1 Visible');
 
-const dir2Control = { intensity: 0.3, color: 0xb28585, x: -5, y: -3, z: 5, visible: true };
+const dir2Control = { intensity: 0.6, color: 0xffcfb3, x: -5, y: -3, z: 5, visible: true };
 lightFolder.add(dir2Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   directionalLight2.intensity = val;
 }).name('Dir Light 2 Intensity');
@@ -1429,7 +1934,7 @@ lightFolder.add(dir2Control, 'visible').onChange((val) => {
   directionalLight2.visible = val;
 }).name('Dir Light 2 Visible');
 
-const point1Control = { intensity: 0.9, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true };
+const point1Control = { intensity: 0.25, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true };
 lightFolder.add(point1Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point1.intensity = val;
 }).name('Point Light 1 Intensity');
@@ -1437,7 +1942,7 @@ lightFolder.add(point1Control, 'visible').onChange((val) => {
   point1.visible = val;
 }).name('Point Light 1 Visible');
 
-const point2Control = { intensity: 0.1, color: 0x8fb6ff, x: -2.5, y: 1, z: 3, visible: true };
+const point2Control = { intensity: 0.2, color: 0x7fd3ff, x: -2.5, y: 1, z: 3, visible: true };
 lightFolder.add(point2Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point2.intensity = val;
 }).name('Point Light 2 Intensity');
@@ -1445,7 +1950,7 @@ lightFolder.add(point2Control, 'visible').onChange((val) => {
   point2.visible = val;
 }).name('Point Light 2 Visible');
 
-const point3Control = { intensity: 0.3, color: 0xffffff, x: 0, y: -3, z: 5, visible: true };
+const point3Control = { intensity: 0.2, color: 0xffffff, x: 0, y: -3, z: 5, visible: true };
 lightFolder.add(point3Control, 'intensity', 0, 2, 0.05).onChange((val) => {
   point3.intensity = val;
 }).name('Point Light 3 Intensity');
@@ -1455,9 +1960,12 @@ lightFolder.add(point3Control, 'visible').onChange((val) => {
 
 // Background & Rendering
 const renderFolder = gui.addFolder('Rendering');
-const renderControl = { bgColor: 0x1c1a1c, exposure: 1.6 };
-renderFolder.addColor(renderControl, 'bgColor').onChange((val) => {
-  document.body.style.background = `#${val.toString(16).padStart(6, '0')}`;
+const renderControl = { bgColor: 0x1c1a1c, exposure: 1.1, useSolidBg: false };
+renderFolder.add(renderControl, 'useSolidBg').onChange(() => {
+  applyBackgroundSetting();
+}).name('Solid Background');
+renderFolder.addColor(renderControl, 'bgColor').onChange(() => {
+  applyBackgroundSetting();
 }).name('Background Color');
 renderFolder.add(renderControl, 'exposure', 0, 2, 0.1).onChange((val) => {
   renderer.toneMappingExposure = val;
@@ -2466,18 +2974,6 @@ if (boxSettingsToggle) {
 
 if (settingsExport) {
   settingsExport.addEventListener('click', () => {
-    const getChangedSettings = (base, current) => {
-      const changes = {};
-      Object.keys(current).forEach((key) => {
-        const baseValue = base[key];
-        const currentValue = current[key];
-        if (JSON.stringify(baseValue) !== JSON.stringify(currentValue)) {
-          changes[key] = currentValue;
-        }
-      });
-      return changes;
-    };
-
     const exportPayload = {
       orbitalSettings: getChangedSettings(defaultOrbitalSettings, orbitalSettings),
       uiSettings: getChangedSettings(defaultUiSettings, uiSettings)
@@ -2543,19 +3039,61 @@ if (modelTunerGui && modelControl) {
   tunerGui.add(modelControl, 'scale', 0.4, 2.5, 0.05).name('Scale').onChange((val) => {
     if (model) model.scale.setScalar(modelBaseScale * val);
   });
+
+  if (materialControl) {
+    const toonFolder = tunerGui.addFolder('Render Style');
+    toonFolder.addColor(materialControl, 'color').name('Base Color').onChange(applyToonMaterialToModel);
+    toonFolder.addColor(materialControl, 'shadowColor').name('Shadow Color').onChange(applyToonMaterialToModel);
+    toonFolder.addColor(materialControl, 'highlightColor').name('Highlight Color').onChange(applyToonMaterialToModel);
+    toonFolder.addColor(materialControl, 'emissiveColor').name('Emissive Color').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'emissiveIntensity', 0, 1.5, 0.05).name('Emissive Power').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'shadeSteps', 2, 6, 1).name('Shade Steps').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'shadowStrength', 0, 0.6, 0.02).name('Shadow Cutoff').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'highlightStrength', 0.4, 1, 0.02).name('Highlight Cutoff').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'strictColors').name('Strict Colors').onChange(() => {
+      applyStrictColorLighting();
+      applyToonMaterialToModel();
+    });
+    toonFolder.add(materialControl, 'outlineThickness', 0, 0.12, 0.005).name('Outline Thickness').onChange(applyToonMaterialToModel);
+    toonFolder.addColor(materialControl, 'outlineColor').name('Outline Color').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'pencilIntensity', 0, 0.8, 0.05).name('Pencil Intensity').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'pencilScale', 0.6, 3, 0.1).name('Pencil Scale').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'outlineTextureScale', 0.6, 3, 0.1).name('Outline Texture Scale').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'edgeEnabled').name('Edge Lines').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'edgeThreshold', 1, 60, 1).name('Edge Threshold').onChange(applyToonMaterialToModel);
+    toonFolder.add(materialControl, 'edgeScale', 1, 1.01, 0.0005).name('Edge Scale').onChange(applyToonMaterialToModel);
+    toonFolder.close();
+  }
+
+  if (renderControl) {
+    const renderFolder = tunerGui.addFolder('Rendering');
+    renderFolder.add(renderControl, 'exposure', 0, 2, 0.1).name('Exposure').onChange((val) => {
+      renderer.toneMappingExposure = val;
+    });
+    renderFolder.add(renderControl, 'useSolidBg').name('Solid Background').onChange(() => {
+      applyBackgroundSetting();
+    });
+    renderFolder.addColor(renderControl, 'bgColor').name('Background Color').onChange(() => {
+      applyBackgroundSetting();
+    });
+    renderFolder.close();
+  }
 }
 
 if (modelTunerExport) {
   modelTunerExport.addEventListener('click', () => {
     if (!modelControl) return;
-    const changed = {};
-    Object.keys(modelTunerDefaults).forEach((key) => {
-      if (modelControl[key] !== modelTunerDefaults[key]) {
-        changed[key] = modelControl[key];
-      }
-    });
+    const exportPayload = {
+      model: getChangedSettings(modelTunerDefaults, modelControl),
+      toon: materialControl ? getChangedSettings(defaultToonMaterialSettings, materialControl) : {},
+      rendering: renderControl ? getChangedSettings({
+        exposure: presetSettings.rendering.exposure,
+        bgColor: presetSettings.rendering.bgColor,
+        useSolidBg: !!presetSettings.rendering.useSolidBg,
+      }, renderControl) : {},
+    };
     console.log('=== MODEL TUNER EXPORT ===');
-    console.log(JSON.stringify(changed, null, 2));
+    console.log(JSON.stringify(exportPayload, null, 2));
   });
 }
 
