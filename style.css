@@ -107,6 +107,12 @@ CURSOR CLOSET SECTION
   --blob-color-1: #c7d0dc;
   --blob-color-2: #8a93a4;
   --blob-color-3: #6e7887;
+  --ui-outline: #c7d0dc;
+  --ui-fill: #1a2028;
+  --ui-text: #0f1216;
+  --orbit-outline: #c7d0dc;
+  --orbit-fill: #1a2028;
+  --orbit-text: #0f1216;
 }
 
 /* Navigation Bar */
@@ -246,6 +252,87 @@ body {
 
 .design-controls {
   padding: 16px;
+}
+
+.palette-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 16px 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.palette-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.palette-header h4 {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+}
+
+.palette-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 10, 10, 0.6);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+}
+
+.palette-panel {
+  position: fixed;
+  right: -360px;
+  top: 20px;
+  width: 320px;
+  max-height: calc(100vh - 40px);
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(199, 208, 220, 0.3);
+  border-radius: 12px;
+  z-index: 800;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: right 0.3s ease;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.palette-panel.active {
+  right: 20px;
+}
+
+.palette-panel-body {
+  padding-top: 8px;
+}
+
+.palette-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.palette-toggle-row input {
+  width: 18px;
+  height: 18px;
 }
 
 .design-control-group {
@@ -1694,6 +1781,213 @@ BOX SETTINGS PANEL
   transform: translateY(-2px);
   border-color: rgba(199, 208, 220, 0.7);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.design-panel-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 152px;
+  z-index: 801;
+  background: rgba(20, 20, 20, 0.85);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.design-panel-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(199, 208, 220, 0.7);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.palette-panel-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 196px;
+  z-index: 801;
+  background: rgba(20, 20, 20, 0.85);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.palette-panel-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(199, 208, 220, 0.7);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+body.palette-ui-sync .box-settings-toggle,
+body.palette-ui-sync .font-switcher-toggle,
+body.palette-ui-sync .design-panel-toggle,
+body.palette-ui-sync .palette-panel-toggle,
+body.palette-ui-sync .orbit-colors-toggle,
+body.palette-ui-sync .model-tuner-toggle {
+  border: 3px solid var(--ui-outline);
+  background: var(--ui-fill);
+  color: var(--ui-text);
+}
+
+body.palette-ui-sync .box-settings-panel,
+body.palette-ui-sync .font-switcher-panel,
+body.palette-ui-sync .model-tuner-panel,
+body.palette-ui-sync .palette-panel,
+body.palette-ui-sync .design-panel {
+  border: 3px solid var(--ui-outline);
+  background: var(--ui-fill);
+  color: var(--ui-text);
+}
+
+body.palette-ui-sync .settings-header h3,
+body.palette-ui-sync .design-header h3,
+body.palette-ui-sync .palette-header h4 {
+  color: var(--ui-text);
+}
+
+body.palette-orbit-sync .corner-box {
+  border: 3px solid var(--orbit-outline);
+  background: var(--orbit-fill);
+  box-shadow: none;
+}
+
+body.palette-orbit-sync .corner-box::before {
+  opacity: 0;
+}
+
+body.palette-orbit-sync .corner-box-label {
+  color: var(--orbit-text) !important;
+}
+
+body.palette-orbit-sync .orbit-arrow {
+  border: 3px solid var(--orbit-outline);
+  background: var(--orbit-fill);
+  color: var(--orbit-text);
+  box-shadow: none;
+}
+
+body.palette-orbit-sync .orbit-arrow:hover {
+  background: var(--orbit-fill);
+  border-color: var(--orbit-outline);
+  box-shadow: none;
+}
+
+body.palette-orbit-sync .orbit-dot {
+  background: var(--orbit-fill);
+  border: 3px solid var(--orbit-outline);
+  box-shadow: none;
+}
+
+body.palette-orbit-sync .orbit-dot.active {
+  background: var(--orbit-fill);
+  box-shadow: 0 0 12px var(--orbit-outline);
+}
+
+/* Orbit Colors Panel */
+.orbit-colors-panel {
+  position: fixed;
+  right: -400px;
+  top: 20px;
+  width: 360px;
+  max-height: calc(100vh - 40px);
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(199, 208, 220, 0.3);
+  border-radius: 12px;
+  z-index: 800;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: right 0.3s ease;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.orbit-colors-panel.active {
+  right: 20px;
+}
+
+.orbit-colors-body {
+  padding-top: 8px;
+}
+
+.orbit-colors-body .box-gui-container {
+  margin-bottom: 16px;
+}
+
+.orbit-palette-presets {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.orbit-palette-presets .palette-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.orbit-palette-presets .palette-header h4 {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.orbit-colors-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 240px;
+  z-index: 801;
+  background: rgba(20, 20, 20, 0.85);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(199, 208, 220, 0.4);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.orbit-colors-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(199, 208, 220, 0.7);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+body.palette-ui-sync .orbit-colors-toggle {
+  border: 3px solid var(--ui-outline);
+  background: var(--ui-fill);
+  color: var(--ui-text);
+}
+
+body.palette-ui-sync .orbit-colors-panel {
+  border: 3px solid var(--ui-outline);
+  background: var(--ui-fill);
+  color: var(--ui-text);
 }
 
 .font-switcher-panel {

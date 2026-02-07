@@ -124,6 +124,9 @@
 
   <button class="box-settings-toggle" id="boxSettingsToggle" aria-label="Toggle customize menu">Customize Menu</button>
   <button class="font-switcher-toggle" id="fontSwitcherToggle" aria-label="Toggle font switcher">Fonts</button>
+  <button class="design-panel-toggle" id="designBtn" aria-label="Toggle design panel">Design</button>
+  <button class="palette-panel-toggle" id="palettePresetToggle" aria-label="Toggle palette presets">Palettes</button>
+  <button class="orbit-colors-toggle" id="orbitColorsToggle" aria-label="Toggle orbit colors">Orbit Colors</button>
   <button class="model-tuner-toggle" id="modelTunerToggle" aria-label="Toggle model tuner">Model</button>
 
   <!-- Floating Box Settings GUI -->
@@ -155,6 +158,54 @@
       <select id="fontSwitcherSelect" class="font-switcher-select"></select>
       <div class="font-switcher-list" id="fontSwitcherList"></div>
       <div class="font-switcher-preview" id="fontSwitcherPreview">Preview the orbit menu text</div>
+    </div>
+  </div>
+
+  <div class="palette-panel" id="palettePresetPanel" aria-hidden="true">
+    <div class="settings-header">
+      <h3>Palette Presets</h3>
+      <div class="settings-actions">
+        <button class="settings-close" id="palettePresetClose">✕</button>
+      </div>
+    </div>
+    <div class="palette-panel-body">
+      <label class="palette-toggle-row" for="uiPaletteSyncToggle">
+        <span>Sync UI with Palette</span>
+        <input type="checkbox" id="uiPaletteSyncToggle" />
+      </label>
+      <label class="palette-toggle-row" for="orbitPaletteSyncToggle">
+        <span>Sync Orbit Menu</span>
+        <input type="checkbox" id="orbitPaletteSyncToggle" />
+      </label>
+      <div class="palette-presets">
+        <div class="palette-header">
+          <h4>Saved Palettes</h4>
+          <button id="savePalettePreset" class="export-btn secondary-btn" type="button">Save Current Palette</button>
+        </div>
+        <select id="palettePresetSelect" class="palette-select" aria-label="Palette presets"></select>
+        <button id="deletePalettePreset" class="export-btn secondary-btn" type="button">Delete Selected</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="orbit-colors-panel" id="orbitColorsPanel" aria-hidden="true">
+    <div class="settings-header">
+      <h3>Orbit Colors</h3>
+      <div class="settings-actions">
+        <button class="settings-export" id="orbitColorsExport">Export</button>
+        <button class="settings-close" id="orbitColorsClose">✕</button>
+      </div>
+    </div>
+    <div class="orbit-colors-body">
+      <div id="orbitColorsGuiContainer" class="box-gui-container"></div>
+      <div class="orbit-palette-presets">
+        <div class="palette-header">
+          <h4>Saved Orbit Palettes</h4>
+          <button id="saveOrbitPalette" class="export-btn secondary-btn" type="button">Save Current</button>
+        </div>
+        <select id="orbitPaletteSelect" class="palette-select" aria-label="Orbit palette presets"></select>
+        <button id="deleteOrbitPalette" class="export-btn secondary-btn" type="button">Delete Selected</button>
+      </div>
     </div>
   </div>
 

@@ -1315,6 +1315,24 @@ const designBtn = document.getElementById('designBtn');
 const designPanel = document.getElementById('designPanel');
 const designClose = document.getElementById('designClose');
 const designControls = document.getElementById('designControls');
+const palettePresetToggle = document.getElementById('palettePresetToggle');
+const palettePresetPanel = document.getElementById('palettePresetPanel');
+const palettePresetClose = document.getElementById('palettePresetClose');
+const uiPaletteSyncToggle = document.getElementById('uiPaletteSyncToggle');
+const orbitPaletteSyncToggle = document.getElementById('orbitPaletteSyncToggle');
+const palettePresetSelect = document.getElementById('palettePresetSelect');
+const savePalettePresetBtn = document.getElementById('savePalettePreset');
+const deletePalettePresetBtn = document.getElementById('deletePalettePreset');
+
+// Orbit Colors Panel Elements
+const orbitColorsToggle = document.getElementById('orbitColorsToggle');
+const orbitColorsPanel = document.getElementById('orbitColorsPanel');
+const orbitColorsClose = document.getElementById('orbitColorsClose');
+const orbitColorsExport = document.getElementById('orbitColorsExport');
+const orbitColorsGuiContainer = document.getElementById('orbitColorsGuiContainer');
+const orbitPaletteSelect = document.getElementById('orbitPaletteSelect');
+const saveOrbitPaletteBtn = document.getElementById('saveOrbitPalette');
+const deleteOrbitPaletteBtn = document.getElementById('deleteOrbitPalette');
 
 const defaultDesignSettings = {
   // Colors
@@ -1576,6 +1594,251 @@ function applyDesignSettings() {
   });
 }
 
+const PALETTE_STORAGE_KEY = 'palettePresets';
+const UI_PALETTE_SYNC_KEY = 'uiPaletteSyncEnabled';
+const ORBIT_PALETTE_SYNC_KEY = 'orbitPaletteSyncEnabled';
+let paletteStorage = null;
+let pendingPaletteId = null;
+let uiPaletteSyncEnabled = localStorage.getItem(UI_PALETTE_SYNC_KEY) === 'true';
+let orbitPaletteSyncEnabled = localStorage.getItem(ORBIT_PALETTE_SYNC_KEY) === 'true';
+
+const buildPaletteFromPreset = () => ({
+  toon: {
+    color: presetSettings.material.color,
+    shadowColor: presetSettings.material.shadowColor,
+    highlightColor: presetSettings.material.highlightColor,
+    highlightStrength: presetSettings.material.highlightStrength,
+    outlineColor: presetSettings.material.outlineColor,
+  },
+  rendering: {
+    bgColor: presetSettings.rendering.bgColor,
+    useSolidBg: !!presetSettings.rendering.useSolidBg,
+  }
+});
+
+const buildPaletteFromCurrent = () => {
+  if (!materialControl || !renderControl) {
+    return buildPaletteFromPreset();
+  }
+  return {
+    toon: {
+      color: materialControl.color,
+      shadowColor: materialControl.shadowColor,
+      highlightColor: materialControl.highlightColor,
+      highlightStrength: materialControl.highlightStrength,
+      outlineColor: materialControl.outlineColor,
+    },
+    rendering: {
+      bgColor: renderControl.bgColor,
+      useSolidBg: !!renderControl.useSolidBg,
+    }
+  };
+};
+
+const loadPaletteStorage = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PALETTE_STORAGE_KEY) || '{}');
+    return {
+      version: parsed.version || 1,
+      palettes: Array.isArray(parsed.palettes) ? parsed.palettes : [],
+      selectedId: parsed.selectedId || null,
+    };
+  } catch (err) {
+    return { version: 1, palettes: [], selectedId: null };
+  }
+};
+
+const savePaletteStorage = (storage) => {
+  localStorage.setItem(PALETTE_STORAGE_KEY, JSON.stringify(storage));
+};
+
+const ensureDefaultPalette = (storage) => {
+  if (storage.palettes.length) return;
+  storage.palettes.push({
+    id: 'default',
+    name: 'Preset Default',
+    palette: buildPaletteFromPreset(),
+  });
+  storage.selectedId = 'default';
+};
+
+const renderPaletteOptions = (storage) => {
+  if (!palettePresetSelect) return;
+  palettePresetSelect.innerHTML = '';
+  storage.palettes.forEach((entry) => {
+    const option = document.createElement('option');
+    option.value = entry.id;
+    option.textContent = entry.name;
+    palettePresetSelect.appendChild(option);
+  });
+  if (storage.selectedId) {
+    palettePresetSelect.value = storage.selectedId;
+  }
+};
+
+const applyPaletteById = (paletteId, persistSelection = true) => {
+  if (!paletteStorage) return;
+  const entry = paletteStorage.palettes.find((item) => item.id === paletteId);
+  if (!entry || !entry.palette) return;
+
+  if (persistSelection) {
+    paletteStorage.selectedId = paletteId;
+    savePaletteStorage(paletteStorage);
+  }
+
+  if (!materialControl || !renderControl) {
+    pendingPaletteId = paletteId;
+    return;
+  }
+
+  const toon = entry.palette.toon || {};
+  materialControl.color = toon.color ?? defaultToonMaterialSettings.color;
+  materialControl.shadowColor = toon.shadowColor ?? defaultToonMaterialSettings.shadowColor;
+  materialControl.highlightColor = toon.highlightColor ?? defaultToonMaterialSettings.highlightColor;
+  materialControl.highlightStrength = typeof toon.highlightStrength === 'number'
+    ? toon.highlightStrength
+    : defaultToonMaterialSettings.highlightStrength;
+  materialControl.outlineColor = toon.outlineColor ?? defaultToonMaterialSettings.outlineColor;
+
+  const rendering = entry.palette.rendering || {};
+  if (typeof rendering.bgColor === 'number') {
+    renderControl.bgColor = rendering.bgColor;
+  }
+  if (typeof rendering.useSolidBg === 'boolean') {
+    renderControl.useSolidBg = rendering.useSolidBg;
+  }
+
+  applyToonMaterialToModel();
+  applyStrictColorLighting();
+  applyBackgroundSetting();
+  applyUiPaletteSync(entry.palette);
+  applyOrbitPaletteSync(entry.palette);
+  if (window.gui) window.gui.updateDisplay();
+};
+
+const getActivePalette = () => {
+  if (paletteStorage && paletteStorage.selectedId) {
+    const entry = paletteStorage.palettes.find((item) => item.id === paletteStorage.selectedId);
+    if (entry && entry.palette) return entry.palette;
+  }
+  return buildPaletteFromCurrent();
+};
+
+const applyUiPaletteSync = (palette) => {
+  if (!uiPaletteSyncEnabled) return;
+  if (!palette || !palette.toon) return;
+  const root = document.documentElement.style;
+  const toHex = (value) => `#${Number(value).toString(16).padStart(6, '0')}`;
+  root.setProperty('--ui-outline', toHex(palette.toon.color));
+  root.setProperty('--ui-fill', toHex(palette.toon.highlightColor));
+  root.setProperty('--ui-text', toHex(palette.toon.shadowColor));
+  document.body.classList.add('palette-ui-sync');
+};
+
+const clearUiPaletteSync = () => {
+  const root = document.documentElement.style;
+  root.removeProperty('--ui-outline');
+  root.removeProperty('--ui-fill');
+  root.removeProperty('--ui-text');
+  document.body.classList.remove('palette-ui-sync');
+};
+
+const applyOrbitPaletteSync = (palette) => {
+  if (!orbitPaletteSyncEnabled) return;
+  if (!palette || !palette.toon) return;
+  const root = document.documentElement.style;
+  const toHex = (value) => `#${Number(value).toString(16).padStart(6, '0')}`;
+  root.setProperty('--orbit-outline', toHex(palette.toon.color));
+  root.setProperty('--orbit-fill', toHex(palette.toon.highlightColor));
+  root.setProperty('--orbit-text', toHex(palette.toon.shadowColor));
+  document.body.classList.add('palette-orbit-sync');
+};
+
+const clearOrbitPaletteSync = () => {
+  const root = document.documentElement.style;
+  root.removeProperty('--orbit-outline');
+  root.removeProperty('--orbit-fill');
+  root.removeProperty('--orbit-text');
+  document.body.classList.remove('palette-orbit-sync');
+};
+
+const initPalettePresets = () => {
+  if (!palettePresetSelect) return;
+  paletteStorage = loadPaletteStorage();
+  ensureDefaultPalette(paletteStorage);
+  renderPaletteOptions(paletteStorage);
+  savePaletteStorage(paletteStorage);
+
+  if (uiPaletteSyncToggle) {
+    uiPaletteSyncToggle.checked = uiPaletteSyncEnabled;
+  }
+  if (orbitPaletteSyncToggle) {
+    orbitPaletteSyncToggle.checked = orbitPaletteSyncEnabled;
+  }
+
+  palettePresetSelect.addEventListener('change', (event) => {
+    applyPaletteById(event.target.value);
+  });
+
+  if (savePalettePresetBtn) {
+    savePalettePresetBtn.addEventListener('click', () => {
+      const name = window.prompt('Name this palette:', `Palette ${paletteStorage.palettes.length + 1}`);
+      if (!name) return;
+      const entry = {
+        id: `palette-${Date.now()}`,
+        name: name.trim() || `Palette ${paletteStorage.palettes.length + 1}`,
+        palette: buildPaletteFromCurrent(),
+      };
+      paletteStorage.palettes.push(entry);
+      paletteStorage.selectedId = entry.id;
+      savePaletteStorage(paletteStorage);
+      renderPaletteOptions(paletteStorage);
+      applyPaletteById(entry.id, false);
+    });
+  }
+
+  if (deletePalettePresetBtn) {
+    deletePalettePresetBtn.addEventListener('click', () => {
+      if (!paletteStorage.selectedId) return;
+      const toDelete = paletteStorage.selectedId;
+      paletteStorage.palettes = paletteStorage.palettes.filter((item) => item.id !== toDelete);
+      if (!paletteStorage.palettes.length) {
+        ensureDefaultPalette(paletteStorage);
+      }
+      paletteStorage.selectedId = paletteStorage.palettes[0]?.id || null;
+      savePaletteStorage(paletteStorage);
+      renderPaletteOptions(paletteStorage);
+      if (paletteStorage.selectedId) {
+        applyPaletteById(paletteStorage.selectedId, false);
+      }
+    });
+  }
+};
+
+if (uiPaletteSyncToggle) {
+  uiPaletteSyncToggle.addEventListener('change', (event) => {
+    uiPaletteSyncEnabled = event.target.checked;
+    localStorage.setItem(UI_PALETTE_SYNC_KEY, uiPaletteSyncEnabled ? 'true' : 'false');
+    if (uiPaletteSyncEnabled) {
+      applyUiPaletteSync(getActivePalette());
+    } else {
+      clearUiPaletteSync();
+    }
+  });
+}
+
+if (orbitPaletteSyncToggle) {
+  orbitPaletteSyncToggle.addEventListener('change', (event) => {
+    orbitPaletteSyncEnabled = event.target.checked;
+    localStorage.setItem(ORBIT_PALETTE_SYNC_KEY, orbitPaletteSyncEnabled ? 'true' : 'false');
+    if (orbitPaletteSyncEnabled) {
+      applyOrbitPaletteSync(getActivePalette());
+    } else {
+      clearOrbitPaletteSync();
+    }
+  });
+}
+
 if (designBtn) {
   designBtn.addEventListener('click', () => {
     designPanel.classList.toggle('active');
@@ -1588,7 +1851,305 @@ if (designClose) {
   });
 }
 
+if (palettePresetToggle && palettePresetPanel) {
+  palettePresetToggle.addEventListener('click', () => {
+    palettePresetPanel.classList.toggle('active');
+    palettePresetPanel.setAttribute('aria-hidden', palettePresetPanel.classList.contains('active') ? 'false' : 'true');
+  });
+}
+
+if (palettePresetClose && palettePresetPanel) {
+  palettePresetClose.addEventListener('click', () => {
+    palettePresetPanel.classList.remove('active');
+    palettePresetPanel.setAttribute('aria-hidden', 'true');
+  });
+}
+
+// ============================================
+// ORBIT COLORS PANEL & PALETTE SYSTEM
+// ============================================
+const ORBIT_PALETTE_STORAGE_KEY = 'orbitPalettePresets';
+let orbitPaletteStorage = null;
+
+const defaultOrbitColorSettings = {
+  menuBaseColor: '#d6d6d6',
+  menuTintColor: '#ffffff',
+  menuAccentColor: '#ffffff',
+  menuLabelColor: '#dddada',
+  menuGlassOpacity: 0.46,
+  menuTintOpacity: 0.5,
+  menuBorderOpacity: 0.24,
+  menuShadowOpacity: 0.52,
+  menuGlowOpacity: 0.22,
+  arrowBaseColor: '#d6d6d6',
+  arrowTintColor: '#ffffff',
+  arrowAccentColor: '#ffffff',
+  arrowColor: '#e3e3e3',
+  arrowGlassOpacity: 0.44,
+  arrowTintOpacity: 0.5,
+  arrowBorderOpacity: 0.2,
+  arrowShadowOpacity: 0.4,
+  arrowGlowOpacity: 0.2,
+};
+
+const buildOrbitPaletteFromCurrent = () => ({
+  menuBaseColor: uiSettings.menuBaseColor,
+  menuTintColor: uiSettings.menuTintColor,
+  menuAccentColor: uiSettings.menuAccentColor,
+  menuLabelColor: uiSettings.menuLabelColor,
+  menuGlassOpacity: uiSettings.menuGlassOpacity,
+  menuTintOpacity: uiSettings.menuTintOpacity,
+  menuBorderOpacity: uiSettings.menuBorderOpacity,
+  menuShadowOpacity: uiSettings.menuShadowOpacity,
+  menuGlowOpacity: uiSettings.menuGlowOpacity,
+  arrowBaseColor: uiSettings.arrowBaseColor,
+  arrowTintColor: uiSettings.arrowTintColor,
+  arrowAccentColor: uiSettings.arrowAccentColor,
+  arrowColor: uiSettings.arrowColor,
+  arrowGlassOpacity: uiSettings.arrowGlassOpacity,
+  arrowTintOpacity: uiSettings.arrowTintOpacity,
+  arrowBorderOpacity: uiSettings.arrowBorderOpacity,
+  arrowShadowOpacity: uiSettings.arrowShadowOpacity,
+  arrowGlowOpacity: uiSettings.arrowGlowOpacity,
+});
+
+const loadOrbitPaletteStorage = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ORBIT_PALETTE_STORAGE_KEY) || '{}');
+    return {
+      version: parsed.version || 1,
+      palettes: Array.isArray(parsed.palettes) ? parsed.palettes : [],
+      selectedId: parsed.selectedId || null,
+    };
+  } catch (err) {
+    return { version: 1, palettes: [], selectedId: null };
+  }
+};
+
+const saveOrbitPaletteStorage = (storage) => {
+  localStorage.setItem(ORBIT_PALETTE_STORAGE_KEY, JSON.stringify(storage));
+};
+
+const ensureDefaultOrbitPalette = (storage) => {
+  if (storage.palettes.length) return;
+  storage.palettes.push({
+    id: 'default',
+    name: 'Default Glass',
+    palette: { ...defaultOrbitColorSettings },
+  });
+  storage.selectedId = 'default';
+};
+
+const renderOrbitPaletteOptions = (storage) => {
+  if (!orbitPaletteSelect) return;
+  orbitPaletteSelect.innerHTML = '';
+  storage.palettes.forEach((entry) => {
+    const option = document.createElement('option');
+    option.value = entry.id;
+    option.textContent = entry.name;
+    orbitPaletteSelect.appendChild(option);
+  });
+  if (storage.selectedId) {
+    orbitPaletteSelect.value = storage.selectedId;
+  }
+};
+
+const applyOrbitPaletteById = (paletteId, persistSelection = true) => {
+  if (!orbitPaletteStorage) return;
+  const entry = orbitPaletteStorage.palettes.find((item) => item.id === paletteId);
+  if (!entry || !entry.palette) return;
+
+  if (persistSelection) {
+    orbitPaletteStorage.selectedId = paletteId;
+    saveOrbitPaletteStorage(orbitPaletteStorage);
+  }
+
+  const palette = entry.palette;
+  
+  // Apply colors to uiSettings
+  if (palette.menuBaseColor) uiSettings.menuBaseColor = palette.menuBaseColor;
+  if (palette.menuTintColor) uiSettings.menuTintColor = palette.menuTintColor;
+  if (palette.menuAccentColor) uiSettings.menuAccentColor = palette.menuAccentColor;
+  if (palette.menuLabelColor) uiSettings.menuLabelColor = palette.menuLabelColor;
+  if (typeof palette.menuGlassOpacity === 'number') uiSettings.menuGlassOpacity = palette.menuGlassOpacity;
+  if (typeof palette.menuTintOpacity === 'number') uiSettings.menuTintOpacity = palette.menuTintOpacity;
+  if (typeof palette.menuBorderOpacity === 'number') uiSettings.menuBorderOpacity = palette.menuBorderOpacity;
+  if (typeof palette.menuShadowOpacity === 'number') uiSettings.menuShadowOpacity = palette.menuShadowOpacity;
+  if (typeof palette.menuGlowOpacity === 'number') uiSettings.menuGlowOpacity = palette.menuGlowOpacity;
+  
+  if (palette.arrowBaseColor) uiSettings.arrowBaseColor = palette.arrowBaseColor;
+  if (palette.arrowTintColor) uiSettings.arrowTintColor = palette.arrowTintColor;
+  if (palette.arrowAccentColor) uiSettings.arrowAccentColor = palette.arrowAccentColor;
+  if (palette.arrowColor) uiSettings.arrowColor = palette.arrowColor;
+  if (typeof palette.arrowGlassOpacity === 'number') uiSettings.arrowGlassOpacity = palette.arrowGlassOpacity;
+  if (typeof palette.arrowTintOpacity === 'number') uiSettings.arrowTintOpacity = palette.arrowTintOpacity;
+  if (typeof palette.arrowBorderOpacity === 'number') uiSettings.arrowBorderOpacity = palette.arrowBorderOpacity;
+  if (typeof palette.arrowShadowOpacity === 'number') uiSettings.arrowShadowOpacity = palette.arrowShadowOpacity;
+  if (typeof palette.arrowGlowOpacity === 'number') uiSettings.arrowGlowOpacity = palette.arrowGlowOpacity;
+
+  applyUiSettings();
+  if (window.orbitColorsGui) window.orbitColorsGui.updateDisplay();
+};
+
+const initOrbitColorsGui = () => {
+  if (!orbitColorsGuiContainer) return;
+  
+  const orbitColorsGui = new window.lil.GUI({ container: orbitColorsGuiContainer, title: 'Orbit Menu Colors' });
+  orbitColorsGui.domElement.style.width = '100%';
+  window.orbitColorsGui = orbitColorsGui;
+
+  // Menu Colors Folder
+  const menuColorsFolder = orbitColorsGui.addFolder('🔮 Menu Box Colors');
+  menuColorsFolder.addColor(uiSettings, 'menuBaseColor')
+    .name('Base Color')
+    .onChange(applyUiSettings);
+  menuColorsFolder.addColor(uiSettings, 'menuTintColor')
+    .name('Tint Color')
+    .onChange(applyUiSettings);
+  menuColorsFolder.addColor(uiSettings, 'menuAccentColor')
+    .name('Accent Glow')
+    .onChange(applyUiSettings);
+  menuColorsFolder.addColor(uiSettings, 'menuLabelColor')
+    .name('Label Color')
+    .onChange(applyUiSettings);
+  menuColorsFolder.open();
+
+  // Menu Opacity Folder
+  const menuOpacityFolder = orbitColorsGui.addFolder('📊 Menu Opacity');
+  menuOpacityFolder.add(uiSettings, 'menuGlassOpacity', 0.1, 1, 0.02)
+    .name('Glass')
+    .onChange(applyUiSettings);
+  menuOpacityFolder.add(uiSettings, 'menuTintOpacity', 0, 0.6, 0.02)
+    .name('Tint')
+    .onChange(applyUiSettings);
+  menuOpacityFolder.add(uiSettings, 'menuBorderOpacity', 0, 0.6, 0.02)
+    .name('Border')
+    .onChange(applyUiSettings);
+  menuOpacityFolder.add(uiSettings, 'menuShadowOpacity', 0, 0.8, 0.02)
+    .name('Shadow')
+    .onChange(applyUiSettings);
+  menuOpacityFolder.add(uiSettings, 'menuGlowOpacity', 0, 0.6, 0.02)
+    .name('Glow')
+    .onChange(applyUiSettings);
+  menuOpacityFolder.close();
+
+  // Arrow Colors Folder
+  const arrowColorsFolder = orbitColorsGui.addFolder('⬅️ Arrow Colors');
+  arrowColorsFolder.addColor(uiSettings, 'arrowBaseColor')
+    .name('Base Color')
+    .onChange(applyUiSettings);
+  arrowColorsFolder.addColor(uiSettings, 'arrowTintColor')
+    .name('Tint Color')
+    .onChange(applyUiSettings);
+  arrowColorsFolder.addColor(uiSettings, 'arrowAccentColor')
+    .name('Accent Glow')
+    .onChange(applyUiSettings);
+  arrowColorsFolder.addColor(uiSettings, 'arrowColor')
+    .name('Arrow Symbol')
+    .onChange(applyUiSettings);
+  arrowColorsFolder.open();
+
+  // Arrow Opacity Folder
+  const arrowOpacityFolder = orbitColorsGui.addFolder('📊 Arrow Opacity');
+  arrowOpacityFolder.add(uiSettings, 'arrowGlassOpacity', 0.1, 1, 0.02)
+    .name('Glass')
+    .onChange(applyUiSettings);
+  arrowOpacityFolder.add(uiSettings, 'arrowTintOpacity', 0, 0.6, 0.02)
+    .name('Tint')
+    .onChange(applyUiSettings);
+  arrowOpacityFolder.add(uiSettings, 'arrowBorderOpacity', 0, 0.6, 0.02)
+    .name('Border')
+    .onChange(applyUiSettings);
+  arrowOpacityFolder.add(uiSettings, 'arrowShadowOpacity', 0, 0.8, 0.02)
+    .name('Shadow')
+    .onChange(applyUiSettings);
+  arrowOpacityFolder.add(uiSettings, 'arrowGlowOpacity', 0, 0.6, 0.02)
+    .name('Glow')
+    .onChange(applyUiSettings);
+  arrowOpacityFolder.close();
+};
+
+const initOrbitPalettePresets = () => {
+  if (!orbitPaletteSelect) return;
+  orbitPaletteStorage = loadOrbitPaletteStorage();
+  ensureDefaultOrbitPalette(orbitPaletteStorage);
+  renderOrbitPaletteOptions(orbitPaletteStorage);
+  saveOrbitPaletteStorage(orbitPaletteStorage);
+
+  orbitPaletteSelect.addEventListener('change', (event) => {
+    applyOrbitPaletteById(event.target.value);
+  });
+
+  if (saveOrbitPaletteBtn) {
+    saveOrbitPaletteBtn.addEventListener('click', () => {
+      const name = window.prompt('Name this orbit palette:', `Orbit Palette ${orbitPaletteStorage.palettes.length + 1}`);
+      if (!name) return;
+      const entry = {
+        id: `orbit-palette-${Date.now()}`,
+        name: name.trim() || `Orbit Palette ${orbitPaletteStorage.palettes.length + 1}`,
+        palette: buildOrbitPaletteFromCurrent(),
+      };
+      orbitPaletteStorage.palettes.push(entry);
+      orbitPaletteStorage.selectedId = entry.id;
+      saveOrbitPaletteStorage(orbitPaletteStorage);
+      renderOrbitPaletteOptions(orbitPaletteStorage);
+    });
+  }
+
+  if (deleteOrbitPaletteBtn) {
+    deleteOrbitPaletteBtn.addEventListener('click', () => {
+      if (!orbitPaletteStorage.selectedId) return;
+      const toDelete = orbitPaletteStorage.selectedId;
+      orbitPaletteStorage.palettes = orbitPaletteStorage.palettes.filter((item) => item.id !== toDelete);
+      if (!orbitPaletteStorage.palettes.length) {
+        ensureDefaultOrbitPalette(orbitPaletteStorage);
+      }
+      orbitPaletteStorage.selectedId = orbitPaletteStorage.palettes[0]?.id || null;
+      saveOrbitPaletteStorage(orbitPaletteStorage);
+      renderOrbitPaletteOptions(orbitPaletteStorage);
+      if (orbitPaletteStorage.selectedId) {
+        applyOrbitPaletteById(orbitPaletteStorage.selectedId, false);
+      }
+    });
+  }
+};
+
+// Orbit Colors Panel Toggle
+if (orbitColorsToggle && orbitColorsPanel) {
+  orbitColorsToggle.addEventListener('click', () => {
+    orbitColorsPanel.classList.toggle('active');
+    orbitColorsPanel.setAttribute('aria-hidden', orbitColorsPanel.classList.contains('active') ? 'false' : 'true');
+  });
+}
+
+if (orbitColorsClose && orbitColorsPanel) {
+  orbitColorsClose.addEventListener('click', () => {
+    orbitColorsPanel.classList.remove('active');
+    orbitColorsPanel.setAttribute('aria-hidden', 'true');
+  });
+}
+
+// Export orbit colors
+if (orbitColorsExport) {
+  orbitColorsExport.addEventListener('click', () => {
+    const exportData = {
+      orbitColors: buildOrbitPaletteFromCurrent(),
+      timestamp: new Date().toISOString(),
+    };
+    const json = JSON.stringify(exportData, null, 2);
+    navigator.clipboard.writeText(json).then(() => {
+      window.alert('Orbit colors copied to clipboard!');
+    }).catch(() => {
+      console.log('Export data:', json);
+      window.alert('Check console for export data');
+    });
+  });
+}
+
+// Note: initOrbitColorsGui() and initOrbitPalettePresets() are called later after uiSettings is defined
+
 initDesignPanel();
+initPalettePresets();
 
 // ============================================
 // DESIGN PANEL TABS
@@ -2059,6 +2620,19 @@ settingsFolder.add({ exportSettings: () => {
 
 // Apply current preset values on load
 applyPreset(presetSettings);
+if (paletteStorage && paletteStorage.selectedId) {
+  applyPaletteById(paletteStorage.selectedId, false);
+}
+if (pendingPaletteId) {
+  applyPaletteById(pendingPaletteId, false);
+  pendingPaletteId = null;
+}
+if (uiPaletteSyncEnabled) {
+  applyUiPaletteSync(getActivePalette());
+}
+if (orbitPaletteSyncEnabled) {
+  applyOrbitPaletteSync(getActivePalette());
+}
 
 // Collapse all folders for compact sidebar appearance (user can expand as needed)
 cameraFolder.close();
@@ -2774,6 +3348,10 @@ if (orbitalGuiContainer && boxesContainer) {
   applyOrbitalSettings();
   applyUiSettings();
 }
+
+// Initialize orbit colors GUI and presets (after uiSettings is defined)
+initOrbitColorsGui();
+initOrbitPalettePresets();
 
 // Close button functionality
 settingsClose.addEventListener('click', () => {
