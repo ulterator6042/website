@@ -118,9 +118,9 @@ rimLight.position.set(6, 4, -6);
 scene.add(rimLight);
 
 const defaultToonMaterialSettings = {
-  color: 0xff6b00,
-  shadowColor: 0xff4200,
-  highlightColor: 0xff9500,
+  color: 0xff4d00,
+  shadowColor: 0xff1e00,
+  highlightColor: 0xff7d00,
   emissiveColor: 0x1a0f0f,
   emissiveIntensity: 0.35,
   shadeSteps: 4,
@@ -128,7 +128,7 @@ const defaultToonMaterialSettings = {
   highlightStrength: 0.74,
   strictColors: true,
   outlineThickness: 0.05,
-  outlineColor: 0x49424c,
+  outlineColor: 0x494cbc,
   outlineOpacity: 1,
   outlineTextureIntensity: 0,
   outlineTextureScale: 1.6,
@@ -839,9 +839,9 @@ const presetSettings = {
   model: { posX: 0, posY: 0.7, posZ: -2, scale: 1.5 },
   camera: { z: 2.5 },
   material: {
-    color: 0xff6b00,
-    shadowColor: 0xff4200,
-    highlightColor: 0xff9500,
+    color: 0xff4d00,
+    shadowColor: 0xff1e00,
+    highlightColor: 0xff7d00,
     emissiveColor: 0x1a0f0f,
     emissiveIntensity: 0.35,
     shadeSteps: 4,
@@ -849,7 +849,7 @@ const presetSettings = {
     highlightStrength: 0.74,
     strictColors: true,
     outlineThickness: 0.05,
-    outlineColor: 0x49424c,
+    outlineColor: 0x494cbc,
     outlineOpacity: 1,
     outlineTextureIntensity: 0,
     outlineTextureScale: 1.6,
@@ -871,7 +871,7 @@ const presetSettings = {
   point1: { intensity: 0.25, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true },
   point2: { intensity: 0.2, color: 0x7fd3ff, x: -2.5, y: 1, z: 3, visible: true },
   point3: { intensity: 0.2, color: 0xffffff, x: 0, y: -3, z: 5, visible: true },
-  rendering: { bgColor: 0x3b3286, exposure: 1.1, useSolidBg: true },
+  rendering: { bgColor: 0x3b3686, exposure: 1.1, useSolidBg: true },
   interaction: { rotationSpeedX: 0.4, rotationSpeedY: 0.2, inertia: 0.99, returnSpeed: 0.2, autoOrbit: false, autoOrbitSpeed: 0.5 },
 };
 
