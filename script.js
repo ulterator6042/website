@@ -39,6 +39,18 @@ if (urlParams.get('hardReset') === '1') {
 
 // Mobile fallback elements (added in index.html)
 const mobileFallback = document.getElementById('mobileFallback');
+// Icon hover swap logic
+document.querySelectorAll('.corner-box-icon').forEach(icon => {
+  const src = icon.getAttribute('src');
+  // Use icons/ for both normal and hover icons, matching actual filenames
+  const hoverSrc = src.replace('.png', '_hover.png');
+  icon.addEventListener('mouseenter', () => {
+    icon.setAttribute('src', hoverSrc);
+  });
+  icon.addEventListener('mouseleave', () => {
+    icon.setAttribute('src', src);
+  });
+});
 const load3DButton = document.getElementById('load3DButton');
 const resetColorsBtn = document.getElementById('resetColors');
 const applyModelPresetBtn = document.getElementById('applyModelPreset');

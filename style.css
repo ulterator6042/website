@@ -1272,7 +1272,7 @@ CORNER POPUP BOXES
   object-fit: contain;
   position: relative;
   z-index: 1;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .corner-box:hover {
