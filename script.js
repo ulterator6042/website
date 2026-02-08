@@ -8,11 +8,13 @@ let modelControl = null;
 let modelBaseScale = 1;
 let materialControl = null;
 
-const APP_VERSION = '2026-02-08-1';
+const APP_VERSION = '2026-02-08-2';
 const storedAppVersion = localStorage.getItem('appVersion');
 if (storedAppVersion !== APP_VERSION) {
   localStorage.removeItem('orbitalSettings');
   localStorage.removeItem('uiSettings');
+  localStorage.removeItem('palettePresets');
+  localStorage.removeItem('orbitPalettePresets');
   localStorage.setItem('appVersion', APP_VERSION);
 }
 
@@ -839,17 +841,17 @@ const presetSettings = {
   model: { posX: 0, posY: 0.7, posZ: -2, scale: 1.5 },
   camera: { z: 2.5 },
   material: {
-    color: 0xff4d00,
-    shadowColor: 0xff1e00,
-    highlightColor: 0xff7d00,
+    color: 0x632E12,
+    shadowColor: 0x090811,
+    highlightColor: 0xBA6017,
     emissiveColor: 0x1a0f0f,
     emissiveIntensity: 0.35,
     shadeSteps: 4,
     shadowStrength: 0.35,
-    highlightStrength: 0.74,
+    highlightStrength: 0.68,
     strictColors: true,
     outlineThickness: 0.05,
-    outlineColor: 0x494cbc,
+    outlineColor: 0x7E7272,
     outlineOpacity: 1,
     outlineTextureIntensity: 0,
     outlineTextureScale: 1.6,
@@ -871,7 +873,7 @@ const presetSettings = {
   point1: { intensity: 0.25, color: 0xffbfa8, x: 2.5, y: 1.5, z: 2, visible: true },
   point2: { intensity: 0.2, color: 0x7fd3ff, x: -2.5, y: 1, z: 3, visible: true },
   point3: { intensity: 0.2, color: 0xffffff, x: 0, y: -3, z: 5, visible: true },
-  rendering: { bgColor: 0x3b3686, exposure: 1.1, useSolidBg: true },
+  rendering: { bgColor: 0xF0EBEA, exposure: 1.1, useSolidBg: true },
   interaction: { rotationSpeedX: 0.4, rotationSpeedY: 0.2, inertia: 0.99, returnSpeed: 0.2, autoOrbit: false, autoOrbitSpeed: 0.5 },
 };
 
