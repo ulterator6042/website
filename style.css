@@ -1895,36 +1895,63 @@ body.orbit-controls-hidden .orbit-controls {
   pointer-events: none !important;
 }
 
-.orbit-arrow {
-  width: var(--orbit-arrow-width);
-  height: var(--orbit-arrow-height);
-  border-radius: var(--orbit-arrow-radius);
-  background: var(--orbit-arrow-bg);
-  color: var(--orbit-arrow-color);
-  border: var(--orbit-arrow-border);
-  font-size: var(--orbit-arrow-font);
-  cursor: pointer;
-  backdrop-filter: blur(var(--orbit-arrow-blur)) saturate(var(--orbit-arrow-saturate));
-  -webkit-backdrop-filter: blur(var(--orbit-arrow-blur)) saturate(var(--orbit-arrow-saturate));
-  box-shadow: var(--orbit-arrow-shadow);
-  transition: all 0.2s ease;
+
+/* New contacts hover bubble */
+.contact-bubble {
+  position: absolute;
+  top: calc(50% - 100px);
+  left: calc(-240px - 48px); /* width + gap + 30px */
+  min-width: 220px;
+  background: #353249;
+  border-radius: 18px 18px 18px 0;
+  padding: 28px 28px 18px 28px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  opacity: 0;
+  transform: translateY(-50%) translateX(0);
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 70;
+  box-shadow: none;
+  border: none;
 }
-
-.orbit-arrow:hover {
-  transform: translateY(-2px);
-  background: var(--orbit-arrow-bg-hover);
-  border: var(--orbit-arrow-border-hover);
-  box-shadow: var(--orbit-arrow-shadow-hover);
+.contact-bubble::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -18px;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 18px solid transparent;
+  border-bottom: 18px solid transparent;
+  border-left: 18px solid #353249;
+  border-right: none;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
 }
-
-.orbit-arrow:active {
+.corner-box-icon:hover + .contact-bubble,
+.corner-box.has-dropdown.dropdown-open .contact-bubble {
+  opacity: 1;
   transform: translateY(0);
+  pointer-events: auto;
 }
-
-
+.contact-bubble-email {
+  color: #fff;
+  background: none;
+  font-size: 1.1rem;
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  text-decoration: none;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.contact-bubble-email:hover {
+  text-decoration: underline;
+}
 
 /* ============================================
 BOX SETTINGS PANEL
