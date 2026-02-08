@@ -1149,32 +1149,25 @@ CORNER POPUP BOXES
   position: fixed;
     width: var(--orbit-box-size);
     height: var(--orbit-box-size);
-  background: var(--menu-bg);
-  border: var(--menu-border);
-  border-radius: var(--menu-radius);
-  backdrop-filter: blur(var(--menu-blur)) saturate(var(--menu-saturate));
-  -webkit-backdrop-filter: blur(var(--menu-blur)) saturate(var(--menu-saturate));
+  background: none;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   z-index: 50;
-  box-shadow: var(--menu-shadow);
+  box-shadow: none;
   transition: all 0.4s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 12px;
-  overflow: hidden;
+  padding: 0;
+  overflow: visible;
   opacity: 1;
 }
 
 .corner-box::before {
-  content: '';
-  position: absolute;
-  inset: -12% -18%;
-  background: var(--menu-blob-bg);
-  filter: blur(var(--menu-blob-blur));
-  opacity: var(--menu-blob-opacity);
-  z-index: 0;
-  pointer-events: none;
+  display: none;
 }
 
 /* All boxes load together - no stagger */
@@ -1272,10 +1265,10 @@ CORNER POPUP BOXES
 }
 
 .corner-box-icon {
-  width: 70%;
-  height: 70%;
-  max-width: 180px;
-  max-height: 180px;
+  width: 150%;
+  height: 150%;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   position: relative;
   z-index: 1;
@@ -1283,9 +1276,9 @@ CORNER POPUP BOXES
 }
 
 .corner-box:hover {
-  background: var(--menu-bg-hover);
-  box-shadow: var(--menu-shadow-hover);
-  transform: translateY(-2px);
+  background: none;
+  box-shadow: none;
+  transform: translateY(-2px) scale(1.05);
 }
 
 /* Flat Color Mode - completely removes all glass/shadow effects */
