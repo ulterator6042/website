@@ -8,7 +8,7 @@ let modelControl = null;
 let modelBaseScale = 1;
 let materialControl = null;
 
-const APP_VERSION = '2025-02-06-1';
+const APP_VERSION = '2026-02-08-1';
 const storedAppVersion = localStorage.getItem('appVersion');
 if (storedAppVersion !== APP_VERSION) {
   localStorage.removeItem('orbitalSettings');
