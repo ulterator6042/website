@@ -1271,6 +1271,17 @@ CORNER POPUP BOXES
   z-index: 1;
 }
 
+.corner-box-icon {
+  width: 70%;
+  height: 70%;
+  max-width: 180px;
+  max-height: 180px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .corner-box:hover {
   background: var(--menu-bg-hover);
   box-shadow: var(--menu-shadow-hover);
