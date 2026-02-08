@@ -1,3 +1,241 @@
+/* CV-inspired About Page Layout - Toon & Bold Style */
+.about-toon-bg {
+  background: #f7f6f2 !important;
+}
+.about-cv-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2em;
+  margin-bottom: 0.5em;
+  background: none;
+}
+.cv-name {
+  font-family: 'Zen Dots', 'Mont Heavy Demo', Arial, sans-serif;
+  font-size: 2.8rem;
+  color: #7a6fc2;
+  margin-bottom: 0.1em;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 0 #232e5c, 0 4px 16px #232e5c55;
+  -webkit-text-stroke: 1.5px #232e5c;
+}
+.cv-title {
+  font-family: 'Mont Heavy Demo', 'Montserrat', Arial, sans-serif;
+  font-size: 1.5rem;
+  color: #23243a;
+  margin-bottom: 0.2em;
+  text-shadow: 1px 1px 0 #232e5c, 0 2px 8px #232e5c33;
+}
+.cv-contact {
+  font-size: 1.05rem;
+  color: #23243a;
+  margin-bottom: 0.5em;
+  background: none;
+}
+.cv-contact a {
+  color: #23243a;
+  text-decoration: underline dotted;
+}
+.about-cv-main {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5em;
+}
+.about-cv-section {
+  background: #fdfcf8;
+  border: 5px solid #232e5c;
+  border-radius: 36px;
+  box-shadow: 0 8px 0 #232e5c, 0 16px 32px 0 #232e5c33;
+  padding: 36px 36px 28px 36px;
+  margin-bottom: 0.5em;
+  position: relative;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.about-cv-section:hover {
+  box-shadow: 0 16px 0 #232e5c, 0 24px 48px 0 #232e5c55;
+  transform: translateY(-4px) scale(1.01);
+}
+.about-cv-heading {
+  font-family: 'Mont Heavy Demo', 'Zen Dots', Arial, sans-serif;
+  font-size: 1.7rem;
+  color: #232e5c;
+  margin-bottom: 1.1em;
+  border-bottom: 3px solid #7a6fc2;
+  padding-bottom: 0.2em;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 0 #232e5c33;
+}
+.about-cv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+}
+.about-cv-item {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5em;
+  font-size: 1.13rem;
+  color: #23243a;
+  align-items: flex-start;
+  background: #f3f1ea;
+  border-radius: 18px;
+  border: 2.5px solid #232e5c;
+  box-shadow: 2px 4px 0 #232e5c22;
+  padding: 14px 18px;
+  margin-bottom: 0.2em;
+}
+.about-cv-date {
+  min-width: 110px;
+  font-family: 'Mont ExtraLight Demo', Arial, sans-serif;
+  color: #7a6fc2;
+  font-size: 1.05rem;
+  margin-top: 2px;
+  text-shadow: 1px 1px 0 #232e5c22;
+}
+.about-cv-item strong {
+  color: #232e5c;
+  font-family: 'Mont Heavy Demo', Arial, sans-serif;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #232e5c22;
+}
+.about-cv-languages .about-cv-item {
+  gap: 0.7em;
+  background: #f7f6f2;
+}
+.about-cv-aboutme .about-cv-item {
+  flex-direction: column;
+  font-size: 1.13rem;
+  color: #23243a;
+  background: #f3f1ea;
+  border: 2.5px solid #232e5c;
+  border-radius: 18px;
+  box-shadow: 2px 4px 0 #232e5c22;
+  padding: 14px 18px;
+}
+.footer-note {
+  margin-top: 2.5em;
+  text-align: center;
+  color: #232e5c;
+  font-size: 1.13rem;
+  text-shadow: 1px 1px 0 #232e5c22;
+}
+
+@media (max-width: 700px) {
+  .about-cv-main {
+    padding: 0 4px;
+  }
+  .about-cv-section {
+    padding: 14px 4px 10px 4px;
+    border-radius: 18px;
+  }
+  .about-cv-header {
+    padding-left: 2px;
+  }
+  .cv-name {
+    font-size: 1.4rem;
+  }
+  .about-cv-heading {
+    font-size: 1.1rem;
+  }
+  .about-cv-date {
+    min-width: 60px;
+    font-size: 0.95rem;
+  }
+  .about-cv-item {
+    font-size: 1rem;
+    padding: 8px 8px;
+  }
+}
+/* Toon About Me Section */
+.about-toon-bg {
+  background: linear-gradient(135deg, #23243a 0%, #353249 100%);
+  min-height: 100vh;
+}
+
+.about-toon-section {
+  margin: 48px auto 0 auto;
+  max-width: 1100px;
+  padding: 0 24px;
+}
+
+.about-toon-title {
+  font-family: 'Zen Dots', 'Montserrat', Arial, sans-serif;
+  font-size: 2.1rem;
+  color: #fff;
+  margin-bottom: 24px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 12px #23243a44;
+}
+
+.about-toon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+}
+
+.about-toon-card {
+  background: #fff;
+  border: 4px solid #23243a;
+  border-radius: 32px;
+  box-shadow: 0 8px 32px 0 #23243a55, 0 2px 0 #fff inset;
+  padding: 36px 32px 28px 32px;
+  min-width: 260px;
+  max-width: 340px;
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.about-toon-card:hover {
+  box-shadow: 0 16px 48px 0 #23243a99, 0 2px 0 #fff inset;
+  transform: translateY(-6px) scale(1.03);
+}
+.about-toon-card h2, .about-toon-card h3, .about-toon-card h4 {
+  color: #353249;
+  font-family: 'Zen Dots', 'Montserrat', Arial, sans-serif;
+  margin-bottom: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.about-toon-card p {
+  color: #23243a;
+  font-size: 1.08rem;
+  margin-bottom: 0.5em;
+}
+.about-toon-tags {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.about-toon-tag {
+  background: #353249;
+  color: #fff;
+  border-radius: 12px;
+  padding: 6px 18px;
+  font-size: 1rem;
+  font-family: 'Zen Dots', 'Montserrat', Arial, sans-serif;
+  font-weight: 600;
+  box-shadow: 0 2px 8px #23243a33;
+  border: 2.5px solid #23243a;
+}
+.toon-card {
+  background: #fff;
+  border: 4px solid #23243a;
+  border-radius: 32px;
+  box-shadow: 0 8px 32px 0 #23243a55, 0 2px 0 #fff inset;
+  padding: 24px 32px;
+  margin-bottom: 32px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 * {
   margin: 0;
   padding: 0;
