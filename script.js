@@ -3488,7 +3488,7 @@ if (boxSettingsToggle) {
       const prevBoxBefore = boxesContainer.querySelector('.orbit-prev');
       const nextBoxBefore = boxesContainer.querySelector('.orbit-next');
       const activeBoxBefore = boxesContainer.querySelector('.orbit-active');
-      const visibleBefore = new Set([prevBoxBefore, nextBoxBefore, activeBoxBefore].filter(Boolean));
+      const backBoxBefore = boxesContainer.querySelector('.orbit-back');
 
       // If there's an exit side, fade/shrink the side box moving to the back
       if (exitSide && orbitalSettings.enableExitAnimation) {
@@ -3508,7 +3508,7 @@ if (boxSettingsToggle) {
       boxes.forEach(box => {
         // Don't remove exit classes here - they'll be removed by setTimeout
         if (!box.classList.contains('orbit-exit-left') && !box.classList.contains('orbit-exit-right')) {
-          box.classList.remove('orbit-prev', 'orbit-active', 'orbit-next', 'orbit-back', 'orbit-enter-left', 'orbit-enter-right');
+          box.classList.remove('orbit-prev', 'orbit-active', 'orbit-next', 'orbit-back', 'orbit-enter-left', 'orbit-enter-right', 'orbit-bounce-left', 'orbit-bounce-right', 'orbit-leave-left', 'orbit-leave-right', 'orbit-to-back', 'orbit-from-back');
         }
       });
 
@@ -3522,11 +3522,56 @@ if (boxSettingsToggle) {
       const backIndex = (currentOrbitIndex + 2) % boxOrder.length;
       const backBox = boxesContainer.querySelector(`.${boxOrder[backIndex]}`);
 
-      if (prevBox) prevBox.classList.add('orbit-prev');
-      if (activeBox) activeBox.classList.add('orbit-active');
-      if (nextBox) nextBox.classList.add('orbit-next');
+      const animDuration = orbitalSettings.animationSpeed + 100;
+
+      // Add position classes with animations for all panels
+      if (prevBox) {
+        prevBox.classList.add('orbit-prev');
+        // If this box was the active one before (leaving front going left)
+        if (exitSide && prevBox === activeBoxBefore) {
+          prevBox.classList.add('orbit-leave-left');
+          setTimeout(() => prevBox.classList.remove('orbit-leave-left'), animDuration);
+        }
+        // If this box was at back before (emerging from back)
+        if (exitSide && prevBox === backBoxBefore) {
+          prevBox.classList.add('orbit-from-back');
+          setTimeout(() => prevBox.classList.remove('orbit-from-back'), animDuration);
+        }
+      }
+
+      if (activeBox) {
+        activeBox.classList.add('orbit-active');
+        // Add bounce animation based on direction of entry
+        if (exitSide) {
+          const bounceClass = exitSide === 'left' ? 'orbit-bounce-right' : 'orbit-bounce-left';
+          activeBox.classList.add(bounceClass);
+          setTimeout(() => {
+            activeBox.classList.remove('orbit-bounce-left', 'orbit-bounce-right');
+          }, animDuration);
+        }
+      }
+
+      if (nextBox) {
+        nextBox.classList.add('orbit-next');
+        // If this box was the active one before (leaving front going right)
+        if (exitSide && nextBox === activeBoxBefore) {
+          nextBox.classList.add('orbit-leave-right');
+          setTimeout(() => nextBox.classList.remove('orbit-leave-right'), animDuration);
+        }
+        // If this box was at back before (emerging from back)
+        if (exitSide && nextBox === backBoxBefore) {
+          nextBox.classList.add('orbit-from-back');
+          setTimeout(() => nextBox.classList.remove('orbit-from-back'), animDuration);
+        }
+      }
+
       if (backBox && !backBox.classList.contains('orbit-exit-left') && !backBox.classList.contains('orbit-exit-right')) {
         backBox.classList.add('orbit-back');
+        // If was prev or next before (going to back)
+        if (exitSide && (backBox === prevBoxBefore || backBox === nextBoxBefore)) {
+          backBox.classList.add('orbit-to-back');
+          setTimeout(() => backBox.classList.remove('orbit-to-back'), animDuration);
+        }
       }
 
       updateOrbitIndicators();
@@ -3534,7 +3579,8 @@ if (boxSettingsToggle) {
       const enterSide = exitSide ? (exitSide === 'left' ? 'right' : 'left') : null;
       if (enterSide && orbitalSettings.enableExitAnimation) {
         const enterBox = enterSide === 'right' ? nextBox : prevBox;
-        if (enterBox && !visibleBefore.has(enterBox)) {
+        // Check if enterBox was the back box before (emerging from back)
+        if (enterBox && enterBox === backBoxBefore) {
           const enterClass = enterSide === 'right' ? 'orbit-enter-right' : 'orbit-enter-left';
           enterBox.classList.add(enterClass);
           setTimeout(() => {
