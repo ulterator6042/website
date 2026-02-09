@@ -15,6 +15,25 @@
   <script src="particles.js"></script>
 </head>
 <body>
+          <script src="global-gui-toggle.js"></script>
+        <!-- Global GUI Toggle Button -->
+        <button id="globalGuiToggle" style="position:fixed;top:16px;right:16px;z-index:1000;padding:8px 18px;font-size:18px;border-radius:8px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.12);border:1px solid #ccc;cursor:pointer;">Toggle Menus</button>
+      <script src="text-video-settings.js"></script>
+    <!-- Animated Text Video -->
+    <div id="textVideoContainer" style="position:fixed;top:20vh;left:50vw;transform:translate(-50%,-50%);z-index:6;pointer-events:none;">
+      <video id="textAnimationVideo" src="textanimation.webm" autoplay loop muted playsinline style="width:480px;height:120px;background:transparent;pointer-events:none;"></video>
+    </div>
+
+    <!-- Text Animation Settings GUI -->
+    <div class="text-video-settings-panel" id="textVideoSettingsPanel" style="position:fixed;top:20px;left:20px;z-index:10;background:rgba(255,255,255,0.95);box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:16px;border-radius:12px;min-width:220px;">
+      <h4 style="margin-top:0">Text Animation Settings</h4>
+      <label>Width <input type="number" id="textVideoWidth" min="100" max="1200" value="480" style="width:60px;margin-left:8px"></label><br>
+      <label>Height <input type="number" id="textVideoHeight" min="50" max="400" value="120" style="width:60px;margin-left:8px"></label><br>
+      <label>Position X <input type="range" id="textVideoPosX" min="0" max="100" value="50" style="width:100px"></label><br>
+      <label>Position Y <input type="range" id="textVideoPosY" min="0" max="100" value="20" style="width:100px"></label><br>
+      <button id="textVideoSettingsExport" style="margin-top:10px">Export</button>
+      <button id="textVideoSettingsClose" style="margin-top:10px">Close</button>
+    </div>
   <!-- Design Panel -->
   <div class="design-panel" id="designPanel">
     <div class="design-header">
