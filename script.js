@@ -41,15 +41,52 @@ if (urlParams.get('hardReset') === '1') {
 const mobileFallback = document.getElementById('mobileFallback');
 // Icon hover swap logic
 document.querySelectorAll('.corner-box-icon').forEach(icon => {
-  const src = icon.getAttribute('src');
-  // Use icons/ for both normal and hover icons, matching actual filenames
-  const hoverSrc = src.replace('.png', '_hover.png');
-  icon.addEventListener('mouseenter', () => {
-    icon.setAttribute('src', hoverSrc);
-  });
-  icon.addEventListener('mouseleave', () => {
+  let src = icon.getAttribute('src');
+  // Force correct case for all icons
+  if (src.toLowerCase().includes('download')) {
+    src = 'icons/Download.png';
     icon.setAttribute('src', src);
-  });
+    icon.addEventListener('mouseenter', () => {
+      icon.setAttribute('src', 'icons/Download_hover.png');
+    });
+    icon.addEventListener('mouseleave', () => {
+      icon.setAttribute('src', src);
+    });
+    return;
+  }
+  if (src.toLowerCase().includes('about me')) {
+    src = 'icons/About me.png';
+    icon.setAttribute('src', src);
+    icon.addEventListener('mouseenter', () => {
+      icon.setAttribute('src', 'icons/About me_hover.png');
+    });
+    icon.addEventListener('mouseleave', () => {
+      icon.setAttribute('src', src);
+    });
+    return;
+  }
+  if (src.toLowerCase().includes('contacts')) {
+    src = 'icons/contacts.png';
+    icon.setAttribute('src', src);
+    icon.addEventListener('mouseenter', () => {
+      icon.setAttribute('src', 'icons/contacts_hover.png');
+    });
+    icon.addEventListener('mouseleave', () => {
+      icon.setAttribute('src', src);
+    });
+    return;
+  }
+  if (src.toLowerCase().includes('projects')) {
+    src = 'icons/projects.png';
+    icon.setAttribute('src', src);
+    icon.addEventListener('mouseenter', () => {
+      icon.setAttribute('src', 'icons/projects_hover.png');
+    });
+    icon.addEventListener('mouseleave', () => {
+      icon.setAttribute('src', src);
+    });
+    return;
+  }
 });
 const load3DButton = document.getElementById('load3DButton');
 const resetColorsBtn = document.getElementById('resetColors');
