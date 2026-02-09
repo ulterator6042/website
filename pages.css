@@ -97,7 +97,7 @@
 }
 /* About Me Toon CV Styles */
 .about-toon-bg {
-  background: #f7f6f2 !important;
+  background: linear-gradient(135deg, #f7f6f2 60%, #e0e0e0 100%) !important;
   min-height: 100vh;
   border-radius: 35px;
   border: none;

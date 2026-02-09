@@ -15,12 +15,27 @@
 }
 /* CV-inspired About Page Layout - Toon & Bold Style */
 .about-toon-bg {
-  background: #f7f6f2 !important;
+  background: linear-gradient(135deg, #f7f6f2 60%, #e0e0e0 100%) !important;
   min-height: 100vh;
   border-radius: 35px;
   border: none;
   box-shadow: none;
   padding: 12px 12px 8px 12px;
+}
+/* Animated text video container unified style */
+#textVideoContainer {
+  position: fixed !important;
+  top: 12vh !important;
+  left: 50vw !important;
+  transform: translate(-50%, 0) !important;
+  z-index: 6 !important;
+  pointer-events: none !important;
+}
+#textAnimationVideo {
+  width: 520px !important;
+  height: 130px !important;
+  background: transparent !important;
+  pointer-events: none !important;
 }
 .about-cv-header {
   display: flex;

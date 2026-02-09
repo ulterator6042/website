@@ -42,51 +42,31 @@ const mobileFallback = document.getElementById('mobileFallback');
 // Icon hover swap logic
 document.querySelectorAll('.corner-box-icon').forEach(icon => {
   let src = icon.getAttribute('src');
-  // Force correct case for all icons
+  let hoverSrc = src;
+  // Normalize and set correct case and cache-busting for all icons
   if (src.toLowerCase().includes('download')) {
     src = 'icons/Download.png?v=20260209';
-    icon.setAttribute('src', src);
-    icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/Download_hover.png?v=20260209');
-    });
-    icon.addEventListener('mouseleave', () => {
-      icon.setAttribute('src', src);
-    });
-    return;
-  }
-  if (src.toLowerCase().includes('about me')) {
+    hoverSrc = 'icons/Download_hover.png?v=20260209';
+  } else if (src.toLowerCase().includes('about me')) {
     src = 'icons/About me.png?v=20260209';
-    icon.setAttribute('src', src);
-    icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/About me_hover.png?v=20260209');
-    });
-    icon.addEventListener('mouseleave', () => {
-      icon.setAttribute('src', src);
-    });
-    return;
-  }
-  if (src.toLowerCase().includes('contacts')) {
+    hoverSrc = 'icons/About me_hover.png?v=20260209';
+  } else if (src.toLowerCase().includes('contacts')) {
     src = 'icons/contacts.png?v=20260209';
-    icon.setAttribute('src', src);
-    icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/contacts_hover.png?v=20260209');
-    });
-    icon.addEventListener('mouseleave', () => {
-      icon.setAttribute('src', src);
-    });
-    return;
-  }
-  if (src.toLowerCase().includes('projects')) {
+    hoverSrc = 'icons/contacts_hover.png?v=20260209';
+  } else if (src.toLowerCase().includes('projects')) {
     src = 'icons/projects.png?v=20260209';
-    icon.setAttribute('src', src);
-    icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/projects_hover.png?v=20260209');
-    });
-    icon.addEventListener('mouseleave', () => {
-      icon.setAttribute('src', src);
-    });
-    return;
+    hoverSrc = 'icons/projects_hover.png?v=20260209';
   }
+  icon.setAttribute('src', src);
+  // Preload hover image to avoid flicker
+  const imgPreload = new Image();
+  imgPreload.src = hoverSrc;
+  icon.addEventListener('mouseenter', () => {
+    icon.setAttribute('src', hoverSrc);
+  });
+  icon.addEventListener('mouseleave', () => {
+    icon.setAttribute('src', src);
+  });
 });
 
 // Under construction popup for Other Projects
