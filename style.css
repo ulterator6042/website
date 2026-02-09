@@ -465,13 +465,38 @@ CURSOR CLOSET SECTION
 
 body {
   width: 100%;
-  background: radial-gradient(circle at 50% 20%, rgba(70, 70, 70, 0.35) 0%, rgba(30, 30, 30, 0.85) 55%, rgba(18, 18, 18, 1) 100%);
+  background: #f7f6f2 !important;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
   touch-action: manipulation;
   margin: 0;
   padding: 0;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #f7f6f2 60%, #e0e0e0 100%) !important;
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+  overflow: hidden;
+}
+
+#textVideoContainer {
+  position: fixed !important;
+  top: 12vh !important;
+  left: 50vw !important;
+  transform: translate(-50%, 0) !important;
+  z-index: 6 !important;
+  pointer-events: none !important;
+}
+#textAnimationVideo {
+  width: 520px !important;
+  height: 130px !important;
+  background: transparent !important;
+  pointer-events: none !important;
+  display: block;
+  margin: 0 auto;
 }
 
 /* Design Panel */
