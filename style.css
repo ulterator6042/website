@@ -16,6 +16,11 @@
 /* CV-inspired About Page Layout - Toon & Bold Style */
 .about-toon-bg {
   background: #f7f6f2 !important;
+  min-height: 100vh;
+  border-radius: 35px;
+  border: none;
+  box-shadow: none;
+  padding: 12px 12px 8px 12px;
 }
 .about-cv-header {
   display: flex;

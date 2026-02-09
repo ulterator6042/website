@@ -44,10 +44,10 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
   let src = icon.getAttribute('src');
   // Force correct case for all icons
   if (src.toLowerCase().includes('download')) {
-    src = 'icons/Download.png';
+    src = 'icons/Download.png?v=20260209';
     icon.setAttribute('src', src);
     icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/Download_hover.png');
+      icon.setAttribute('src', 'icons/Download_hover.png?v=20260209');
     });
     icon.addEventListener('mouseleave', () => {
       icon.setAttribute('src', src);
@@ -55,10 +55,10 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
     return;
   }
   if (src.toLowerCase().includes('about me')) {
-    src = 'icons/About me.png';
+    src = 'icons/About me.png?v=20260209';
     icon.setAttribute('src', src);
     icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/About me_hover.png');
+      icon.setAttribute('src', 'icons/About me_hover.png?v=20260209');
     });
     icon.addEventListener('mouseleave', () => {
       icon.setAttribute('src', src);
@@ -66,10 +66,10 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
     return;
   }
   if (src.toLowerCase().includes('contacts')) {
-    src = 'icons/contacts.png';
+    src = 'icons/contacts.png?v=20260209';
     icon.setAttribute('src', src);
     icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/contacts_hover.png');
+      icon.setAttribute('src', 'icons/contacts_hover.png?v=20260209');
     });
     icon.addEventListener('mouseleave', () => {
       icon.setAttribute('src', src);
@@ -77,10 +77,10 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
     return;
   }
   if (src.toLowerCase().includes('projects')) {
-    src = 'icons/projects.png';
+    src = 'icons/projects.png?v=20260209';
     icon.setAttribute('src', src);
     icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('src', 'icons/projects_hover.png');
+      icon.setAttribute('src', 'icons/projects_hover.png?v=20260209');
     });
     icon.addEventListener('mouseleave', () => {
       icon.setAttribute('src', src);
@@ -88,6 +88,19 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
     return;
   }
 });
+
+// Under construction popup for Other Projects
+const boxBottomLeft = document.getElementById('boxBottomLeft');
+const underConstructionPopup = document.getElementById('underConstructionPopup');
+if (boxBottomLeft && underConstructionPopup) {
+  boxBottomLeft.addEventListener('click', (e) => {
+    e.preventDefault();
+    underConstructionPopup.style.display = 'block';
+    setTimeout(() => {
+      underConstructionPopup.style.display = 'none';
+    }, 1800);
+  });
+}
 const load3DButton = document.getElementById('load3DButton');
 const resetColorsBtn = document.getElementById('resetColors');
 const applyModelPresetBtn = document.getElementById('applyModelPreset');
