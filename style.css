@@ -1,3 +1,18 @@
+#modelContainer,
+#orbitControls {
+  margin-top: 40px !important;
+}
+/* Hide and disable sidebar menu buttons */
+#orbitColorsToggle,
+#palettePresetToggle,
+#designBtn,
+#modelTunerToggle,
+#fontSwitcherToggle,
+#boxSettingsToggle {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
 /* CV-inspired About Page Layout - Toon & Bold Style */
 .about-toon-bg {
   background: #f7f6f2 !important;
