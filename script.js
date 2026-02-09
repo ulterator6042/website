@@ -47,7 +47,7 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
   if (src.toLowerCase().includes('download')) {
     src = 'icons/Download.png';
     hoverSrc = 'icons/Download_hover.png';
-  } else if (src.toLowerCase().includes('about me')) {
+  } else if (src.toLowerCase().includes('about_me')) {
     src = 'icons/About_me.png';
     hoverSrc = 'icons/About_me_hover.png';
   } else if (src.toLowerCase().includes('contacts')) {
