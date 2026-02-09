@@ -6,10 +6,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const container = document.getElementById('textVideoContainer');
   const panel = document.getElementById('textVideoSettingsPanel');
 
-  let width = 480;
+  let width = 800;
   let height = 120;
-  let posX = 0.5;
-  let posY = 0.2;
+  let posX = 0.13;
+  let posY = 0.05;
 
   // Restore settings from localStorage
   const saved = localStorage.getItem('textVideoSettings');
@@ -67,16 +67,6 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   document.getElementById('textVideoSettingsExport').addEventListener('click', function() {
     const settings = { width, height, posX, posY };
-    const blob = new Blob([JSON.stringify(settings, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'text-video-settings.json';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
+    console.log('Exported Text Animation Settings:', JSON.stringify(settings, null, 2));
   });
 });

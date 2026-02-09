@@ -4,15 +4,15 @@
 document.addEventListener('DOMContentLoaded', function () {
   // Default settings
   let PARTICLE_COUNT = 80;
-  let DOT_COLOR = '#1a237e';
+  let DOT_COLOR = '#353249';
   let DOT_SIZE = 3;
   let PARALLAX = 20;
-  let BG_COLOR = '#ffffff';
+  let BG_COLOR = '#f1eff5';
   let POS_X = 0.5;
   let POS_Y = 0.5;
-  let PARTICLE_SPEED = 0.08;
-  let PARTICLE_ENTROPY = 1;
-  let PARTICLE_LINEAR_RATIO = 0.3; // 0 to 1
+  let PARTICLE_SPEED = 0.1;
+  let PARTICLE_ENTROPY = 1.2;
+  let PARTICLE_LINEAR_RATIO = 0.28; // 0 to 1
 
   // Restore settings from localStorage
   const saved = localStorage.getItem('particleSettings');
@@ -186,17 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
         PARTICLE_ENTROPY,
         PARTICLE_LINEAR_RATIO
       };
-      const blob = new Blob([JSON.stringify(settings, null, 2)], {type: 'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'particle-settings.json';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
+      console.log('Exported Particle Settings:', JSON.stringify(settings, null, 2));
     });
 
     document.getElementById('particleSettingsImport').addEventListener('click', function() {
