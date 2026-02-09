@@ -45,17 +45,17 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
   let hoverSrc = src;
   // Normalize and set correct case and cache-busting for all icons
   if (src.toLowerCase().includes('download')) {
-    src = 'icons/Download.png?v=20260209';
-    hoverSrc = 'icons/Download_hover.png?v=20260209';
+    src = 'icons/Download.png';
+    hoverSrc = 'icons/Download_hover.png';
   } else if (src.toLowerCase().includes('about me')) {
-    src = 'icons/About me.png?v=20260209';
-    hoverSrc = 'icons/About me_hover.png?v=20260209';
+    src = 'icons/About me.png';
+    hoverSrc = 'icons/About me_hover.png';
   } else if (src.toLowerCase().includes('contacts')) {
-    src = 'icons/contacts.png?v=20260209';
-    hoverSrc = 'icons/contacts_hover.png?v=20260209';
+    src = 'icons/contacts.png';
+    hoverSrc = 'icons/contacts_hover.png';
   } else if (src.toLowerCase().includes('projects')) {
-    src = 'icons/projects.png?v=20260209';
-    hoverSrc = 'icons/projects_hover.png?v=20260209';
+    src = 'icons/projects.png';
+    hoverSrc = 'icons/projects_hover.png';
   }
   icon.setAttribute('src', src);
   // Preload hover image to avoid flicker
