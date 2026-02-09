@@ -48,8 +48,8 @@ document.querySelectorAll('.corner-box-icon').forEach(icon => {
     src = 'icons/Download.png';
     hoverSrc = 'icons/Download_hover.png';
   } else if (src.toLowerCase().includes('about me')) {
-    src = 'icons/About me.png';
-    hoverSrc = 'icons/About me_hover.png';
+    src = 'icons/About_me.png';
+    hoverSrc = 'icons/About_me_hover.png';
   } else if (src.toLowerCase().includes('contacts')) {
     src = 'icons/contacts.png';
     hoverSrc = 'icons/contacts_hover.png';
