@@ -1,3 +1,212 @@
+/* Header row aligns with info cards, home button right */
+.cv-header-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  max-width: 700px;
+  margin: 0 auto 30px auto;
+  width: 100%;
+}
+.cv-header-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2em;
+}
+.home-link {
+  align-self: flex-start;
+  margin: 0 0 0 24px;
+  font-family: 'Mont Heavy Demo', Arial, sans-serif;
+  font-size: 1.05em;
+  color: #fff;
+  background: #ff7a4a;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.home-link:hover {
+  background: #e0a655;
+  color: #fff;
+  border: 2px solid #e0a655;
+  box-shadow: none;
+}
+/* Align header content left and style home button */
+.page-header.about-cv-header {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0;
+}
+.cv-header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2em;
+}
+.home-link {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-family: 'Mont Heavy Demo', Arial, sans-serif;
+  font-size: 1.05em;
+  color: #fff;
+  background: #ff7a4a;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px #ff7a4a33;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.home-link:hover {
+  background: #fff;
+  color: #ff7a4a;
+  box-shadow: 0 4px 16px #ff7a4a55;
+  border: 2px solid #ff7a4a;
+}
+/* --- About Me Section Final Fixes --- */
+.about-cv-section {
+  border-bottom: none !important;
+}
+.about-cv-list {
+  gap: 30px !important;
+}
+.about-cv-item {
+  gap: 20px !important;
+  font-size: 16px !important;
+  padding: 18px 24px !important;
+  margin-bottom: 0 !important;
+}
+.about-cv-section-title {
+  font-size: 1.18em !important;
+  border-bottom: none !important;
+}
+.about-cv-date {
+  font-size: 1.05em !important;
+  margin-top: 2px !important;
+}
+.about-cv-place {
+  text-shadow: none !important;
+}
+/* About Me Toon CV Styles */
+.about-toon-bg {
+  background: #f7f6f2 !important;
+  border-radius: 35px;
+  border: none;
+  box-shadow: none;
+  padding: 12px 12px 8px 12px;
+}
+.about-cv-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1em;
+  margin-bottom: 0.2em;
+  background: none;
+}
+.cv-name {
+  font-family: 'Mont Heavy Demo', Arial, sans-serif;
+  font-size: 35.2px;
+  color: #353249;
+  margin-bottom: 0.1em;
+  letter-spacing: 0.5px;
+  text-shadow: none;
+  font-weight: 700;
+  -webkit-text-stroke: 0;
+}
+.cv-title {
+  font-family: 'Mont Heavy Demo', Arial, sans-serif;
+  font-size: 17.6px;
+  color: #353249;
+  margin-bottom: 0.1em;
+  text-shadow: none;
+  font-weight: 600;
+}
+.cv-contact {
+  font-size: 1.05rem;
+  color: #23243a;
+  margin-bottom: 0.5em;
+  background: none;
+}
+.cv-contact a {
+  color: #23243a;
+  text-decoration: underline dotted;
+}
+.about-cv-main {
+  max-width: 700px;
+  margin: 32px auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  align-items: stretch;
+  height: auto;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+.about-cv-section {
+  background: #dcdad5;
+  border: 3px solid #353249;
+  border-radius: 35px;
+  box-shadow: 0 8px 0 #353249, 0 16px 0 #353249, 0 24px 0 #353249;
+  padding: 14px 14px 10px 14px;
+  margin-bottom: 30px;
+  position: relative;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.about-cv-section-title {
+  font-family: 'Mont Heavy Demo', Arial, sans-serif;
+    font-size: 1.3em;
+    color: #353249;
+    margin-bottom: 0.2em;
+    border-bottom: none;
+  padding-bottom: 0.2em;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 0 #232e5c33;
+}
+.about-cv-list {
+  display: flex;
+  flex-direction: column;
+    gap: 0.5em;
+}
+.about-cv-item {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5em;
+  font-size: 14.642px;
+  color: #353249;
+  align-items: flex-start;
+  background: #f7f6f2;
+  border-radius: 35px;
+  border: 2.5px solid #353249;
+  box-shadow: none;
+  font-family: 'Mont ExtraLight Demo', "Segoe UI", sans-serif;
+  padding: 14px 18px;
+  margin-bottom: 0.2em;
+}
+.about-cv-item-light {
+  background: #f7f6f2;
+}
+.about-cv-date {
+  min-width: 80px;
+  font-family: 'Mont ExtraLight Demo', Arial, sans-serif;
+  color: #353249;
+  font-size: 0.95rem;
+  margin-top: 0;
+  text-shadow: none;
+}
+.about-cv-place {
+  color: #232e5c;
+  font-family: 'Mont Heavy Demo', Arial, sans-serif;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #232e5c22;
+}
 @font-face {
   font-family: 'Mont ExtraLight Demo';
   src: url('Mont-ExtraLightDEMO.otf') format('opentype');
@@ -43,10 +252,7 @@ body {
   margin: 0;
   font-family: 'Mont ExtraLight Demo', 'Segoe UI', sans-serif;
   color: var(--text);
-  background: radial-gradient(1200px circle at 10% 10%, rgba(199, 208, 220, 0.08), transparent 60%),
-              radial-gradient(900px circle at 90% 20%, rgba(225, 230, 239, 0.08), transparent 55%),
-              radial-gradient(800px circle at 50% 90%, rgba(255, 122, 74, 0.08), transparent 60%),
-              var(--page-bg);
+  background: #f7f6f2;
   min-height: 100vh;
 }
 

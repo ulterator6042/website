@@ -1,0 +1,166 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const panel = document.getElementById('boxSettingsPanel');
+  const toggle = document.getElementById('boxSettingsToggle');
+  const closeBtn = document.getElementById('settingsClose');
+  const tabs = document.querySelectorAll('.customize-tab');
+  const panes = document.querySelectorAll('.customize-pane');
+
+  // Only activate on About Me page
+  if (!document.querySelector('.about-cv-main')) return;
+
+  // Show/hide panel logic
+  toggle.onclick = () => panel.classList.add('active');
+  closeBtn.onclick = () => panel.classList.remove('active');
+
+  tabs.forEach(tab => {
+    tab.onclick = () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelector(`.customize-pane[data-pane="${tab.dataset.pane}"]`).classList.add('active');
+    };
+  });
+
+  // Appearance controls for About Me
+  const aboutStyles = {
+    bg: getComputedStyle(document.querySelector('.about-toon-bg')).backgroundColor,
+    sectionBg: getComputedStyle(document.querySelector('.about-cv-section')).backgroundColor,
+    sectionBorder: getComputedStyle(document.querySelector('.about-cv-section')).borderColor,
+    sectionRadius: parseInt(getComputedStyle(document.querySelector('.about-cv-section')).borderRadius),
+    sectionShadow: getComputedStyle(document.querySelector('.about-cv-section')).boxShadow,
+    nameColor: getComputedStyle(document.querySelector('.cv-name')).color,
+    nameFont: getComputedStyle(document.querySelector('.cv-name')).fontFamily,
+    nameSize: parseFloat(getComputedStyle(document.querySelector('.cv-name')).fontSize),
+    titleColor: getComputedStyle(document.querySelector('.cv-title')).color,
+    titleFont: getComputedStyle(document.querySelector('.cv-title')).fontFamily,
+    titleSize: parseFloat(getComputedStyle(document.querySelector('.cv-title')).fontSize),
+    itemBg: getComputedStyle(document.querySelector('.about-cv-item')).backgroundColor,
+    itemBorder: getComputedStyle(document.querySelector('.about-cv-item')).borderColor,
+    itemRadius: parseInt(getComputedStyle(document.querySelector('.about-cv-item')).borderRadius),
+    itemShadow: getComputedStyle(document.querySelector('.about-cv-item')).boxShadow,
+    itemFont: getComputedStyle(document.querySelector('.about-cv-item')).fontFamily,
+    itemColor: getComputedStyle(document.querySelector('.about-cv-item')).color,
+    itemSize: parseFloat(getComputedStyle(document.querySelector('.about-cv-item')).fontSize),
+  };
+
+    // Add more appearance controls
+    aboutStyles.sectionShadowSize = 8;
+    aboutStyles.sectionShadowColor = 'rgba(35,46,92,0.133)';
+    aboutStyles.sectionLine = true;
+    aboutStyles.sectionLineColor = '#7a6fc2';
+
+    gui.add(aboutStyles, 'sectionShadowSize', 0, 48).name('Shadow Size').onChange(v => {
+      document.querySelectorAll('.about-cv-section').forEach(e => {
+        e.style.boxShadow = `rgb(35,46,92) 0px 4px 0px 0px, ${aboutStyles.sectionShadowColor} 0px ${v}px ${2*v}px 0px`;
+      });
+    });
+    gui.addColor(aboutStyles, 'sectionShadowColor').name('Shadow Color').onChange(v => {
+      document.querySelectorAll('.about-cv-section').forEach(e => {
+        e.style.boxShadow = `rgb(35,46,92) 0px 4px 0px 0px, ${v} 0px ${aboutStyles.sectionShadowSize}px ${2*aboutStyles.sectionShadowSize}px 0px`;
+      });
+    });
+    gui.add(aboutStyles, 'sectionLine').name('Show Section Line').onChange(v => {
+      document.querySelectorAll('.about-cv-section-title').forEach(e => {
+        e.style.borderBottom = v ? `3px solid ${aboutStyles.sectionLineColor}` : 'none';
+      });
+    });
+    gui.addColor(aboutStyles, 'sectionLineColor').name('Line Color').onChange(v => {
+      document.querySelectorAll('.about-cv-section-title').forEach(e => {
+        if (aboutStyles.sectionLine) e.style.borderBottom = `3px solid ${v}`;
+      });
+    });
+
+    // Make sections draggable
+    let dragSrc = null;
+    document.querySelectorAll('.about-cv-section').forEach(section => {
+      section.setAttribute('draggable', 'true');
+      section.ondragstart = e => {
+        dragSrc = section;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', section.outerHTML);
+        section.classList.add('dragging');
+      };
+      section.ondragend = () => {
+        dragSrc = null;
+        section.classList.remove('dragging');
+      };
+      section.ondragover = e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      };
+      section.ondrop = e => {
+        e.preventDefault();
+        if (dragSrc && dragSrc !== section) {
+          section.parentNode.insertBefore(dragSrc, section.nextSibling);
+        }
+      };
+    });
+  const gui = new window.lil.GUI({
+    container: document.getElementById('appearanceGuiContainer'),
+    width: 320,
+    title: 'About Me Appearance',
+  });
+
+  gui.addColor(aboutStyles, 'bg').name('Page BG').onChange(v => {
+    document.querySelector('.about-toon-bg').style.background = v;
+  });
+  gui.addColor(aboutStyles, 'sectionBg').name('Section BG').onChange(v => {
+    document.querySelectorAll('.about-cv-section').forEach(e => e.style.background = v);
+  });
+  gui.addColor(aboutStyles, 'sectionBorder').name('Section Border').onChange(v => {
+    document.querySelectorAll('.about-cv-section').forEach(e => e.style.borderColor = v);
+  });
+  gui.add(aboutStyles, 'sectionRadius', 0, 48).name('Section Radius').onChange(v => {
+    document.querySelectorAll('.about-cv-section').forEach(e => e.style.borderRadius = v+'px');
+  });
+  gui.add(aboutStyles, 'sectionShadow').name('Section Shadow').onChange(v => {
+    document.querySelectorAll('.about-cv-section').forEach(e => e.style.boxShadow = v);
+  });
+  gui.addColor(aboutStyles, 'nameColor').name('Name Color').onChange(v => {
+    document.querySelector('.cv-name').style.color = v;
+  });
+  gui.add(aboutStyles, 'nameFont').name('Name Font').onChange(v => {
+    document.querySelector('.cv-name').style.fontFamily = v;
+  });
+  gui.add(aboutStyles, 'nameSize', 12, 64).name('Name Size').onChange(v => {
+    document.querySelector('.cv-name').style.fontSize = v+'px';
+  });
+  gui.addColor(aboutStyles, 'titleColor').name('Title Color').onChange(v => {
+    document.querySelector('.cv-title').style.color = v;
+  });
+  gui.add(aboutStyles, 'titleFont').name('Title Font').onChange(v => {
+    document.querySelector('.cv-title').style.fontFamily = v;
+  });
+  gui.add(aboutStyles, 'titleSize', 10, 48).name('Title Size').onChange(v => {
+    document.querySelector('.cv-title').style.fontSize = v+'px';
+  });
+  gui.addColor(aboutStyles, 'itemBg').name('Item BG').onChange(v => {
+    document.querySelectorAll('.about-cv-item').forEach(e => e.style.background = v);
+  });
+  gui.addColor(aboutStyles, 'itemBorder').name('Item Border').onChange(v => {
+    document.querySelectorAll('.about-cv-item').forEach(e => e.style.borderColor = v);
+  });
+  gui.add(aboutStyles, 'itemRadius', 0, 32).name('Item Radius').onChange(v => {
+    document.querySelectorAll('.about-cv-item').forEach(e => e.style.borderRadius = v+'px');
+  });
+  gui.add(aboutStyles, 'itemShadow').name('Item Shadow').onChange(v => {
+    document.querySelectorAll('.about-cv-item').forEach(e => e.style.boxShadow = v);
+  });
+  gui.add(aboutStyles, 'itemFont').name('Item Font').onChange(v => {
+    document.querySelectorAll('.about-cv-item').forEach(e => e.style.fontFamily = v);
+  });
+  gui.addColor(aboutStyles, 'itemColor').name('Item Color').onChange(v => {
+    document.querySelectorAll('.about-cv-item').forEach(e => e.style.color = v);
+  });
+  gui.add(aboutStyles, 'itemSize', 10, 32).name('Item Size').onChange(v => {
+    document.querySelectorAll('.about-cv-item').forEach(e => e.style.fontSize = v+'px');
+  });
+
+  // Export to console
+  const exportBtn = document.getElementById('exportAboutStyles');
+  exportBtn.onclick = () => {
+    console.log('About Me Styles:', JSON.stringify(aboutStyles, null, 2));
+    alert('Current About Me styles exported to console.');
+  };
+});
+
