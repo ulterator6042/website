@@ -1,3 +1,206 @@
+#boxTopLeft {
+  top: 32px !important;
+  left: 10% !important;
+}
+#boxTopLeft .corner-box-icon {
+  left: 50%;
+}
+#boxTopLeft.corner-box:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+/* === Responsive Enhancements for All Screens (Appended) === */
+
+/* Animated text video responsiveness */
+@media (max-width: 1200px) {
+  #textAnimationVideo {
+    width: 400px !important;
+    height: 100px !important;
+  }
+}
+@media (max-width: 900px) {
+  #textAnimationVideo {
+    width: 300px !important;
+    height: 80px !important;
+  }
+}
+@media (max-width: 600px) {
+  #textVideoContainer {
+    top: 6vh !important;
+  }
+  #textAnimationVideo {
+    width: 200px !important;
+    height: 50px !important;
+  }
+}
+
+/* Model container scaling */
+@media (max-width: 1200px) {
+  .hero-section > .model-container {
+    height: 70vh;
+  }
+}
+@media (max-width: 900px) {
+  .hero-section > .model-container {
+    height: 50vh;
+  }
+}
+@media (max-width: 600px) {
+  .hero-section > .model-container {
+    height: 35vh;
+    min-height: 220px;
+  }
+}
+
+/* Menu and nav responsiveness */
+@media (max-width: 1024px) {
+  .nav-menu {
+    gap: 24px;
+  }
+}
+@media (max-width: 768px) {
+  .nav-menu.active {
+    gap: 0;
+    padding: 8px 0;
+  }
+  .nav-menu.active a {
+    font-size: 0.95rem;
+    padding: 10px 0;
+    text-align: center;
+    width: 100%;
+    border-radius: 0;
+  }
+}
+@media (max-width: 480px) {
+  .nav-content {
+    height: 48px;
+    padding: 0 6px;
+  }
+  .nav-menu.active {
+    top: 48px;
+    padding: 4px 0;
+  }
+  .nav-menu.active a {
+    font-size: 0.9rem;
+    padding: 8px 0;
+  }
+}
+
+/* About Me (CV) section scaling */
+@media (max-width: 900px) {
+  .about-cv-main {
+    gap: 1.2em;
+  }
+  .about-cv-section {
+    margin-bottom: 1em;
+  }
+}
+@media (max-width: 700px) {
+  .about-cv-main {
+    padding: 0 4px;
+    gap: 1.2em;
+  }
+  .about-cv-section {
+    padding: 14px 4px 10px 4px;
+    border-radius: 18px;
+    margin-bottom: 1em;
+  }
+  .about-cv-header {
+    padding-left: 2px;
+  }
+  .cv-name {
+    font-size: 1.4rem;
+  }
+  .about-cv-heading {
+    font-size: 1.1rem;
+  }
+  .about-cv-date {
+    min-width: 60px;
+    font-size: 0.95rem;
+  }
+  .about-cv-item {
+    font-size: 1rem;
+    padding: 8px 8px;
+    gap: 0.7em;
+  }
+}
+@media (max-width: 480px) {
+  .about-cv-main {
+    gap: 0.7em;
+  }
+  .about-cv-section {
+    padding: 8px 2px 6px 2px;
+    border-radius: 12px;
+    margin-bottom: 0.7em;
+  }
+  .about-cv-header {
+    padding-left: 0;
+  }
+  .cv-name {
+    font-size: 1.1rem;
+  }
+  .about-cv-heading {
+    font-size: 0.9rem;
+  }
+  .about-cv-date {
+    min-width: 40px;
+    font-size: 0.8rem;
+  }
+  .about-cv-item {
+    font-size: 0.85rem;
+    padding: 5px 4px;
+    gap: 0.4em;
+  }
+}
+
+/* About Toon Cards scaling */
+@media (max-width: 900px) {
+  .about-toon-section {
+    max-width: 98vw;
+    padding: 0 8px;
+  }
+  .about-toon-grid {
+    gap: 18px;
+  }
+  .about-toon-card {
+    min-width: 180px;
+    max-width: 220px;
+    padding: 18px 10px 14px 10px;
+    border-radius: 18px;
+  }
+  .about-toon-title {
+    font-size: 1.2rem;
+  }
+}
+@media (max-width: 600px) {
+  .about-toon-section {
+    padding: 0 2px;
+  }
+  .about-toon-grid {
+    gap: 8px;
+  }
+  .about-toon-card {
+    min-width: 120px;
+    max-width: 140px;
+    padding: 8px 2px 6px 2px;
+    border-radius: 10px;
+  }
+  .about-toon-title {
+    font-size: 0.9rem;
+  }
+  .about-toon-card h2, .about-toon-card h3, .about-toon-card h4 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+  .about-toon-card p {
+    font-size: 0.8rem;
+    margin-bottom: 0.2em;
+  }
+  .about-toon-tag {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+}
 #modelContainer,
 #orbitControls {
   margin-top: 40px !important;
@@ -1197,7 +1400,7 @@ body {
     box-shadow: 0 0 14px rgba(255, 255, 255, 0.3), 0 10px 22px rgba(0, 0, 0, 0.5);
   }
 
-  .download-btn:active {
+      margin: 12px;
     transform: translateY(0);
   }
 
@@ -1572,14 +1775,44 @@ CORNER POPUP BOXES
   z-index: 1;
   pointer-events: auto;
 }
+    width: 90%;
+    height: 90%;
+    max-width: 60px;
+    max-height: 60px;
+    object-fit: contain;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    pointer-events: auto;
+  }
 
-.corner-box:hover {
-  background: none;
-  box-shadow: none;
-  transform: translateY(-2px) scale(1.05);
-}
+  @media (max-width: 900px) {
+    .corner-box {
+      margin: 8px;
+    }
+    .corner-box-icon {
+      max-width: 44px;
+      max-height: 44px;
+    }
+  }
+  @media (max-width: 600px) {
+    .corner-box {
+      margin: 4px;
+    }
+    .corner-box-icon {
+      max-width: 32px;
+      max-height: 32px;
+    }
+  }
 
-/* Flat Color Mode - completely removes all glass/shadow effects */
+  /* Download button alignment fix */
+  #boxTopLeft {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 body.orbit-flat-mode .corner-box {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
